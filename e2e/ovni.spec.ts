@@ -1,0 +1,121 @@
+import { test, expect, type Page } from '@playwright/test'
+
+// Historias e2e centradas en happy paths. La URL usa ?fast para acelerar los bots
+// y ?seed para una partida reproducible.
+
+interface Snapshot {
+  screen?: 'fin-ronda' | 'victoria'
+  overlay?: 'roba2' | 'palo'
+  estado?: string | null
+  hasPlayable?: boolean
+}
+
+/** Lee el estado visible del DOM de una sola vez (un round-trip por iteración). */
+function readState(page: Page): Promise<Snapshot> {
+  return page.evaluate(() => {
+    const q = (id: string) => document.querySelector(`[data-testid="${id}"]`)
+    if (q('fin-ronda')) return { screen: 'fin-ronda' }
+    if (q('victoria')) return { screen: 'victoria' }
+    if (q('roba2-ok')) return { overlay: 'roba2' }
+    if (q('palo-oros')) return { overlay: 'palo' }
+    return {
+      estado: q('estado')?.getAttribute('data-value') ?? null,
+      hasPlayable: !!q('carta-jugable'),
+    }
+  })
+}
+
+/** Juega la ronda en curso automáticamente hasta que aparece el recuento o la victoria. */
+async function playRoundToEnd(page: Page): Promise<'fin-ronda' | 'victoria'> {
+  for (let i = 0; i < 4000; i++) {
+    const s = await readState(page)
+    if (s.screen) return s.screen
+    if (s.overlay === 'roba2') {
+      await page.getByTestId('roba2-ok').click().catch(() => {})
+      continue
+    }
+    if (s.overlay === 'palo') {
+      await page.getByTestId('palo-oros').click().catch(() => {})
+      continue
+    }
+    if (s.estado === 'tu' && s.hasPlayable) {
+      await page.getByTestId('carta-jugable').first().click().catch(() => {})
+      continue
+    }
+    if (s.estado === 'robar') {
+      await page.getByTestId('robar').click().catch(() => {})
+      continue
+    }
+    // Turno de un bot o transición: espera breve.
+    await page.waitForTimeout(8)
+  }
+  throw new Error('La ronda no terminó dentro del límite de pasos')
+}
+
+/** Lleva la partida hasta el final (pantalla de victoria). */
+async function playToVictory(page: Page): Promise<void> {
+  for (let round = 0; round < 120; round++) {
+    const res = await playRoundToEnd(page)
+    if (res === 'victoria') return
+    await page.getByTestId('siguiente-ronda').click()
+  }
+  throw new Error('La partida no terminó dentro del límite de rondas')
+}
+
+async function empezarPartida(page: Page, rivales = 2) {
+  await page.goto('/?seed=7&fast=1')
+  await expect(page.getByTestId('jugar')).toBeVisible()
+  await page.getByTestId(`rivales-${rivales}`).click()
+  await page.getByTestId('jugar').click()
+  await expect(page.getByTestId('mesa')).toBeVisible()
+}
+
+test.describe('OVNI · happy paths', () => {
+  test('Historia 1 · Inicio: configurar rivales y avatar y empezar (R-CFG-1, R-CFG-2)', async ({
+    page,
+  }) => {
+    await page.goto('/?seed=7&fast=1')
+    await expect(page.getByTestId('jugar')).toBeVisible()
+
+    await page.getByTestId('rivales-3').click()
+    await expect(page.getByTestId('rivales-3')).toHaveAttribute('aria-pressed', 'true')
+    await page.getByTestId('avatar-estrella').click()
+    await expect(page.getByTestId('avatar-estrella')).toHaveAttribute('aria-pressed', 'true')
+
+    await page.getByTestId('jugar').click()
+    await expect(page.getByTestId('mesa')).toBeVisible()
+    // El banner de estado existe (turno del humano o de un bot).
+    await expect(page.getByTestId('estado')).toBeVisible()
+  })
+
+  test('Historia 2 · Una ronda completa termina en el recuento (R-OBJ-1, R-OBJ-2)', async ({
+    page,
+  }) => {
+    await empezarPartida(page, 2)
+    const res = await playRoundToEnd(page)
+    expect(res).toBe('fin-ronda')
+    await expect(page.getByTestId('fin-ronda')).toBeVisible()
+    // Hay alguien que gana la ronda (quien se queda sin cartas) y botón para seguir.
+    await expect(page.getByText('Sin cartas')).toBeVisible()
+    await expect(page.getByTestId('siguiente-ronda')).toBeVisible()
+  })
+
+  test('Historia 3 · Partida completa hasta un ganador (R-OBJ-3, R-OBJ-4, R-OBJ-5)', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000)
+    await empezarPartida(page, 3)
+    await playToVictory(page)
+    await expect(page.getByTestId('victoria')).toBeVisible()
+    const estado = await page.getByTestId('victoria').getAttribute('data-value')
+    expect(['gana', 'empate', 'eliminado']).toContain(estado)
+  })
+
+  test('Historia 4 · Ver mi mano en grande y volver (R-UI accesibilidad)', async ({ page }) => {
+    await empezarPartida(page, 2)
+    await page.getByTestId('ver-mano').click()
+    await expect(page.getByTestId('ver-mano-cerrar')).toBeVisible()
+    await page.getByTestId('ver-mano-cerrar').click()
+    await expect(page.getByTestId('mesa')).toBeVisible()
+  })
+})
