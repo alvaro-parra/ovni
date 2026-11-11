@@ -1,0 +1,141 @@
+# OVNI — Documento de Requisitos de Interfaz
+
+> Requisitos de la interfaz de la **web app** de OVNI. Este documento cubre
+> **cómo debe verse y comportarse** la aplicación. Las reglas del juego están en
+> [`REQUISITOS.md`](./REQUISITOS.md).
+
+**Estado:** Borrador v0.1 · **Fecha:** 2026-11-11
+
+---
+
+## 1. Plataforma
+
+- **R-UI-PLAT-1.** La interfaz es una **web app responsive**, diseñada
+  **mobile-first** y que debe escalar correctamente a tablet y escritorio.
+
+---
+
+## 2. Público objetivo y principio rector
+
+> ⚠️ **Requisito transversal.** La app será usada principalmente por:
+> - **Personas mayores con dificultad visual** (baja agudeza, problemas de
+>   contraste, posible temblor o menor precisión al tocar).
+> - **Niños pequeños que pueden no saber leer bien** (o nada).
+
+- **R-UI-PUB-1.** **La interfaz debe ser usable sin necesidad de leer.** Toda
+  acción e información esencial debe entenderse mediante **iconos, colores,
+  imágenes y símbolos**, no solo texto.
+- **R-UI-PUB-2.** Prima siempre la **claridad y el tamaño** sobre la densidad de
+  información o la estética. Ante la duda: más grande, más contraste, menos texto.
+- **R-UI-PUB-3.** El flujo de juego debe poder completarse (jugar carta, robar,
+  elegir palo, ver de quién es el turno) **reconociendo elementos de un vistazo**,
+  sin instrucciones escritas.
+
+---
+
+## 3. Requisitos de accesibilidad
+
+### 3.1 Legibilidad y visión
+
+- **R-UI-A11Y-1.** **Tipografía grande** por defecto y tamaños de carta amplios.
+  Evitar textos pequeños; números y figuras de las cartas claramente visibles.
+- **R-UI-A11Y-2.** **Alto contraste** entre texto/elementos y fondo (objetivo:
+  cumplir o superar WCAG 2.1 AA, idealmente AAA en elementos clave).
+- **R-UI-A11Y-3.** **No depender solo del color** para transmitir información
+  (turno, carta jugable, palo): acompañar siempre con icono, forma, borde o texto.
+- **R-UI-A11Y-4.** Opción de **modo de texto/elementos aún más grandes** y/o modo
+  de **contraste reforzado** para quien lo necesite.
+
+### 3.2 Interacción táctil
+
+- **R-UI-A11Y-5.** **Áreas táctiles grandes** y bien separadas (objetivo mínimo
+  ~44×44 px, preferiblemente mayores), para reducir toques erróneos.
+- **R-UI-A11Y-6.** Interacciones **simples y tolerantes**: tocar para jugar/robar;
+  si se usa arrastrar, que haya siempre alternativa de toque. Evitar gestos
+  complejos o precisos.
+- **R-UI-A11Y-7.** **Confirmación visual clara** de cada acción (carta jugada,
+  carta robada, turno pasado), con feedback inmediato.
+
+### 3.3 Apoyos no textuales (clave para niños)
+
+- **R-UI-A11Y-8.** Uso de **iconografía y color consistentes** para los cuatro
+  palos (Oros, Copas, Espadas, Bastos), reconocibles por su dibujo.
+- **R-UI-A11Y-9.** **Pistas visuales/animaciones** para los efectos especiales
+  (roba 2, cambio de sentido, palo elegido) que se entiendan sin leer.
+- **R-UI-A11Y-10.** (Deseable) **Apoyo sonoro / locución** opcional para reforzar
+  acciones y turnos, útil tanto para baja visión como para pre-lectores.
+
+---
+
+## 4. Modo de juego (asunción a confirmar)
+
+- **R-UI-MODO-1.** Se asume **partida con varios jugadores en la misma app**
+  (online con lobby o local pass-and-play — *pendiente de confirmar*). Si el
+  objetivo es **local en un mismo dispositivo** o **contra IA**, se ajustará este
+  documento. *(Ver §8, Q1.)*
+
+---
+
+## 5. Pantallas
+
+- **R-UI-SCR-1. Inicio / Lobby:** crear o unirse a una partida, elegir número de
+  jugadores (2–4), nombres/avatares (preferible **avatares con imágenes** grandes
+  en lugar de texto), y botón de empezar grande y claro.
+- **R-UI-SCR-2. Mesa de juego (principal):**
+  - Pila de descarte central (carta activa) y mazo de robo con **contador** de
+    cartas.
+  - **Mano del jugador** en abanico en la parte inferior, con cartas **jugables
+    resaltadas** y no jugables atenuadas (con apoyo no cromático, R-UI-A11Y-3).
+  - Oponentes alrededor de la mesa: avatar, nombre, **nº de cartas en mano** y
+    **puntos acumulados**, mostrados con iconos/números grandes.
+  - Indicador muy visible de **de quién es el turno** y del **sentido de juego**.
+  - Acciones de **jugar** y **robar** grandes y evidentes.
+- **R-UI-SCR-3. Selector de palo (Sota):** overlay para elegir
+  Oros/Copas/Espadas/Bastos con **botones grandes e ilustrados**; indicador
+  persistente del **palo forzado** mientras esté activo.
+- **R-UI-SCR-4. Marcador / fin de ronda:** recuento de puntos de cada jugador en
+  la ronda y **total acumulado**, resaltando al ganador de la ronda y avisando
+  visualmente de quién **se acerca o llega a 101**.
+- **R-UI-SCR-5. Eliminación y victoria:** estado de jugador **eliminado** (≥101) y
+  pantalla de **victoria** del ganador final (o **empate** si varios terminan con
+  la puntuación mínima), con celebración visual clara.
+
+---
+
+## 6. Componentes clave
+
+- **R-UI-COMP-1. Carta:** componente reutilizable (cara y dorso) para la baraja
+  española, con número/figura y palo grandes y de alto contraste.
+- **R-UI-COMP-2. Indicador de turno:** elemento destacado (resaltado del jugador
+  activo + flecha/animación de sentido).
+- **R-UI-COMP-3. Indicador de palo activo:** visible siempre que un palo esté
+  forzado por una Sota.
+- **R-UI-COMP-4. Marcador de puntos:** por jugador, con indicación visual de
+  proximidad a 101 (p. ej. barra que se llena / cambio de estado).
+- **R-UI-COMP-5. Avisos de efectos especiales:** roba 2, cambio de sentido,
+  repetir turno — comunicados con animación/icono, sin depender del texto.
+
+---
+
+## 7. Estados e interacciones a representar
+
+- **R-UI-EST-1.** Carta jugable vs. no jugable.
+- **R-UI-EST-2.** Turno propio vs. turno de otro jugador.
+- **R-UI-EST-3.** Selección de palo activa (Sota) y palo forzado resultante.
+- **R-UI-EST-4.** Efecto "roba 2": aviso claro de que el siguiente roba 2 y pierde
+  turno.
+- **R-UI-EST-5.** Cambio de sentido de juego (As con 3+ jugadores).
+- **R-UI-EST-6.** Contadores actualizados: cartas en mano, cartas en el mazo,
+  puntos acumulados.
+- **R-UI-EST-7.** Proximidad a 101 y estado de eliminación por jugador.
+
+---
+
+## 8. Decisiones pendientes
+
+- **Q1.** **Modo de juego:** ¿online con lobby, **local pass-and-play** en un
+  mismo dispositivo, o **contra IA**? (afecta a §4 y §5).
+- **Q2.** **Identidad visual:** ¿hay nombre de marca, logo o paleta de colores
+  definidos, o los propone el diseño?
+- **Q3.** **Apoyo sonoro/locución** (R-UI-A11Y-10): ¿se incluye desde el inicio o
+  queda como mejora posterior?

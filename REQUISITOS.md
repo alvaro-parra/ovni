@@ -144,9 +144,13 @@ más puntos elimina** al jugador. Gana el último que sobreviva.
 
 ### 8.2 Robo y reciclaje del mazo
 
-- **R-MAZO-1.** Las cartas se roban del **mazo de robo**.
-- **R-MAZO-2.** Si el mazo de robo se **agota**, se **rebaraja** la pila de
-  descarte para formar un nuevo mazo. Esto se permite **una sola vez** por ronda.
+- **R-MAZO-1.** Hay **dos montones separados**: el **mazo de robo** (boca abajo,
+  del que se roba) y la **pila de descarte** (boca arriba, cuya carta superior es
+  la carta activa). Las cartas se roban del **mazo de robo**.
+- **R-MAZO-2.** Si el mazo de robo se **agota**, se rellena rebarajando la pila de
+  descarte así: la **carta superior (la carta activa) permanece** sola en la pila
+  de descarte, y **todas las demás cartas del descarte se barajan** para formar el
+  nuevo mazo de robo. Esta rebaraja se permite **una sola vez** por ronda.
 - **R-MAZO-3.** Si el mazo vuelve a agotarse (tras la única rebaraja permitida) y
   el jugador en turno **no puede jugar ni robar**, la **ronda termina de
   inmediato**: **ningún jugador gana la ronda** y **todos** suman a su marcador
