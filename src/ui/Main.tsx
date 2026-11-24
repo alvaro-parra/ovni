@@ -156,6 +156,7 @@ export function Main({ game }: { game: Ovni }) {
         style={{
           marginTop: 'auto',
           height: 80,
+          flexShrink: 0,
           borderRadius: 24,
           background: '#FFD23F',
           color: '#1A1A1A',
@@ -175,6 +176,18 @@ export function Main({ game }: { game: Ovni }) {
         <Svg markup={`<svg width="36" height="36" viewBox="0 0 24 24"><path d="M7 4.5 L19.5 12 L7 19.5 Z" fill="#1A1A1A"></path></svg>`} />
         <span>JUGAR</span>
       </button>
+
+      {/* Crédito exigido por la licencia CC BY-SA 3.0 de las imágenes (ver LICENCIA-CARTAS.md). */}
+      <p data-testid="credito-cartas" style={{ margin: '-4px 0 0', fontSize: 14, lineHeight: 1.3, textAlign: 'center', color: '#E8DFC8' }}>
+        Cartas:{' '}
+        <a href="https://commons.wikimedia.org/wiki/User:Basquetteur" target="_blank" rel="noopener noreferrer" style={{ color: '#FFF8E7' }}>
+          Basquetteur
+        </a>{' '}
+        ·{' '}
+        <a href="https://creativecommons.org/licenses/by-sa/3.0/deed.es" target="_blank" rel="noopener noreferrer" style={{ color: '#FFF8E7', whiteSpace: 'nowrap' }}>
+          CC BY-SA 3.0
+        </a>
+      </p>
     </Marco>
   )
 }
