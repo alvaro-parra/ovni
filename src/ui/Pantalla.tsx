@@ -9,6 +9,7 @@
 // Se usa `transform` (y no `zoom`) porque no altera las medidas de layout: los
 // ResizeObserver de dentro siguen midiendo en píxeles de diseño.
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { FACTOR_GRANDE, usePreferencias, variablesTema } from './preferencias'
 
 /**
  * Alto de referencia (px de diseño) para calcular la escala. La mesa se adapta a cualquier
@@ -20,6 +21,8 @@ export const ALTO_REF_PANTALLA = 844
 /** Ancho de referencia del diseño original. */
 const ANCHO_REF = 390
 const ESCALA_MAX = 1.8
+/** Escala mínima en modo normal; el modo grande (R-UI-A11Y-4) la multiplica. */
+const ESCALA_MIN = 1
 /** Más ancho que esto no aporta nada a un diseño vertical: se centra con bandas. */
 const ANCHO_MAX = 560
 
@@ -33,8 +36,9 @@ export interface Escala {
   left: number
 }
 
-export function calcularEscala(vw: number, vh: number, altoRef: number): Escala {
-  const s = Math.min(ESCALA_MAX, Math.max(1, Math.min(vw / ANCHO_REF, vh / altoRef)))
+export function calcularEscala(vw: number, vh: number, altoRef: number, factor = 1): Escala {
+  const base = Math.min(ESCALA_MAX, Math.max(ESCALA_MIN, Math.min(vw / ANCHO_REF, vh / altoRef)))
+  const s = base * factor
   const w = Math.min(ANCHO_MAX, vw / s)
   const h = vh / s
   return { s, w, h, left: (vw - w * s) / 2 }
@@ -48,6 +52,7 @@ function medirViewport() {
 /** Escala para el viewport actual. Se calcula en el render: cambiar de pantalla
  *  (y por tanto de `altoRef`) aplica la escala nueva sin un fotograma intermedio. */
 export function useEscala(altoRef: number): Escala {
+  const { grande } = usePreferencias()
   const [vp, setVp] = useState(medirViewport)
   useEffect(() => {
     const on = () =>
@@ -62,14 +67,19 @@ export function useEscala(altoRef: number): Escala {
       window.visualViewport?.removeEventListener('resize', on)
     }
   }, [])
-  return calcularEscala(vp.vw, vp.vh, altoRef)
+  return calcularEscala(vp.vw, vp.vh, altoRef, grande ? FACTOR_GRANDE : 1)
 }
 
 /** Ocupa el viewport y coloca dentro el marco escalado. */
 export function Pantalla({ children, altoRef }: { children: ReactNode; altoRef: number }) {
   const { s, w, h, left } = useEscala(altoRef)
+  const { grande, contraste } = usePreferencias()
   return (
-    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0F3A24' }}>
+    <div
+      data-grande={grande}
+      data-contraste={contraste}
+      style={{ ...variablesTema(contraste), position: 'fixed', inset: 0, overflow: 'hidden', background: 'var(--fondo)' }}
+    >
       <div
         data-testid="pantalla"
         data-escala={s.toFixed(3)}
@@ -98,7 +108,7 @@ export function estiloTablero(extra: CSSProperties = {}): CSSProperties {
     position: 'relative',
     overflowX: 'hidden',
     overflowY: 'auto',
-    background: '#1D5A3A',
+    background: 'var(--tapete)',
     boxShadow: 'inset 0 0 0 8px #5A3A1E',
     fontFamily: "'Atkinson Hyperlegible', system-ui, sans-serif",
     color: '#FFF8E7',

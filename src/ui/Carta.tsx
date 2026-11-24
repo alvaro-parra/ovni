@@ -56,7 +56,8 @@ export function Carta({
       ? 'none'
       : '0 3px 6px rgba(0,0,0,0.35)'
   const lift = jugable && !sinSubir ? -16 : 0
-  const op = apagada ? 0.45 : 1
+  // Normal: atenuada. Contraste reforzado (R-UI-A11Y-4): opaca y con rayado (ver preferencias).
+  const op = apagada ? 'var(--apagada-opacidad)' : 1
   const mostrarIndice = !dorso && (indiceGrande || !conImagen)
 
   return (
@@ -126,6 +127,13 @@ export function Carta({
             backgroundImage:
               'repeating-linear-gradient(45deg, rgba(255,255,255,0.28) 0px, rgba(255,255,255,0.28) 1.5px, transparent 1.5px, transparent 7px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0px, rgba(255,255,255,0.28) 1.5px, transparent 1.5px, transparent 7px)',
           }}
+        />
+      )}
+
+      {apagada && (
+        <div
+          data-testid="patron-apagada"
+          style={{ position: 'absolute', inset: 0, borderRadius: radIn, background: 'var(--apagada-patron)', pointerEvents: 'none' }}
         />
       )}
 

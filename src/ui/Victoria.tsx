@@ -62,7 +62,7 @@ export function Victoria({ game }: { game: Ovni }) {
           <button
             data-testid="inicio"
             onClick={game.restart}
-            style={{ height: 60, boxSizing: 'border-box', borderRadius: 20, background: '#0F3A24', color: '#FFF8E7', border: '3px solid #3C7A57', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 22, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ height: 60, boxSizing: 'border-box', borderRadius: 20, background: 'var(--panel)', color: '#FFF8E7', border: '3px solid var(--borde)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 22, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             <Svg markup={`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 L12 3.5 L21 11"></path><path d="M5.5 9.5 V20.5 H18.5 V9.5"></path><path d="M10 20.5 V15 H14 V20.5"></path></svg>`} />
             <span>Inicio</span>
@@ -85,7 +85,7 @@ export function Victoria({ game }: { game: Ovni }) {
             <Avatar quien={game.humanAvatar} w={104} />
           </div>
           <h1 style={{ margin: '4px 0 0', fontSize: 46, lineHeight: 1.05, fontWeight: 700, textAlign: 'center' }}>¡Has ganado!</h1>
-          <p style={{ margin: 0, fontSize: 20, color: '#CFE8D8', textAlign: 'center' }}>Eres el único por debajo de 101</p>
+          <p style={{ margin: 0, fontSize: 20, color: 'var(--texto-2)', textAlign: 'center' }}>Eres el único por debajo de 101</p>
         </div>
       )}
 
@@ -93,7 +93,7 @@ export function Victoria({ game }: { game: Ovni }) {
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 40 }}>
           <Avatar quien={game.humanAvatar} w={96} />
           <h1 style={{ margin: '6px 0 0', fontSize: 46, lineHeight: 1.05, fontWeight: 700 }}>¡Empate!</h1>
-          <p style={{ margin: 0, fontSize: 20, color: '#CFE8D8', textAlign: 'center' }}>
+          <p style={{ margin: 0, fontSize: 20, color: 'var(--texto-2)', textAlign: 'center' }}>
             Tú {otrosGanadores.length ? `y ${otrosGanadores.join(', ')} ` : ''}tenéis los puntos más bajos: ganáis
           </p>
         </div>
@@ -111,13 +111,13 @@ export function Victoria({ game }: { game: Ovni }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 24, fontWeight: 700, color: '#FF8A8A' }}>
             <span>{human.score} puntos (101 o más)</span>
           </div>
-          <p style={{ margin: 0, fontSize: 20, color: '#CFE8D8', textAlign: 'center' }}>Ganó quien quedó por debajo de 101</p>
+          <p style={{ margin: 0, fontSize: 20, color: 'var(--texto-2)', textAlign: 'center' }}>Ganó quien quedó por debajo de 101</p>
         </div>
       )}
 
-      <section aria-label="Clasificación final" style={{ position: 'relative', width: '100%', background: '#0F3A24', borderRadius: 20, padding: 12, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
+      <section aria-label="Clasificación final" style={{ position: 'relative', width: '100%', background: 'var(--panel)', borderRadius: 20, padding: 12, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
         {tabla.map((f, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 52, padding: '4px 8px', borderRadius: 14, background: f.corona ? '#FFD23F' : 'transparent', color: f.corona ? '#1A1A1A' : f.fuera ? '#BFD3C6' : '#FFF8E7' }}>
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 52, padding: '4px 8px', borderRadius: 14, background: f.corona ? '#FFD23F' : 'transparent', color: f.corona ? '#1A1A1A' : f.fuera ? 'var(--texto-apagado)' : '#FFF8E7' }}>
             <Avatar quien={f.cfg.avatar} w={40} apagado={f.fuera} />
             <span style={{ fontSize: 21, fontWeight: 700, flex: 1 }}>{f.cfg.name}</span>
             {f.corona && <Svg ariaLabel="Ganador" markup={`<svg width="24" height="22" viewBox="0 0 24 22" role="img" aria-label="Ganador"><path d="M2 8 L7 12 L12 3 L17 12 L22 8 L20 20 H4 Z" fill="#1A1A1A"></path></svg>`} />}

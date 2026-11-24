@@ -55,7 +55,7 @@ export function FinRonda({ game }: { game: Ovni }) {
         </span>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.05, fontWeight: 700 }}>Fin de ronda</h1>
-          <span style={{ fontSize: 19, color: '#CFE8D8' }}>Ronda {game.roundNumber} · puntos que suma cada uno</span>
+          <span style={{ fontSize: 19, color: 'var(--texto-2)' }}>Ronda {game.roundNumber} · puntos que suma cada uno</span>
         </div>
       </div>
 
@@ -64,8 +64,8 @@ export function FinRonda({ game }: { game: Ovni }) {
           key={idx}
           style={{
             position: 'relative',
-            background: p.ganador ? '#174B30' : '#0F3A24',
-            border: `${p.ganador || p.elim ? 4 : 2}px ${p.elim ? 'dashed' : 'solid'} ${p.ganador ? '#FFD23F' : p.elim ? '#FF8A8A' : '#2F6E4A'}`,
+            background: p.ganador ? 'var(--panel-ganador)' : 'var(--panel)',
+            border: `${p.ganador || p.elim ? 4 : 2}px ${p.elim ? 'dashed' : 'solid'} ${p.ganador ? '#FFD23F' : p.elim ? '#FF8A8A' : 'var(--borde-suave)'}`,
             borderRadius: 18,
             padding: '10px 12px 12px',
             display: 'flex',
@@ -93,7 +93,7 @@ export function FinRonda({ game }: { game: Ovni }) {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, minHeight: 44, flexWrap: 'wrap' }}>
                 {p.sinCartas && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 18, color: '#CFE8D8' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 18, color: 'var(--texto-2)' }}>
                     <Svg markup={`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8FE3A6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 7"></path></svg>`} />
                     <span>Sin cartas</span>
                   </span>
@@ -112,7 +112,7 @@ export function FinRonda({ game }: { game: Ovni }) {
               )}
               <span>{p.total}</span>
             </span>
-            <div style={{ flex: 1, height: 14, borderRadius: 8, background: '#2C5E43', overflow: 'hidden' }}>
+            <div style={{ flex: 1, height: 14, borderRadius: 8, background: 'var(--pista)', overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${p.pct}%`, background: p.color, borderRadius: 8 }} />
             </div>
             <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 17, fontWeight: 700, color: '#FFD0D0' }}>

@@ -29,6 +29,7 @@ export type Overlay =
   | { kind: 'palo' }
   | { kind: 'roba2'; byName: string; byAvatar: AvatarKind; card: Card }
   | { kind: 'verMano' }
+  | { kind: 'vista' } // ajustes de letra grande / contraste (R-UI-A11Y-4)
 
 export const HUMAN_ID = 'yo'
 const BOT_IDS = ['robi', 'pixel', 'toby'] as const
@@ -102,6 +103,7 @@ export interface Ovni {
   drawHuman: () => void
   dismissRoba2: () => void
   openVerMano: () => void
+  openVista: () => void
   closeOverlay: () => void
   nextRound: () => void
   restart: () => void
@@ -281,6 +283,7 @@ export function useOvni(): Ovni {
 
   const dismissRoba2 = useCallback(() => setOverlay(null), [])
   const openVerMano = useCallback(() => setOverlay({ kind: 'verMano' }), [])
+  const openVista = useCallback(() => setOverlay({ kind: 'vista' }), [])
   const closeOverlay = useCallback(() => setOverlay(null), [])
 
   // --- simula el resto de la partida (cuando el humano queda eliminado) ---
@@ -354,6 +357,7 @@ export function useOvni(): Ovni {
     drawHuman,
     dismissRoba2,
     openVerMano,
+    openVista,
     closeOverlay,
     nextRound,
     restart,

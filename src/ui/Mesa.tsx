@@ -10,6 +10,7 @@ import { Carta, CartaDe } from './Carta'
 import { Svg } from './dc'
 import { ALTO_REF_MESA, estiloTablero, useEscala } from './Pantalla'
 import { ajustarRejilla, PROPORCION_CARTA } from './ajuste'
+import { BotonVista, PanelVista } from './Vista'
 import {
   cardLabel,
   rankVnum,
@@ -54,8 +55,8 @@ const headBtn = {
   height: 52,
   boxSizing: 'border-box' as const,
   borderRadius: 16,
-  border: '2px solid #3C7A57',
-  background: '#0F3A24',
+  border: '2px solid var(--borde)',
+  background: 'var(--panel)',
   color: '#FFF8E7',
   display: 'flex',
   alignItems: 'center',
@@ -120,7 +121,9 @@ export function Mesa({ game }: { game: Ovni }) {
 
   // R-UI-PLAT-1: en pantallas bajas (< 700 px de diseño) la zona central encoge un poco
   // para dejar sitio a la mano; las cartas de la mano se ajustan al hueco que queda.
-  const { h: altoPantalla } = useEscala(ALTO_REF_MESA)
+  const { h: altoPantalla, w: anchoPantalla } = useEscala(ALTO_REF_MESA)
+  // Ancho de diseño estrecho (móvil pequeño, o modo grande): cabecera y rivales más compactos.
+  const estrecho = anchoPantalla < 340
   const muyBaja = altoPantalla < 560
   const altoCentro = Math.round(Math.max(100, Math.min(142, 142 - (700 - altoPantalla) * 0.3)))
   const wActiva = Math.min(88, Math.floor((altoCentro - 6) / PROPORCION_CARTA))
@@ -158,27 +161,28 @@ export function Mesa({ game }: { game: Ovni }) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
+            gap: estrecho ? 6 : 8,
+            whiteSpace: 'nowrap',
             height: 52,
             boxSizing: 'border-box',
-            background: invertido ? '#FFD23F' : '#0F3A24',
+            background: invertido ? '#FFD23F' : 'var(--panel)',
             color: invertido ? '#1A1A1A' : '#FFF8E7',
-            border: `2px solid ${invertido ? '#1A1A1A' : '#0F3A24'}`,
+            border: `2px solid ${invertido ? '#1A1A1A' : 'var(--panel)'}`,
             borderRadius: 999,
-            padding: '0 16px 0 10px',
+            padding: estrecho ? '0 12px 0 8px' : '0 16px 0 10px',
             fontSize: 20,
             fontWeight: 700,
           }}
         >
           <Svg
             style={{ transform: `scaleX(${invertido ? -1 : 1})` }}
-            markup={`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5 A9 9 0 1 0 12 3"></path><path d="M12 0.5 L12 5.5 L7 3"></path></svg>`}
+            markup={`<svg width="${estrecho ? 26 : 32}" height="${estrecho ? 26 : 32}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5 A9 9 0 1 0 12 3"></path><path d="M12 0.5 L12 5.5 L7 3"></path></svg>`}
           />
           <span>Ronda {game.roundNumber}</span>
         </div>
-        {/* Hueco del ancho de un botón para mantener centrado el indicador de ronda.
-            Aquí iba el botón de sonido, retirado hasta decidir Q3 (R-UI-A11Y-10). */}
-        <div aria-hidden="true" style={{ width: headBtn.width, flexShrink: 0 }} />
+        {/* Ajustes de vista (R-UI-A11Y-4). Antes iba aquí el botón de sonido, retirado
+            hasta decidir Q3 (R-UI-A11Y-10). */}
+        <BotonVista onClick={game.openVista} />
       </div>
 
       {/* Rivales */}
@@ -202,13 +206,13 @@ export function Mesa({ game }: { game: Ovni }) {
                 position: 'relative',
                 boxSizing: 'border-box',
                 height: 66,
-                background: '#0F3A24',
-                border: `${activo ? 4 : 2}px solid ${activo ? '#FFD23F' : '#2F6E4A'}`,
+                background: 'var(--panel)',
+                border: `${activo ? 4 : 2}px solid ${activo ? '#FFD23F' : 'var(--borde-suave)'}`,
                 borderRadius: 16,
-                padding: '0 8px',
+                padding: estrecho ? '0 5px' : '0 8px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
+                gap: estrecho ? 4 : 8,
               }}
             >
               {activo && (
@@ -230,10 +234,10 @@ export function Mesa({ game }: { game: Ovni }) {
                   <Svg markup={`<svg width="12" height="12" viewBox="0 0 24 24"><path d="M6 3 L21 12 L6 21 Z" fill="#1A1A1A"></path></svg>`} />
                 </span>
               )}
-              <Avatar quien={cfg.avatar} w={40} />
+              <Avatar quien={cfg.avatar} w={estrecho ? 28 : 40} />
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
-                  <Svg markup={`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="7" width="11" height="14" rx="2" fill="#FFF8E7"></rect><path d="M8 4 H19 a2 2 0 0 1 2 2 V16"></path></svg>`} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: estrecho ? 2 : 4, fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
+                  <Svg markup={`<svg width="${estrecho ? 12 : 16}" height="${estrecho ? 12 : 16}" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="7" width="11" height="14" rx="2" fill="#FFF8E7"></rect><path d="M8 4 H19 a2 2 0 0 1 2 2 V16"></path></svg>`} />
                   <span>{rp.hand.length}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 16, fontWeight: 700, lineHeight: 1, color }}>
@@ -242,7 +246,7 @@ export function Mesa({ game }: { game: Ovni }) {
                   )}
                   <span>{pts}</span>
                 </div>
-                <div style={{ height: 6, borderRadius: 4, background: '#2C5E43', overflow: 'hidden' }}>
+                <div style={{ height: 6, borderRadius: 4, background: 'var(--pista)', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${Math.min(100, Math.round((pts / 101) * 100))}%`, background: color }} />
                 </div>
               </div>
@@ -378,9 +382,9 @@ export function Mesa({ game }: { game: Ovni }) {
         style={{
           flex: 1,
           minHeight: muyBaja ? 280 : 0,
-          background: '#134229',
+          background: 'var(--panel-mano)',
           borderRadius: 24,
-          border: `${humanTurn ? 4 : 2}px solid ${humanTurn ? '#FFD23F' : '#2F6E4A'}`,
+          border: `${humanTurn ? 4 : 2}px solid ${humanTurn ? '#FFD23F' : 'var(--borde-suave)'}`,
           padding: '10px 10px 12px',
           display: 'flex',
           flexDirection: 'column',
@@ -395,7 +399,7 @@ export function Mesa({ game }: { game: Ovni }) {
             <span data-testid="mis-cartas">{human.hand.length}</span>
           </span>
           <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 700, color: colorPuntos(humanScore) }}>{humanScore}</span>
-          <div style={{ width: 54, height: 8, borderRadius: 5, background: '#2C5E43', overflow: 'hidden' }}>
+          <div style={{ width: 54, height: 8, borderRadius: 5, background: 'var(--pista)', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${Math.min(100, Math.round((humanScore / 101) * 100))}%`, background: colorPuntos(humanScore) }} />
           </div>
           <button
@@ -459,8 +463,8 @@ export function Mesa({ game }: { game: Ovni }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                color: '#CFE8D8',
-                background: '#0F3A24',
+                color: 'var(--texto-2)',
+                background: 'var(--panel)',
                 border: 0,
                 borderRadius: 16,
                 padding: '6px 8px',
@@ -494,7 +498,7 @@ export function Mesa({ game }: { game: Ovni }) {
                   height: Math.round(rRejilla.w * PROPORCION_CARTA),
                   boxSizing: 'border-box',
                   borderRadius: 8,
-                  border: '3px dashed #CFE8D8',
+                  border: '3px dashed var(--texto-2)',
                   background: 'transparent',
                   color: '#FFF8E7',
                   display: 'flex',
@@ -517,6 +521,7 @@ export function Mesa({ game }: { game: Ovni }) {
 
       {/* Overlays */}
       {game.overlay?.kind === 'palo' && <SelectorPalo onPick={game.chooseSuit} />}
+      {game.overlay?.kind === 'vista' && <PanelVista onClose={game.closeOverlay} />}
       {game.overlay?.kind === 'roba2' && (
         <Roba2 overlay={game.overlay} onOk={game.dismissRoba2} />
       )}
@@ -540,7 +545,7 @@ function Banner({
         role="status"
         data-testid="estado"
         data-value="ia"
-        style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: '#0F3A24', color: '#FFF8E7', border: '3px solid #3C7A57', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 23, fontWeight: 700 }}
+        style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: 'var(--panel)', color: '#FFF8E7', border: '3px solid var(--borde)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 23, fontWeight: 700 }}
       >
         {curPlayer && <Avatar quien={curPlayer.avatar} w={34} />}
         <span>Juega {curPlayer?.name ?? ''}</span>
@@ -634,7 +639,7 @@ function Roba2({
 }) {
   return (
     <div role="alertdialog" aria-label="Robas 2 cartas y pierdes el turno" style={{ position: 'absolute', inset: 0, background: 'rgba(6,20,12,0.86)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 22, padding: 24, boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#0F3A24', border: '2px solid #3C7A57', padding: '8px 16px 8px 8px', borderRadius: 999, fontSize: 20, fontWeight: 700, color: '#FFF8E7' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--panel)', border: '2px solid var(--borde)', padding: '8px 16px 8px 8px', borderRadius: 999, fontSize: 20, fontWeight: 700, color: '#FFF8E7' }}>
         <Avatar quien={overlay.byAvatar} w={40} />
         <span>{overlay.byName} ha jugado</span>
         <CartaDe card={overlay.card} w={36} />
@@ -693,7 +698,7 @@ function VerMano({
           data-testid="ver-mano-cerrar"
           aria-label="Cerrar"
           onClick={onClose}
-          style={{ height: 52, padding: '0 18px', borderRadius: 16, border: '3px solid #FFD23F', background: '#0F3A24', color: '#FFF8E7', fontSize: 20, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ height: 52, padding: '0 18px', borderRadius: 16, border: '3px solid #FFD23F', background: 'var(--panel)', color: '#FFF8E7', fontSize: 20, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           Cerrar
         </button>

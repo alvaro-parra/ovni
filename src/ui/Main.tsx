@@ -6,6 +6,7 @@ import { Palo } from './Palo'
 import { Carta } from './Carta'
 import { Svg, css } from './dc'
 import { ALTO_REF_PANTALLA, Tablero, useEscala } from './Pantalla'
+import { InterruptoresVista } from './Vista'
 
 const BOTS: AvatarKind[] = ['robi', 'pixel', 'toby']
 const AVATARES: { q: AvatarKind; nombre: string }[] = [
@@ -16,7 +17,7 @@ const AVATARES: { q: AvatarKind; nombre: string }[] = [
 ]
 
 const btnTop =
-  'width: 52px; height: 52px; border-radius: 16px; border: 2px solid #3C7A57; background: #0F3A24; color: #FFF8E7; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer'
+  'width: 52px; height: 52px; border-radius: 16px; border: 2px solid var(--borde); background: var(--panel); color: #FFF8E7; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer'
 
 export function Main({ game }: { game: Ovni }) {
   // En pantallas bajas se quita el abanico decorativo y se compacta el título para que
@@ -54,7 +55,7 @@ export function Main({ game }: { game: Ovni }) {
           </button>
 
           {/* Crédito exigido por la licencia CC BY-SA 3.0 de las imágenes (ver LICENCIA-CARTAS.md). */}
-          <p data-testid="credito-cartas" style={{ margin: 0, fontSize: 14, lineHeight: 1.3, textAlign: 'center', color: '#E8DFC8' }}>
+          <p data-testid="credito-cartas" style={{ margin: 0, fontSize: 14, lineHeight: 1.3, textAlign: 'center', color: 'var(--texto-3)' }}>
             Cartas:{' '}
             <a href="https://commons.wikimedia.org/wiki/User:Basquetteur" target="_blank" rel="noopener noreferrer" style={{ color: '#FFF8E7' }}>
               Basquetteur
@@ -67,7 +68,10 @@ export function Main({ game }: { game: Ovni }) {
         </>
       }
     >
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+      {/* paddingTop: deja sitio a la marca ✓ del interruptor activo (si no, la recorta el scroll). */}
+      <div style={{ display: 'flex', gap: 10, flex: 'none', paddingTop: 8 }}>
+        <InterruptoresVista />
+        <span style={{ flex: 1 }} />
         <button aria-label="Cómo se juega" style={css(btnTop)}>
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M9.2 9.3 a3 3 0 0 1 5.6 1.2 c0 2 -2.8 2.4 -2.8 4"></path><path d="M12 17.6 V17.8"></path></svg>`} />
         </button>
@@ -114,7 +118,7 @@ export function Main({ game }: { game: Ovni }) {
 
       <section
         aria-label="Número de rivales"
-        style={{ background: '#0F3A24', borderRadius: 22, padding: '14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
+        style={{ background: 'var(--panel)', borderRadius: 22, padding: '14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 22, fontWeight: 700, color: '#FFF8E7' }}>
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 48 48"><line x1="24" y1="5" x2="24" y2="11" stroke="#FFF8E7" stroke-width="3"></line><circle cx="24" cy="5" r="3" fill="#FFF8E7"></circle><rect x="9" y="11" width="30" height="24" rx="7" fill="#FFF8E7"></rect><circle cx="18" cy="22" r="3.5" fill="#0F3A24"></circle><circle cx="30" cy="22" r="3.5" fill="#0F3A24"></circle><rect x="18" y="28" width="12" height="3" rx="1.5" fill="#0F3A24"></rect></svg>`} />
@@ -134,8 +138,8 @@ export function Main({ game }: { game: Ovni }) {
                   position: 'relative',
                   height: 104,
                   borderRadius: 18,
-                  border: `4px solid ${sel ? '#FFD23F' : '#3C7A57'}`,
-                  background: sel ? '#FFF8E7' : '#1D5A3A',
+                  border: `4px solid ${sel ? '#FFD23F' : 'var(--borde)'}`,
+                  background: sel ? '#FFF8E7' : 'var(--tapete)',
                   color: sel ? '#1A1A1A' : '#FFF8E7',
                   display: 'flex',
                   flexDirection: 'column',
@@ -162,7 +166,7 @@ export function Main({ game }: { game: Ovni }) {
 
       <section
         aria-label="Tu avatar"
-        style={{ background: '#0F3A24', borderRadius: 22, padding: '14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
+        style={{ background: 'var(--panel)', borderRadius: 22, padding: '14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 22, fontWeight: 700, color: '#FFF8E7' }}>
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21 C4 16 8 14 12 14 C16 14 20 16 20 21"></path></svg>`} />
@@ -182,8 +186,8 @@ export function Main({ game }: { game: Ovni }) {
                   position: 'relative',
                   height: 76,
                   borderRadius: 18,
-                  border: `4px solid ${sel ? '#FFD23F' : '#3C7A57'}`,
-                  background: sel ? '#FFF8E7' : '#1D5A3A',
+                  border: `4px solid ${sel ? '#FFD23F' : 'var(--borde)'}`,
+                  background: sel ? '#FFF8E7' : 'var(--tapete)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -228,7 +232,7 @@ function Marca() {
 /** Tablero de la pantalla de inicio: ocupa todo el marco y hace scroll si no cabe. */
 export function Marco({ children, pie, compacta = false }: { children: ReactNode; pie?: ReactNode; compacta?: boolean }) {
   return (
-    <Tablero padding={compacta ? '12px 18px 14px' : '20px 18px 24px'} gap={compacta ? 12 : 16} pie={pie}>
+    <Tablero padding={compacta ? '6px 18px 14px' : '12px 18px 24px'} gap={compacta ? 12 : 16} pie={pie}>
       {children}
     </Tablero>
   )

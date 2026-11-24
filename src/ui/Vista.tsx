@@ -1,0 +1,141 @@
+// Interruptores de visualización (R-UI-A11Y-4): letra/elementos grandes y contraste reforzado.
+// Se reconocen por el icono; el estado activo se ve por color Y por una marca ✓ (R-UI-A11Y-3).
+import type { CSSProperties } from 'react'
+import { Svg } from './dc'
+import { usePreferencias } from './preferencias'
+
+const ICONO_GRANDE = (c: string, w: number) =>
+  `<svg width="${w}" height="${w}" viewBox="0 0 32 32"><text x="1" y="26" font-family="Atkinson Hyperlegible, system-ui, sans-serif" font-size="15" font-weight="700" fill="${c}">A</text><text x="11" y="27" font-family="Atkinson Hyperlegible, system-ui, sans-serif" font-size="25" font-weight="700" fill="${c}">A</text></svg>`
+
+const ICONO_CONTRASTE = (c: string, w: number) =>
+  `<svg width="${w}" height="${w}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="${c}" stroke-width="2.6"></circle><path d="M12 3 A9 9 0 0 1 12 21 Z" fill="${c}"></path></svg>`
+
+function Check() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        top: -10,
+        right: -8,
+        width: 26,
+        height: 26,
+        borderRadius: '50%',
+        background: '#FFD23F',
+        border: '3px solid #1A1A1A',
+        boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Svg markup={`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 7"></path></svg>`} />
+    </span>
+  )
+}
+
+function estiloBoton(activo: boolean, extra: CSSProperties): CSSProperties {
+  return {
+    position: 'relative',
+    boxSizing: 'border-box',
+    borderRadius: 16,
+    border: activo ? '3px solid #1A1A1A' : '2px solid var(--borde)',
+    background: activo ? '#FFD23F' : 'var(--panel)',
+    color: activo ? '#1A1A1A' : '#FFF8E7',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 0,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    ...extra,
+  }
+}
+
+/** Dos botones cuadrados (solo icono), para la cabecera de la pantalla de inicio. */
+export function InterruptoresVista() {
+  const { grande, contraste, setGrande, setContraste } = usePreferencias()
+  return (
+    <>
+      <button
+        data-testid="vista-grande"
+        aria-label="Letra y botones más grandes"
+        aria-pressed={grande}
+        onClick={() => setGrande(!grande)}
+        style={estiloBoton(grande, { width: 52, height: 52 })}
+      >
+        <Svg markup={ICONO_GRANDE(grande ? '#1A1A1A' : '#FFF8E7', 32)} />
+        {grande && <Check />}
+      </button>
+      <button
+        data-testid="vista-contraste"
+        aria-label="Más contraste"
+        aria-pressed={contraste}
+        onClick={() => setContraste(!contraste)}
+        style={estiloBoton(contraste, { width: 52, height: 52 })}
+      >
+        <Svg markup={ICONO_CONTRASTE(contraste ? '#1A1A1A' : '#FFF8E7', 28)} />
+        {contraste && <Check />}
+      </button>
+    </>
+  )
+}
+
+/** Botón de la cabecera de la mesa que abre el panel de vista. */
+export function BotonVista({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      data-testid="abrir-vista"
+      aria-label="Ver mejor: letra grande y contraste"
+      onClick={onClick}
+      style={estiloBoton(false, { width: 52, height: 52, flexShrink: 0 })}
+    >
+      <Svg markup={`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12 C4.5 6.5 8 4.5 12 4.5 C16 4.5 19.5 6.5 22.5 12 C19.5 17.5 16 19.5 12 19.5 C8 19.5 4.5 17.5 1.5 12 Z"></path><circle cx="12" cy="12" r="3.6" fill="#FFF8E7"></circle></svg>`} />
+    </button>
+  )
+}
+
+/** Panel inferior con los dos interruptores grandes (icono + texto), para la mesa. */
+export function PanelVista({ onClose }: { onClose: () => void }) {
+  const { grande, contraste, setGrande, setContraste } = usePreferencias()
+  const fila = (activo: boolean, icono: string, texto: string, testid: string, on: () => void) => (
+    <button
+      data-testid={testid}
+      aria-pressed={activo}
+      onClick={on}
+      style={estiloBoton(activo, {
+        height: 84,
+        width: '100%',
+        justifyContent: 'flex-start',
+        gap: 16,
+        padding: '0 18px',
+        fontSize: 24,
+        fontWeight: 700,
+        border: activo ? '4px solid #1A1A1A' : '3px solid #1A1A1A',
+        background: activo ? '#FFD23F' : '#FFFFFF',
+        color: '#1A1A1A',
+      })}
+    >
+      <Svg markup={icono} />
+      <span>{texto}</span>
+      {activo && <Check />}
+    </button>
+  )
+  return (
+    <div style={{ position: 'absolute', inset: 0, background: 'rgba(6,20,12,0.8)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', zIndex: 5 }}>
+      <div role="dialog" aria-label="Ver mejor" style={{ background: '#FFF8E7', color: '#1A1A1A', borderRadius: '28px 28px 0 0', borderTop: '6px solid #5A3A1E', padding: '22px 18px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ fontSize: 30, fontWeight: 700 }}>Ver mejor</div>
+        {fila(grande, ICONO_GRANDE('#1A1A1A', 40), 'Más grande', 'vista-grande', () => setGrande(!grande))}
+        {fila(contraste, ICONO_CONTRASTE('#1A1A1A', 36), 'Más contraste', 'vista-contraste', () => setContraste(!contraste))}
+        <button
+          data-testid="cerrar-vista"
+          onClick={onClose}
+          style={{ height: 64, borderRadius: 20, border: '4px solid #1A1A1A', background: '#1D5A3A', color: '#FFF8E7', fontSize: 24, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+        >
+          <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 7"></path></svg>`} />
+          <span>Listo</span>
+        </button>
+      </div>
+    </div>
+  )
+}
