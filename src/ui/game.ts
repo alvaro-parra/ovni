@@ -14,6 +14,8 @@ import {
 import { createMatch, applyRoundResult, type MatchState } from '../match'
 import type { AvatarKind } from './Avatar'
 import { makeShuffle, mulberry32, shuffledDeck } from './deck'
+import { usePreferencias } from './preferencias'
+import { duraciones, duracionRobo, type Duraciones } from './ritmo'
 
 export type Screen = 'inicio' | 'mesa' | 'finRonda' | 'victoria'
 
@@ -26,19 +28,48 @@ export interface PlayerCfg {
 
 export type Overlay =
   | null
-  | { kind: 'palo' }
+  | { kind: 'palo'; card: Card }
   | { kind: 'roba2'; byName: string; byAvatar: AvatarKind; card: Card }
   | { kind: 'verMano' }
   | { kind: 'vista' } // ajustes de letra grande / contraste (R-UI-A11Y-4)
 
+/** Movimiento de cartas en curso (se anima en la mesa; el estado se aplica al terminar). */
+export type Jugada =
+  | { id: number; tipo: 'juega'; actorId: string; card: Card }
+  | { id: number; tipo: 'roba'; actorId: string; n: number }
+
+/** Aviso grande de lo que acaba de pasar (R-UI-A11Y-9, R-UI-COMP-5). */
+export type Aviso =
+  | { id: number; tipo: 'roba2'; actorId: string; victimaId: string }
+  | { id: number; tipo: 'sentido'; actorId: string }
+  | { id: number; tipo: 'repite'; actorId: string }
+  | { id: number; tipo: 'palo'; actorId: string; suit: Suit }
+  | { id: number; tipo: 'fin'; ganadorId: string | null }
+
+type SinId<T> = T extends unknown ? Omit<T, 'id'> : never
+
+/**
+ * Aviso para los efectos de la carta inicial (R-INI-1), que el motor aplica al repartir
+ * y que, sin aviso, pasarían desapercibidos (p. ej. empezar con 7 cartas por un 2).
+ */
+export function avisoInicial(r: RoundState, dealerId: string): SinId<Aviso> | null {
+  const top = r.discardPile[r.discardPile.length - 1]
+  if (!top) return null
+  if (top.rank === '2') {
+    const victima = r.players.find((p) => p.hand.length === 7)
+    return victima ? { tipo: 'roba2', actorId: dealerId, victimaId: victima.id } : null
+  }
+  if (top.rank === 'as') {
+    return r.players.length === 2
+      ? { tipo: 'repite', actorId: dealerId }
+      : { tipo: 'sentido', actorId: dealerId }
+  }
+  return null
+}
+
 export const HUMAN_ID = 'yo'
 const BOT_IDS = ['robi', 'pixel', 'toby'] as const
 const BOT_NAMES: Record<string, string> = { robi: 'Robi', pixel: 'Pixel', toby: 'Toby' }
-
-const BOT_DELAY_MS = 850
-const PLAY_SETTLE_MS = 900
-const FAST_BOT_MS = 0
-const FAST_SETTLE_MS = 0
 
 // ---- IA de bots ---------------------------------------------------------
 
@@ -89,7 +120,14 @@ export interface Ovni {
   round: RoundState | null
   roundNumber: number
   overlay: Overlay
-  directionToast: boolean
+  /** Carta(s) en movimiento ahora mismo, o null. */
+  jugada: Jugada | null
+  /** Aviso grande en pantalla, o null. */
+  aviso: Aviso | null
+  /** Cartas que cada bot acaba de robar (para la marca «+N» en su ficha). */
+  robosRecientes: Record<string, number>
+  dur: Duraciones
+  cerrarAviso: () => void
   lastResult: RoundState['result']
   // config
   nRivals: number
@@ -123,18 +161,23 @@ export function useOvni(): Ovni {
   const rng = rngRef.current
   const shuffle = useMemo(() => makeShuffle(rng), [rng])
 
-  // Tiempos (acelerables con ?fast para los e2e).
-  const timingRef = useRef<{ bot: number; settle: number } | null>(null)
-  if (!timingRef.current) {
-    const fast = new URLSearchParams(
-      typeof location !== 'undefined' ? location.search : '',
-    ).has('fast')
-    timingRef.current = {
-      bot: fast ? FAST_BOT_MS : BOT_DELAY_MS,
-      settle: fast ? FAST_SETTLE_MS : PLAY_SETTLE_MS,
+  // Ritmo: según la velocidad elegida; ?fast lo deja todo instantáneo para los e2e.
+  const { velocidad } = usePreferencias()
+  const rapidoTests = useMemo(
+    () => new URLSearchParams(typeof location !== 'undefined' ? location.search : '').has('fast'),
+    [],
+  )
+  const movimientoReducido = useMemo(() => {
+    try {
+      return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    } catch {
+      return false
     }
-  }
-  const timing = timingRef.current
+  }, [])
+  const dur = useMemo(
+    () => duraciones(velocidad, { rapidoTests, movimientoReducido }),
+    [velocidad, rapidoTests, movimientoReducido],
+  )
 
   const [screen, setScreen] = useState<Screen>('inicio')
   const [players, setPlayers] = useState<PlayerCfg[]>([])
@@ -142,7 +185,9 @@ export function useOvni(): Ovni {
   const [round, setRound] = useState<RoundState | null>(null)
   const [roundNumber, setRoundNumber] = useState(1)
   const [overlay, setOverlay] = useState<Overlay>(null)
-  const [directionToast, setDirectionToast] = useState(false)
+  const [jugada, setJugada] = useState<Jugada | null>(null)
+  const [aviso, setAviso] = useState<Aviso | null>(null)
+  const [robosRecientes, setRobosRecientes] = useState<Record<string, number>>({})
   const [lastResult, setLastResult] = useState<RoundState['result']>(null)
   const [nRivals, setNRivals] = useState(3)
   const [humanAvatar, setHumanAvatar] = useState<AvatarKind>('sol')
@@ -152,13 +197,76 @@ export function useOvni(): Ovni {
   const playersRef = useRef<PlayerCfg[]>([])
   playersRef.current = players
   const pendingSota = useRef<Card | null>(null)
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const flashDirection = useCallback(() => {
-    setDirectionToast(true)
-    if (toastTimer.current) clearTimeout(toastTimer.current)
-    toastTimer.current = setTimeout(() => setDirectionToast(false), 1600)
+  // Temporizadores de animaciones y avisos: se cancelan todos al salir o empezar de nuevo.
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>())
+  const programar = useCallback((fn: () => void, ms: number) => {
+    const t = setTimeout(() => {
+      timers.current.delete(t)
+      fn()
+    }, ms)
+    timers.current.add(t)
+    return t
   }, [])
+  const cancelarTodo = useCallback(() => {
+    for (const t of timers.current) clearTimeout(t)
+    timers.current.clear()
+    setJugada(null)
+    setAviso(null)
+    setRobosRecientes({})
+  }, [])
+  useEffect(() => cancelarTodo, [cancelarTodo])
+
+  const seq = useRef(0)
+  const avisoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const mostrarAviso = useCallback(
+    (a: SinId<Aviso>) => {
+      if (dur.aviso === 0) return
+      if (avisoTimer.current) clearTimeout(avisoTimer.current)
+      setAviso({ ...a, id: ++seq.current } as Aviso)
+      avisoTimer.current = programar(() => setAviso(null), dur.aviso)
+    },
+    [dur.aviso, programar],
+  )
+
+  const cerrarAviso = useCallback(() => {
+    if (avisoTimer.current) clearTimeout(avisoTimer.current)
+    avisoTimer.current = null
+    setAviso((a) => (a?.tipo === 'fin' ? a : null)) // el de fin de ronda se va solo
+  }, [])
+
+  /** Muestra el movimiento `j` durante `ms` y después aplica `fin` (el nuevo estado). */
+  const animarYAplicar = useCallback(
+    (j: SinId<Jugada>, ms: number, fin: () => void) => {
+      if (ms === 0) {
+        fin()
+        return
+      }
+      setJugada({ ...j, id: ++seq.current } as Jugada)
+      programar(() => {
+        setJugada(null)
+        fin()
+      }, ms)
+    },
+    [programar],
+  )
+
+  const marcarRobo = useCallback(
+    (id: string, n: number) => {
+      if (dur.aviso === 0) return
+      setRobosRecientes((r) => ({ ...r, [id]: n }))
+      programar(
+        () =>
+          setRobosRecientes((r) => {
+            const { [id]: _, ...resto } = r
+            return resto
+          }),
+        dur.aviso + dur.pensar,
+      )
+    },
+    [dur.aviso, dur.pensar, programar],
+  )
 
   const buildRound = useCallback(
     (m: MatchState): RoundState => {
@@ -189,6 +297,7 @@ export function useOvni(): Ovni {
     const ids = next.map((p) => p.id)
     const firstDealer = Math.floor(rng() * ids.length)
     const m = createMatch(ids, firstDealer)
+    cancelarTodo()
     playersRef.current = next
     matchRef.current = m
     setPlayers(next)
@@ -196,28 +305,22 @@ export function useOvni(): Ovni {
     setRoundNumber(1)
     setLastResult(null)
     setOverlay(null)
-    setRound(buildRound(m))
+    const r = buildRound(m)
+    setRound(r)
     setScreen('mesa')
-  }, [nRivals, humanAvatar, rng, buildRound])
+    const ini = avisoInicial(r, m.players[m.dealerIndex].id)
+    if (ini) {
+      if (ini.tipo === 'roba2') marcarRobo(ini.victimaId, 2)
+      mostrarAviso(ini)
+    }
+  }, [nRivals, humanAvatar, rng, buildRound, cancelarTodo, mostrarAviso, marcarRobo])
 
-  // --- turno de bots ------------------------------------------------------
-  useEffect(() => {
-    if (screen !== 'mesa' || !round || round.phase !== 'playing') return
-    if (overlay) return // pausado (roba2 / selector de palo / ver mano)
-    const cur = round.players[round.currentPlayerIndex]
-    if (cur.id === HUMAN_ID) return // espera al humano
-
-    const timer = setTimeout(() => {
-      const playable = getPlayableCards(round)
-      if (playable.length === 0) {
-        setRound(drawCard(round, shuffle))
-        return
-      }
-      const card = botChoose(playable)
-      const suit = card.rank === 'sota' ? botChooseSuit(round) : undefined
-      const res = describeAndPlay(round, card, suit, shuffle)
-      if (res.reversed) flashDirection()
+  /** Aplica una jugada ya resuelta y lanza el aviso de su efecto especial, si lo tiene. */
+  const aplicarJugada = useCallback(
+    (prev: RoundState, res: PlayOutcome, card: Card, porHumano: boolean) => {
       setRound(res.next)
+      if (res.next.phase === 'over') return // el aviso de fin de ronda lo pone su efecto
+      const n = prev.players.length
       if (res.roba2VictimId === HUMAN_ID) {
         setOverlay({
           kind: 'roba2',
@@ -225,61 +328,126 @@ export function useOvni(): Ovni {
           byAvatar: avatarOf(res.actorId),
           card,
         })
+      } else if (res.roba2VictimId) {
+        marcarRobo(res.roba2VictimId, 2)
+        mostrarAviso({ tipo: 'roba2', actorId: res.actorId, victimaId: res.roba2VictimId })
+      } else if (res.reversed) {
+        mostrarAviso({ tipo: 'sentido', actorId: res.actorId })
+      } else if (card.rank === 'as' && n === 2) {
+        mostrarAviso({ tipo: 'repite', actorId: res.actorId })
+      } else if (card.rank === 'sota' && !porHumano) {
+        mostrarAviso({ tipo: 'palo', actorId: res.actorId, suit: res.next.activeSuit })
       }
-    }, timing.bot)
+    },
+    [mostrarAviso, marcarRobo],
+  )
+
+  // --- turno de bots ------------------------------------------------------
+  // Fases: pensar → (robar todas las necesarias de una vez) → jugar con vuelo → aviso.
+  // Se para mientras haya un overlay, un aviso o un movimiento en curso.
+  useEffect(() => {
+    if (screen !== 'mesa' || !round || round.phase !== 'playing') return
+    if (overlay || aviso || jugada) return
+    const idx = round.currentPlayerIndex
+    const cur = round.players[idx]
+    if (cur.id === HUMAN_ID) return // espera al humano
+
+    const timer = setTimeout(() => {
+      if (getPlayableCards(round).length === 0) {
+        let r = round
+        let guard = 0
+        while (
+          r.phase === 'playing' &&
+          r.currentPlayerIndex === idx &&
+          getPlayableCards(r).length === 0 &&
+          guard++ < 80
+        ) {
+          r = drawCard(r, shuffle)
+        }
+        const n = r.players[idx].hand.length - cur.hand.length
+        if (n <= 0) {
+          setRound(r) // R-MAZO-3: no quedaba nada que robar
+          return
+        }
+        marcarRobo(cur.id, n)
+        animarYAplicar({ tipo: 'roba', actorId: cur.id, n }, duracionRobo(dur, n), () => setRound(r))
+        return
+      }
+      const card = botChoose(getPlayableCards(round))
+      const suit = card.rank === 'sota' ? botChooseSuit(round) : undefined
+      const res = describeAndPlay(round, card, suit, shuffle)
+      animarYAplicar({ tipo: 'juega', actorId: cur.id, card }, dur.vueloBot, () =>
+        aplicarJugada(round, res, card, false),
+      )
+    }, dur.pensar)
     return () => clearTimeout(timer)
-  }, [round, screen, overlay, shuffle, flashDirection, timing.bot])
+  }, [round, screen, overlay, aviso, jugada, shuffle, dur, animarYAplicar, aplicarJugada, marcarRobo])
 
   // --- fin de ronda -------------------------------------------------------
+  // Aviso «sin cartas» (o «mazo agotado») y, después, el recuento.
   useEffect(() => {
-    if (screen !== 'mesa' || !round || round.phase !== 'over') return
+    if (screen !== 'mesa' || !round || round.phase !== 'over' || jugada) return
+    const result = round.result!
+    if (dur.finRonda > 0) setAviso({ tipo: 'fin', ganadorId: result.winnerId, id: ++seq.current })
     const timer = setTimeout(() => {
-      const result = round.result!
+      setAviso(null)
       const m = applyRoundResult(matchRef.current!, result)
       setMatch(m)
       setLastResult(result)
       setScreen('finRonda')
-    }, timing.settle)
+    }, dur.finRonda)
     return () => clearTimeout(timer)
-  }, [round, screen, timing.settle])
+  }, [round, screen, jugada, dur.finRonda])
 
   // --- acciones del humano ------------------------------------------------
+  const esTurnoHumano = (r: RoundState | null): r is RoundState =>
+    !!r && r.phase === 'playing' && r.players[r.currentPlayerIndex].id === HUMAN_ID
+
   const playHuman = useCallback(
     (card: Card) => {
-      if (!round || round.phase !== 'playing') return
-      if (round.players[round.currentPlayerIndex].id !== HUMAN_ID) return
+      if (!esTurnoHumano(round) || jugada) return
       if (!isPlayable(card, round.activeSuit, round.activeRank)) return
+      cerrarAviso()
       if (card.rank === 'sota') {
         pendingSota.current = card
-        setOverlay({ kind: 'palo' })
+        setOverlay({ kind: 'palo', card })
         return
       }
       const res = describeAndPlay(round, card, undefined, shuffle)
-      if (res.reversed) flashDirection()
       setOverlay(null)
-      setRound(res.next)
+      animarYAplicar({ tipo: 'juega', actorId: HUMAN_ID, card }, dur.vueloHumano, () =>
+        aplicarJugada(round, res, card, true),
+      )
     },
-    [round, shuffle, flashDirection],
+    [round, jugada, shuffle, dur.vueloHumano, animarYAplicar, aplicarJugada, cerrarAviso],
   )
 
   const chooseSuit = useCallback(
     (suit: Suit) => {
       const card = pendingSota.current
-      if (!card || !round) return
+      if (!card || !round || jugada) return
       const res = describeAndPlay(round, card, suit, shuffle)
       pendingSota.current = null
       setOverlay(null)
-      setRound(res.next)
+      animarYAplicar({ tipo: 'juega', actorId: HUMAN_ID, card }, dur.vueloHumano, () =>
+        aplicarJugada(round, res, card, true),
+      )
     },
-    [round, shuffle],
+    [round, jugada, shuffle, dur.vueloHumano, animarYAplicar, aplicarJugada],
   )
 
   const drawHuman = useCallback(() => {
-    if (!round || round.phase !== 'playing') return
-    if (round.players[round.currentPlayerIndex].id !== HUMAN_ID) return
+    if (!esTurnoHumano(round) || jugada) return
     if (getPlayableCards(round).length > 0) return // jugar es obligatorio
-    setRound(drawCard(round, shuffle))
-  }, [round, shuffle])
+    cerrarAviso()
+    const r = drawCard(round, shuffle)
+    const n = r.players[r.currentPlayerIndex].hand.length - round.players[round.currentPlayerIndex].hand.length
+    if (n <= 0) {
+      setRound(r)
+      return
+    }
+    animarYAplicar({ tipo: 'roba', actorId: HUMAN_ID, n }, dur.vueloHumano, () => setRound(r))
+  }, [round, jugada, shuffle, dur.vueloHumano, animarYAplicar, cerrarAviso])
 
   const dismissRoba2 = useCallback(() => setOverlay(null), [])
   const openVerMano = useCallback(() => setOverlay({ kind: 'verMano' }), [])
@@ -324,19 +492,27 @@ export function useOvni(): Ovni {
       setScreen('victoria')
       return
     }
+    cancelarTodo()
     const rn = roundNumber + 1
     setRoundNumber(rn)
     setOverlay(null)
-    setRound(buildRound(m))
+    const r = buildRound(m)
+    setRound(r)
     setScreen('mesa')
-  }, [roundNumber, buildRound, simulateToEnd])
+    const ini = avisoInicial(r, m.players[m.dealerIndex].id)
+    if (ini) {
+      if (ini.tipo === 'roba2') marcarRobo(ini.victimaId, 2)
+      mostrarAviso(ini)
+    }
+  }, [roundNumber, buildRound, simulateToEnd, cancelarTodo, mostrarAviso, marcarRobo])
 
   const restart = useCallback(() => {
+    cancelarTodo()
     setScreen('inicio')
     setRound(null)
     setMatch(null)
     setOverlay(null)
-  }, [])
+  }, [cancelarTodo])
 
   return {
     screen,
@@ -345,7 +521,11 @@ export function useOvni(): Ovni {
     round,
     roundNumber,
     overlay,
-    directionToast,
+    jugada,
+    aviso,
+    robosRecientes,
+    dur,
+    cerrarAviso,
     lastResult,
     nRivals,
     humanAvatar,

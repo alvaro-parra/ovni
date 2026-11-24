@@ -2,7 +2,7 @@
 // Se reconocen por el icono; el estado activo se ve por color Y por una marca ✓ (R-UI-A11Y-3).
 import type { CSSProperties } from 'react'
 import { Svg } from './dc'
-import { usePreferencias } from './preferencias'
+import { usePreferencias, type Velocidad } from './preferencias'
 
 const ICONO_GRANDE = (c: string, w: number) =>
   `<svg width="${w}" height="${w}" viewBox="0 0 32 32"><text x="1" y="26" font-family="Atkinson Hyperlegible, system-ui, sans-serif" font-size="15" font-weight="700" fill="${c}">A</text><text x="11" y="27" font-family="Atkinson Hyperlegible, system-ui, sans-serif" font-size="25" font-weight="700" fill="${c}">A</text></svg>`
@@ -96,8 +96,14 @@ export function BotonVista({ onClick }: { onClick: () => void }) {
 }
 
 /** Panel inferior con los dos interruptores grandes (icono + texto), para la mesa. */
+const VELOCIDADES: { v: Velocidad; icono: string; texto: string }[] = [
+  { v: 'lenta', icono: '🐢', texto: 'Despacio' },
+  { v: 'normal', icono: '🚶', texto: 'Normal' },
+  { v: 'rapida', icono: '🐇', texto: 'Rápido' },
+]
+
 export function PanelVista({ onClose }: { onClose: () => void }) {
-  const { grande, contraste, setGrande, setContraste } = usePreferencias()
+  const { grande, contraste, setGrande, setContraste, velocidad, setVelocidad } = usePreferencias()
   const fila = (activo: boolean, icono: string, texto: string, testid: string, on: () => void) => (
     <button
       data-testid={testid}
@@ -127,6 +133,34 @@ export function PanelVista({ onClose }: { onClose: () => void }) {
         <div style={{ fontSize: 30, fontWeight: 700 }}>Ver mejor</div>
         {fila(grande, ICONO_GRANDE('#1A1A1A', 40), 'Más grande', 'vista-grande', () => setGrande(!grande))}
         {fila(contraste, ICONO_CONTRASTE('#1A1A1A', 36), 'Más contraste', 'vista-contraste', () => setContraste(!contraste))}
+        <div role="radiogroup" aria-label="Velocidad del juego" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
+          {VELOCIDADES.map(({ v, icono, texto }) => {
+            const activo = velocidad === v
+            return (
+              <button
+                key={v}
+                role="radio"
+                aria-checked={activo}
+                data-testid={`velocidad-${v}`}
+                onClick={() => setVelocidad(v)}
+                style={estiloBoton(activo, {
+                  height: 84,
+                  flexDirection: 'column',
+                  gap: 2,
+                  fontSize: 18,
+                  fontWeight: 700,
+                  border: activo ? '4px solid #1A1A1A' : '3px solid #1A1A1A',
+                  background: activo ? '#FFD23F' : '#FFFFFF',
+                  color: '#1A1A1A',
+                })}
+              >
+                <span aria-hidden="true" style={{ fontSize: 34, lineHeight: 1 }}>{icono}</span>
+                <span>{texto}</span>
+                {activo && <Check />}
+              </button>
+            )
+          })}
+        </div>
         <button
           data-testid="cerrar-vista"
           onClick={onClose}

@@ -1,9 +1,9 @@
 // Pantalla 2 · Mesa de juego (portado de Mesa.dc.html) + overlays.
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Card, Suit } from '../cards'
 import { isPlayable, type RoundState } from '../engine'
 import type { MatchState } from '../match'
-import { HUMAN_ID, type Ovni, type PlayerCfg } from './game'
+import { HUMAN_ID, type Jugada, type Ovni, type PlayerCfg } from './game'
 import { Avatar, type AvatarKind } from './Avatar'
 import { Palo } from './Palo'
 import { Carta, CartaDe } from './Carta'
@@ -11,6 +11,7 @@ import { Svg } from './dc'
 import { ALTO_REF_MESA, estiloTablero, useEscala } from './Pantalla'
 import { ajustarRejilla, PROPORCION_CARTA } from './ajuste'
 import { BotonVista, PanelVista } from './Vista'
+import { CapaVuelo, CartelAviso, claveCarta } from './Animaciones'
 import {
   cardLabel,
   rankVnum,
@@ -86,6 +87,7 @@ function useMedida<T extends HTMLElement>() {
 }
 
 export function Mesa({ game }: { game: Ovni }) {
+  const raizRef = useRef<HTMLDivElement>(null)
   const round = game.round!
   const match = game.match!
   const players = game.players
@@ -115,6 +117,25 @@ export function Mesa({ game }: { game: Ovni }) {
   const colorPuntos = (pts: number) =>
     pts >= 90 ? '#FF8A8A' : pts >= 70 ? '#FFB347' : '#8FE3A6'
 
+  // Cartas recién llegadas a la mano (robo o +2): se destacan hasta un rato después de
+  // que no haya overlays delante, o hasta la siguiente jugada propia.
+  const [nuevas, setNuevas] = useState<Set<string>>(() => new Set())
+  const prevMano = useRef<{ ronda: number; claves: Set<string> } | null>(null)
+  useEffect(() => {
+    const claves = new Set(human.hand.map(claveCarta))
+    const prev = prevMano.current
+    prevMano.current = { ronda: game.roundNumber, claves }
+    if (!prev || prev.ronda !== game.roundNumber || !game.dur.animar) return
+    const llegadas = [...claves].filter((k) => !prev.claves.has(k))
+    if (llegadas.length > 0) setNuevas(new Set(llegadas))
+    else if (claves.size < prev.claves.size) setNuevas(new Set()) // has jugado: se quita
+  }, [human.hand, game.roundNumber, game.dur.animar])
+  useEffect(() => {
+    if (nuevas.size === 0 || game.overlay) return
+    const t = setTimeout(() => setNuevas(new Set()), game.dur.aviso * 1.6)
+    return () => clearTimeout(t)
+  }, [nuevas, game.overlay, game.dur.aviso])
+
   const rivales = round.players
     .map((rp, idx) => ({ rp, idx }))
     .filter(({ rp }) => rp.id !== HUMAN_ID)
@@ -142,6 +163,7 @@ export function Mesa({ game }: { game: Ovni }) {
   return (
     <div
       data-testid="mesa"
+      ref={raizRef}
       // El tablero no hace scroll, así los overlays (absolutos) lo cubren entero.
       style={estiloTablero({ overflowY: 'hidden' })}
     >
@@ -201,6 +223,7 @@ export function Mesa({ game }: { game: Ovni }) {
           return (
             <div
               key={rp.id}
+              data-vuelo={`jugador-${rp.id}`}
               aria-label={`${cfg.name}: ${rp.hand.length} cartas, ${pts} puntos${activo ? ', está jugando' : ''}`}
               style={{
                 position: 'relative',
@@ -234,6 +257,35 @@ export function Mesa({ game }: { game: Ovni }) {
                   <Svg markup={`<svg width="12" height="12" viewBox="0 0 24 24"><path d="M6 3 L21 12 L6 21 Z" fill="#1A1A1A"></path></svg>`} />
                 </span>
               )}
+              {game.robosRecientes[rp.id] && (
+                <span
+                  data-testid={`robo-${rp.id}`}
+                  aria-label={`Ha robado ${game.robosRecientes[rp.id]}`}
+                  style={{
+                    position: 'absolute',
+                    bottom: -12,
+                    right: -4,
+                    zIndex: 2,
+                    minWidth: 36,
+                    height: 30,
+                    boxSizing: 'border-box',
+                    padding: '0 6px',
+                    borderRadius: 15,
+                    background: '#FFF8E7',
+                    color: '#1A1A1A',
+                    border: '3px solid #1A1A1A',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 2,
+                    fontSize: 18,
+                    fontWeight: 700,
+                    lineHeight: 1,
+                  }}
+                >
+                  +{game.robosRecientes[rp.id]}
+                </span>
+              )}
               <Avatar quien={cfg.avatar} w={estrecho ? 28 : 40} />
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: estrecho ? 2 : 4, fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
@@ -255,10 +307,11 @@ export function Mesa({ game }: { game: Ovni }) {
         })}
       </div>
 
-      {/* Centro: mazo, carta activa, palo forzado / cambio de sentido */}
+      {/* Centro: mazo, carta activa y palo forzado (el cambio de sentido se avisa en grande) */}
       <div style={{ height: altoCentro, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
         <button
           data-testid="robar"
+          data-vuelo="mazo"
           aria-label={`Mazo de robo, ${round.drawPile.length} cartas`}
           onClick={game.drawHuman}
           disabled={estado !== 'robar'}
@@ -318,11 +371,11 @@ export function Mesa({ game }: { game: Ovni }) {
           )}
         </button>
 
-        <div aria-label={`Carta en la mesa: ${cardLabel(top)}`} style={{ lineHeight: 0 }}>
+        <div data-vuelo="pila" aria-label={`Carta en la mesa: ${cardLabel(top)}`} style={{ lineHeight: 0 }}>
           <CartaDe card={top} estado="normal" w={wActiva} />
         </div>
 
-        {forzado && !game.directionToast && (
+        {forzado && (
           <div
             aria-label={`Palo obligatorio: ${SUIT_NAME[round.activeSuit]}`}
             style={{
@@ -348,34 +401,10 @@ export function Mesa({ game }: { game: Ovni }) {
           </div>
         )}
 
-        {game.directionToast && (
-          <div
-            style={{
-              width: 104,
-              boxSizing: 'border-box',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 4,
-              background: '#FFD23F',
-              color: '#1A1A1A',
-              border: '3px solid #1A1A1A',
-              borderRadius: 18,
-              padding: '8px 6px',
-              fontSize: 17,
-              fontWeight: 700,
-              textAlign: 'center',
-              lineHeight: 1.1,
-            }}
-          >
-            <Svg markup={`<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5 H18.5 L14.5 4.5"></path><path d="M20 15.5 H5.5 L9.5 19.5"></path></svg>`} />
-            <span>¡Cambio de sentido!</span>
-          </div>
-        )}
       </div>
 
       {/* Banner de estado */}
-      <Banner estado={estado} curPlayer={curPlayer} />
+      <Banner estado={estado} curPlayer={curPlayer} roba={game.jugada?.tipo === 'roba' && game.jugada.actorId === curId ? game.jugada.n : 0} />
 
       {/* Panel del jugador */}
       <div
@@ -425,11 +454,11 @@ export function Mesa({ game }: { game: Ovni }) {
           </button>
         </div>
 
-        <div ref={refMano} data-testid="zona-mano" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <div ref={refMano} data-testid="zona-mano" data-vuelo="jugador-yo" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {modo === 'grande' && (
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rGrande.cols}, minmax(0, 1fr))`, gap: '20px 8px', justifyItems: 'center', alignContent: 'center', flex: 1, paddingTop: 18 }}>
             {hand.map((i, k) => (
-              <CartaBtn key={k} item={i} w={rGrande.w} onPlay={game.playHuman} />
+              <CartaBtn key={k} item={i} w={rGrande.w} onPlay={game.playHuman} vuelo={game.jugada} nuevas={nuevas} />
             ))}
           </div>
         )}
@@ -447,6 +476,8 @@ export function Mesa({ game }: { game: Ovni }) {
             >
               {jugables.map((i, k) => (
                 <CartaBtn
+                  vuelo={game.jugada}
+                  nuevas={nuevas}
                   key={k}
                   item={i}
                   w={rDividido.w}
@@ -486,7 +517,7 @@ export function Mesa({ game }: { game: Ovni }) {
         {modo === 'rejilla' && (
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rRejilla.cols}, minmax(0, 1fr))`, gap: '12px 6px', justifyItems: 'center', paddingTop: 6 }}>
             {(n > 12 ? hand.slice(0, 11) : hand).map((i, k) => (
-              <CartaBtn key={k} item={i} w={rRejilla.w} onPlay={game.playHuman} />
+              <CartaBtn key={k} item={i} w={rRejilla.w} onPlay={game.playHuman} vuelo={game.jugada} nuevas={nuevas} />
             ))}
             {n > 12 && (
               <button
@@ -519,8 +550,16 @@ export function Mesa({ game }: { game: Ovni }) {
 
       </div>
 
+      {/* Cartas en movimiento y avisos grandes de lo que pasa */}
+      <CapaVuelo jugada={game.jugada} dur={game.dur} raiz={raizRef} wPila={wActiva} wMazo={wMazo} />
+      {game.aviso && (
+        <CartelAviso aviso={game.aviso} players={players} dur={game.dur} raiz={raizRef} onClose={game.cerrarAviso} />
+      )}
+
       {/* Overlays */}
-      {game.overlay?.kind === 'palo' && <SelectorPalo onPick={game.chooseSuit} />}
+      {game.overlay?.kind === 'palo' && (
+        <SelectorPalo sota={game.overlay.card} mano={human.hand} onPick={game.chooseSuit} />
+      )}
       {game.overlay?.kind === 'vista' && <PanelVista onClose={game.closeOverlay} />}
       {game.overlay?.kind === 'roba2' && (
         <Roba2 overlay={game.overlay} onOk={game.dismissRoba2} />
@@ -535,9 +574,12 @@ export function Mesa({ game }: { game: Ovni }) {
 function Banner({
   estado,
   curPlayer,
+  roba = 0,
 }: {
   estado: 'tu' | 'robar' | 'ia'
   curPlayer: PlayerCfg | undefined
+  /** Cartas que está robando el bot en turno (0 si no está robando). */
+  roba?: number
 }) {
   if (estado === 'ia') {
     return (
@@ -548,7 +590,7 @@ function Banner({
         style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: 'var(--panel)', color: '#FFF8E7', border: '3px solid var(--borde)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 23, fontWeight: 700 }}
       >
         {curPlayer && <Avatar quien={curPlayer.avatar} w={34} />}
-        <span>Juega {curPlayer?.name ?? ''}</span>
+        <span>{roba > 0 ? `${curPlayer?.name ?? ''} roba ${roba}` : `Juega ${curPlayer?.name ?? ''}`}</span>
       </div>
     )
   }
@@ -563,12 +605,12 @@ function Banner({
       {robar ? (
         <>
           <Svg markup={`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20 V5"></path><path d="M6 11 L12 5 L18 11"></path></svg>`} />
-          <span>No puedes jugar: roba</span>
+          <span>No tienes jugada: roba</span>
         </>
       ) : (
         <>
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="#FFF8E7" stroke="#1A1A1A" stroke-width="1.8" stroke-linejoin="round"><path d="M8.5 13 V5.2 a1.75 1.75 0 0 1 3.5 0 V11 l5.2 1 a2 2 0 0 1 1.6 2.2 L18.1 19 a2 2 0 0 1 -2 1.7 H11 a2 2 0 0 1 -1.6 -0.8 L5.8 15.3 a1.6 1.6 0 0 1 2.7 -1.8 Z"></path></svg>`} />
-          <span>¡Te toca! Toca una carta</span>
+          <span>¡Tu turno! Elige una carta</span>
         </>
       )}
     </div>
@@ -579,49 +621,94 @@ function CartaBtn({
   item,
   w,
   onPlay,
+  vuelo = null,
+  nuevas,
 }: {
   item: HandItem
   w: number
   onPlay: (c: Card) => void
+  /** Movimiento en curso: si es esta carta volando a la mesa, se oculta de la mano. */
+  vuelo?: Jugada | null
+  /** Claves de las cartas recién llegadas a la mano. */
+  nuevas?: Set<string>
 }) {
   const jugable = item.est === 'jugable'
+  const volando =
+    vuelo?.tipo === 'juega' &&
+    vuelo.actorId === HUMAN_ID &&
+    vuelo.card.suit === item.card.suit &&
+    vuelo.card.rank === item.card.rank
   return (
     <button
       data-testid={jugable ? 'carta-jugable' : 'carta'}
+      data-vuelo={claveCarta(item.card)}
       aria-label={cardLabel(item.card) + (jugable ? ', se puede jugar' : item.est === 'apagada' ? ', no se puede jugar' : '')}
       disabled={!jugable}
       onClick={() => jugable && onPlay(item.card)}
-      style={{ padding: 0, border: 0, background: 'transparent', cursor: jugable ? 'pointer' : 'default', borderRadius: 10, lineHeight: 0 }}
+      style={{ padding: 0, border: 0, background: 'transparent', cursor: jugable ? 'pointer' : 'default', borderRadius: 10, lineHeight: 0, visibility: volando ? 'hidden' : 'visible' }}
     >
-      <CartaDe card={item.card} estado={item.est} w={w} />
+      <CartaDe card={item.card} estado={item.est} w={w} nueva={nuevas?.has(claveCarta(item.card))} />
     </button>
   )
 }
 
 // ---- Overlays -----------------------------------------------------------
 
-function SelectorPalo({ onPick }: { onPick: (s: Suit) => void }) {
+/**
+ * Elegir palo al jugar una Sota. Muestra tus cartas (sin la Sota que juegas) y cuántas
+ * tienes de cada palo, para decidir sin tener que recordar la mano que queda detrás.
+ */
+function SelectorPalo({ sota, mano, onPick }: { sota: Card; mano: Card[]; onPick: (s: Suit) => void }) {
+  let quitada = false
+  const resto = mano.filter((c) => {
+    if (!quitada && c.suit === sota.suit && c.rank === sota.rank) {
+      quitada = true
+      return false
+    }
+    return true
+  })
+  const ordenadas = [...resto].sort((a, b) => SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit] || rankVnum(a.rank) - rankVnum(b.rank))
+  const cuantas = (s: Suit) => resto.filter((c) => c.suit === s && c.rank !== 'sota').length
+  const solape = ordenadas.length > 7 ? -Math.min(22, (ordenadas.length - 7) * 4 + 8) : 4
   return (
-    <div style={{ position: 'absolute', inset: 0, background: 'rgba(6,20,12,0.8)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-      <div role="dialog" aria-label="Elige el palo" style={{ background: '#FFF8E7', color: '#1A1A1A', borderRadius: '28px 28px 0 0', borderTop: '6px solid #5A3A1E', padding: '22px 18px 26px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ position: 'absolute', inset: 0, background: 'rgba(6,20,12,0.6)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+      <div role="dialog" aria-label="Elige el palo" style={{ background: '#FFF8E7', color: '#1A1A1A', borderRadius: '28px 28px 0 0', borderTop: '6px solid #5A3A1E', padding: '18px 16px 20px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <Carta rank="sota" suit="bastos" w={58} />
+          <CartaDe card={sota} w={52} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1.1 }}>Elige el palo</div>
             <div style={{ fontSize: 19, color: '#4A4A4A', lineHeight: 1.25 }}>Los demás tendrán que seguirlo</div>
           </div>
         </div>
+        {ordenadas.length > 0 && (
+          <div data-testid="palo-mano" aria-label="Tus cartas" style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#1D5A3A', borderRadius: 16, padding: '8px 10px' }}>
+            <span style={{ color: '#FFF8E7', fontSize: 17, fontWeight: 700, flex: 'none' }}>Tú</span>
+            <div style={{ display: 'flex', flexWrap: 'nowrap', minWidth: 0 }}>
+              {ordenadas.map((c, k) => (
+                <span key={k} style={{ marginLeft: k === 0 ? 0 : solape, lineHeight: 0 }}>
+                  <CartaDe card={c} w={38} />
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
           {SUITS.map((s) => (
             <button
               key={s}
               data-testid={`palo-${s}`}
-              aria-label={`Elegir ${SUIT_NAME[s]}`}
+              aria-label={`Elegir ${SUIT_NAME[s]}: tienes ${cuantas(s)}`}
               onClick={() => onPick(s)}
-              style={{ height: 148, boxSizing: 'border-box', borderRadius: 22, border: `4px solid ${SUIT_COLOR[s]}`, background: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: SUIT_COLOR[s], padding: 0, fontFamily: 'inherit' }}
+              style={{ position: 'relative', height: 122, boxSizing: 'border-box', borderRadius: 22, border: `4px solid ${SUIT_COLOR[s]}`, background: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: SUIT_COLOR[s], padding: 0, fontFamily: 'inherit' }}
             >
-              <Palo palo={s} w={78} />
-              <span style={{ fontSize: 24, fontWeight: 700 }}>{SUIT_NAME[s]}</span>
+              <Palo palo={s} w={62} />
+              <span style={{ fontSize: 22, fontWeight: 700 }}>{SUIT_NAME[s]}</span>
+              <span
+                aria-hidden="true"
+                style={{ position: 'absolute', top: 8, right: 8, minWidth: 40, height: 40, boxSizing: 'border-box', padding: '0 6px', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, fontSize: 22, fontWeight: 700, background: cuantas(s) > 0 ? SUIT_COLOR[s] : '#E8E2D2', color: cuantas(s) > 0 ? '#FFFFFF' : '#6B6455' }}
+              >
+                ×{cuantas(s)}
+              </span>
             </button>
           ))}
         </div>

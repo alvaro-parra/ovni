@@ -10,13 +10,22 @@ export const FACTOR_GRANDE = 1.25
 
 const CLAVE = 'ovni.vista'
 
+/** Ritmo de las jugadas de los bots y de las animaciones. */
+export type Velocidad = 'lenta' | 'normal' | 'rapida'
+
+/** Multiplicador de todas las duraciones según la velocidad elegida. */
+export const FACTOR_VELOCIDAD: Record<Velocidad, number> = { lenta: 1.6, normal: 1, rapida: 0.55 }
+
 interface Guardado {
+  velocidad?: Velocidad
   grande?: boolean
   /** Ausente = seguir al sistema. */
   contraste?: boolean
 }
 
 export interface Preferencias {
+  velocidad: Velocidad
+  setVelocidad: (v: Velocidad) => void
   grande: boolean
   contraste: boolean
   setGrande: (v: boolean) => void
@@ -24,6 +33,8 @@ export interface Preferencias {
 }
 
 const Ctx = createContext<Preferencias>({
+  velocidad: 'normal',
+  setVelocidad: () => {},
   grande: false,
   contraste: false,
   setGrande: () => {},
@@ -77,6 +88,8 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
     })
 
   const valor: Preferencias = {
+    velocidad: g.velocidad ?? 'normal',
+    setVelocidad: (v) => actualizar({ velocidad: v }),
     grande: g.grande ?? false,
     contraste: g.contraste ?? sistema,
     setGrande: (v) => actualizar({ grande: v }),

@@ -1,0 +1,313 @@
+// Animaciones de la mesa: cartas que vuelan y avisos grandes de lo que acaba de pasar.
+// Objetivo (R-UI-A11Y-7, R-UI-A11Y-9, R-UI-COMP-5): que se entienda cada jugada sin leer.
+//
+// Los elementos de origen y destino se marcan en la mesa con `data-vuelo`:
+//   "mazo", "pila", "jugador-<id>" (ficha del rival o mano propia) y "carta-<palo>-<valor>".
+import { useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react'
+import type { Card } from '../cards'
+import { Avatar } from './Avatar'
+import { Carta, CartaDe } from './Carta'
+import { Palo } from './Palo'
+import { Svg } from './dc'
+import { HUMAN_ID, type Aviso, type Jugada, type PlayerCfg } from './game'
+import { SUIT_COLOR, SUIT_NAME } from './deck'
+import { PROPORCION_CARTA } from './ajuste'
+import type { Duraciones } from './ritmo'
+
+export const claveCarta = (c: Card) => `carta-${c.suit}-${c.rank}`
+
+interface Caja {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+/** Caja de un elemento marcado, en px de diseño relativos a la raíz (descuenta el escalado). */
+function caja(raiz: HTMLElement, clave: string): Caja | null {
+  const el = raiz.querySelector(`[data-vuelo="${clave}"]`)
+  if (!el) return null
+  const R = raiz.getBoundingClientRect()
+  const s = R.width / raiz.offsetWidth || 1
+  const r = el.getBoundingClientRect()
+  return { x: (r.left - R.left) / s, y: (r.top - R.top) / s, w: r.width / s, h: r.height / s }
+}
+
+const EASE = 'cubic-bezier(.25,.75,.3,1)'
+
+export function CapaVuelo({
+  jugada,
+  dur,
+  raiz,
+  wPila,
+  wMazo,
+}: {
+  jugada: Jugada | null
+  dur: Duraciones
+  raiz: RefObject<HTMLElement | null>
+  wPila: number
+  wMazo: number
+}) {
+  const capa = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const r = raiz.current
+    const c = capa.current
+    if (!jugada || !r || !c) return
+    const cartas = [...c.querySelectorAll<HTMLElement>('[data-carta-vuelo]')]
+    const anims: Animation[] = []
+
+    if (jugada.tipo === 'juega') {
+      const humano = jugada.actorId === HUMAN_ID
+      const desde =
+        (humano ? caja(r, claveCarta(jugada.card)) : null) ?? caja(r, `jugador-${jugada.actorId}`)
+      const hasta = caja(r, 'pila')
+      const el = cartas[0]
+      if (!desde || !hasta || !el) return
+      const W = wPila
+      const H = W * PROPORCION_CARTA
+      el.style.left = `${hasta.x + hasta.w / 2 - W / 2}px`
+      el.style.top = `${hasta.y + hasta.h / 2 - H / 2}px`
+      const dx = desde.x + desde.w / 2 - (hasta.x + hasta.w / 2)
+      const dy = desde.y + desde.h / 2 - (hasta.y + hasta.h / 2)
+      // Desde la ficha de un bot la carta "sale" pequeña y crece; desde la mano, a su tamaño.
+      const s0 = humano ? desde.w / W : 0.45
+      const total = humano ? dur.vueloHumano : dur.vueloBot
+      anims.push(
+        el.animate(
+          [
+            { transform: `translate(${dx}px, ${dy}px) scale(${s0}) rotate(${humano ? 0 : -14}deg)`, opacity: humano ? 1 : 0.2 },
+            { opacity: 1, offset: 0.25 },
+            { transform: 'translate(0, 0) scale(1) rotate(0deg)', opacity: 1 },
+          ],
+          // Llega un poco antes de que se aplique la jugada, para que "se pose" en la pila.
+          { duration: total * 0.85, easing: EASE, fill: 'both' },
+        ),
+      )
+      el.style.visibility = 'visible'
+    } else {
+      const desde = caja(r, 'mazo')
+      const hasta = caja(r, `jugador-${jugada.actorId}`)
+      if (!desde || !hasta) return
+      const W = wMazo
+      const H = W * PROPORCION_CARTA
+      cartas.forEach((el, i) => {
+        el.style.left = `${desde.x + desde.w / 2 - W / 2}px`
+        el.style.top = `${desde.y + desde.h / 2 - H / 2}px`
+        const dx = hasta.x + hasta.w / 2 - (desde.x + desde.w / 2)
+        const dy = hasta.y + hasta.h / 2 - (desde.y + desde.h / 2)
+        anims.push(
+          el.animate(
+            [
+              { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+              { transform: `translate(${dx}px, ${dy}px) scale(0.45)`, opacity: 0.15 },
+            ],
+            { duration: dur.robo * 0.9, delay: i * dur.roboExtra, easing: EASE, fill: 'both' },
+          ),
+        )
+        el.style.visibility = 'visible'
+      })
+    }
+    return () => anims.forEach((a) => a.cancel())
+    // Solo al empezar cada jugada nueva.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jugada?.id])
+
+  if (!jugada || !dur.animar) return null
+  const base = {
+    position: 'absolute' as const,
+    left: 0,
+    top: 0,
+    zIndex: 4,
+    pointerEvents: 'none' as const,
+    lineHeight: 0,
+    visibility: 'hidden' as const,
+    filter: 'drop-shadow(0 8px 10px rgba(0,0,0,0.45))',
+  }
+  return (
+    <div ref={capa} aria-hidden="true" data-testid="capa-vuelo" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 4 }}>
+      {jugada.tipo === 'juega' ? (
+        <div data-carta-vuelo style={base}>
+          <CartaDe card={jugada.card} estado="normal" w={wPila} />
+        </div>
+      ) : (
+        Array.from({ length: Math.min(jugada.n, 6) }, (_, i) => (
+          <div key={i} data-carta-vuelo style={base}>
+            <Carta estado="dorso" w={wMazo} />
+          </div>
+        ))
+      )}
+    </div>
+  )
+}
+
+// ---- Avisos ---------------------------------------------------------------
+
+const ICONO_SENTIDO = `<svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11 A8 8 0 0 0 5.6 6.2"></path><path d="M5 2.5 V6.6 H9.1"></path><path d="M4 13 A8 8 0 0 0 18.4 17.8"></path><path d="M19 21.5 V17.4 H14.9"></path></svg>`
+const ICONO_REPITE = `<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12 a7.5 7.5 0 1 1 -2.2 -5.3"></path><path d="M19.5 3.5 V7.5 H15.5"></path></svg>`
+const ICONO_SALTA = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8E0F18" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M5.6 5.6 L18.4 18.4"></path></svg>`
+
+export function CartelAviso({
+  aviso,
+  players,
+  dur,
+  raiz,
+  onClose,
+}: {
+  aviso: Aviso
+  players: PlayerCfg[]
+  dur: Duraciones
+  raiz: RefObject<HTMLElement | null>
+  onClose: () => void
+}) {
+  const panel = useRef<HTMLDivElement>(null)
+  // Centrado sobre la pila de descarte: así no tapa la mano cuando te toca jugar.
+  useLayoutEffect(() => {
+    const r = raiz.current
+    const el = panel.current
+    if (!r || !el) return
+    const pila = caja(r, 'pila')
+    const alto = r.offsetHeight
+    const h = el.offsetHeight
+    const centro = pila ? pila.y + pila.h / 2 : alto / 2
+    el.style.marginTop = `${Math.max(8, Math.min(alto - h - 8, centro - h / 2))}px`
+  }, [aviso.id, raiz])
+  useLayoutEffect(() => {
+    if (!dur.animar || !panel.current) return
+    const a = panel.current.animate(
+      [
+        { transform: 'scale(0.6)', opacity: 0 },
+        { transform: 'scale(1.06)', opacity: 1, offset: 0.7 },
+        { transform: 'scale(1)', opacity: 1 },
+      ],
+      { duration: 320, easing: 'ease-out' },
+    )
+    return () => a.cancel()
+  }, [aviso.id, dur.animar])
+
+  const cfg = (id: string) => players.find((p) => p.id === id)
+  const nombre = (id: string) => cfg(id)?.name ?? id
+  const esYo = (id: string) => id === HUMAN_ID
+
+  let contenido: ReactNode = null
+  let borde = '#1A1A1A'
+  let etiqueta = ''
+
+  if (aviso.tipo === 'roba2') {
+    const v = cfg(aviso.victimaId)
+    etiqueta = esYo(aviso.victimaId)
+      ? 'Robas 2 y pierdes el turno'
+      : `${nombre(aviso.victimaId)} roba 2 y pierde el turno`
+    contenido = (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {v && <Avatar quien={v.avatar} w={76} />}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ transform: 'rotate(-10deg)', lineHeight: 0 }}><Carta estado="dorso" w={44} /></span>
+            <span style={{ transform: 'rotate(8deg)', marginLeft: -18, lineHeight: 0 }}><Carta estado="dorso" w={44} /></span>
+          </div>
+          <span style={{ fontSize: 56, fontWeight: 700, lineHeight: 1 }}>+2</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Svg markup={ICONO_SALTA} />
+          <span>{etiqueta}</span>
+        </div>
+      </>
+    )
+  } else if (aviso.tipo === 'sentido') {
+    etiqueta = '¡Cambio de sentido!'
+    contenido = (
+      <>
+        <Svg markup={ICONO_SENTIDO} />
+        <span>¡Cambio de sentido!</span>
+      </>
+    )
+  } else if (aviso.tipo === 'repite') {
+    const a = cfg(aviso.actorId)
+    etiqueta = esYo(aviso.actorId) ? '¡Vuelves a jugar!' : `¡${nombre(aviso.actorId)} vuelve a jugar!`
+    contenido = (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {a && <Avatar quien={a.avatar} w={76} />}
+          <Svg markup={ICONO_REPITE} />
+        </div>
+        <span>{etiqueta}</span>
+      </>
+    )
+  } else if (aviso.tipo === 'palo') {
+    const a = cfg(aviso.actorId)
+    borde = SUIT_COLOR[aviso.suit]
+    etiqueta = `${esYo(aviso.actorId) ? 'Eliges' : `${nombre(aviso.actorId)} elige`} ${SUIT_NAME[aviso.suit]}`
+    contenido = (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {a && <Avatar quien={a.avatar} w={64} />}
+          <Palo palo={aviso.suit} w={92} />
+        </div>
+        <span>
+          Ahora: <span style={{ color: SUIT_COLOR[aviso.suit] }}>{SUIT_NAME[aviso.suit]}</span>
+        </span>
+      </>
+    )
+  } else {
+    const g = aviso.ganadorId ? cfg(aviso.ganadorId) : null
+    etiqueta = !aviso.ganadorId
+      ? 'Se acabó el mazo: fin de la ronda'
+      : esYo(aviso.ganadorId)
+        ? '¡Te has quedado sin cartas!'
+        : `¡${nombre(aviso.ganadorId)} se queda sin cartas!`
+    contenido = (
+      <>
+        {g ? <Avatar quien={g.avatar} w={96} /> : <Carta estado="dorso" w={60} />}
+        <span>{etiqueta}</span>
+      </>
+    )
+  }
+
+  return (
+    <div
+      data-testid="aviso"
+      data-value={aviso.tipo}
+      onClick={onClose}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 5,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        background: 'rgba(6,20,12,0.3)',
+        padding: '0 20px',
+        cursor: aviso.tipo === 'fin' ? 'default' : 'pointer',
+      }}
+    >
+      <div
+        ref={panel}
+        role="alert"
+        aria-label={etiqueta}
+        style={{
+          maxWidth: 340,
+          width: '100%',
+          boxSizing: 'border-box',
+          background: '#FFF8E7',
+          color: '#1A1A1A',
+          border: `5px solid ${borde}`,
+          boxShadow: '0 0 0 3px #1A1A1A, 0 18px 40px rgba(0,0,0,0.5)',
+          borderRadius: 28,
+          padding: '22px 18px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 14,
+          fontSize: 26,
+          fontWeight: 700,
+          lineHeight: 1.15,
+          textAlign: 'center',
+        }}
+      >
+        {contenido}
+      </div>
+    </div>
+  )
+}
