@@ -67,20 +67,19 @@
 
 ---
 
-## 4. Modo de juego (asunción a confirmar)
+## 4. Modo de juego
 
-- **R-UI-MODO-1.** Se asume **partida con varios jugadores en la misma app**
-  (online con lobby o local pass-and-play — *pendiente de confirmar*). Si el
-  objetivo es **local en un mismo dispositivo** o **contra IA**, se ajustará este
-  documento. *(Ver §8, Q1.)*
+- **R-UI-MODO-1.** **Un jugador humano contra 1–3 bots**, en un solo dispositivo
+  (2–4 jugadores en total, R-CFG-1). No hay modo *pass-and-play* (varios humanos
+  pasándose el dispositivo): está descartado. *(Decidido en §8, Q1.)*
 
 ---
 
 ## 5. Pantallas
 
-- **R-UI-SCR-1. Inicio / Lobby:** crear o unirse a una partida, elegir número de
-  jugadores (2–4), nombres/avatares (preferible **avatares con imágenes** grandes
-  en lugar de texto), y botón de empezar grande y claro.
+- **R-UI-SCR-1. Inicio:** elegir el **número de rivales bot (1–3)** y el
+  **avatar** del jugador (**avatares con imágenes** grandes en lugar de texto), y
+  botón de empezar grande y claro.
 - **R-UI-SCR-2. Mesa de juego (principal):**
   - Pila de descarte central (carta activa) y mazo de robo con **contador** de
     cartas.
@@ -131,10 +130,14 @@
 
 ---
 
-## 8. Decisiones pendientes
+## 8. Decisiones
 
-- **Q1.** **Modo de juego:** ¿online con lobby, **local pass-and-play** en un
-  mismo dispositivo, o **contra IA**? (afecta a §4 y §5).
+- **Q1. ✅ Resuelta (2026-11-24).** **Modo de juego:** ¿online con lobby, local
+  pass-and-play o contra IA? → **Contra bots** (1 humano contra 1–3 bots). El
+  pass-and-play queda descartado. Actualizados §4 (R-UI-MODO-1) y §5 (R-UI-SCR-1).
+
+**Pendientes:**
+
 - **Q2.** **Identidad visual:** ¿hay nombre de marca, logo o paleta de colores
   definidos, o los propone el diseño?
 - **Q3.** **Apoyo sonoro/locución** (R-UI-A11Y-10): ¿se incluye desde el inicio o
