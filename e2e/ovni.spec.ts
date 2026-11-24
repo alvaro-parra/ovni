@@ -142,6 +142,27 @@ test.describe('OVNI · happy paths', () => {
     expect(await vista()).toEqual({ grande: 'true', contraste: 'true' })
   })
 
+  test('Historia 7 · Ritmo: la jugada de un bot se ve volar a la mesa; la velocidad se puede cambiar', async ({
+    page,
+  }) => {
+    // Sin ?fast: ritmo real.
+    await page.goto('/?seed=7')
+    await page.getByTestId('rivales-3').click()
+    await page.getByTestId('jugar').click()
+    await expect(page.getByTestId('estado')).toHaveAttribute('data-value', 'ia')
+    // El bot piensa y después su carta vuela de su ficha a la pila.
+    await expect(page.getByTestId('capa-vuelo')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('capa-vuelo')).toBeHidden({ timeout: 5000 })
+
+    await page.getByTestId('abrir-vista').click()
+    await page.getByTestId('velocidad-lenta').click()
+    await expect(page.getByTestId('velocidad-lenta')).toHaveAttribute('aria-checked', 'true')
+    await page.getByTestId('cerrar-vista').click()
+    await page.reload()
+    const guardado = await page.evaluate(() => localStorage.getItem('ovni.vista'))
+    expect(JSON.parse(guardado!).velocidad).toBe('lenta')
+  })
+
   for (const vp of [
     { width: 320, height: 568 },
     { width: 375, height: 667 },

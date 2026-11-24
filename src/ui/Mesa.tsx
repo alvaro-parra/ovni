@@ -101,11 +101,8 @@ export function Mesa({ game }: { game: Ovni }) {
   const n = hand.length
   const modo = n <= 6 ? 'grande' : hayJugable ? 'dividido' : 'rejilla'
 
-  const estado: 'tu' | 'robar' | 'ia' = humanTurn
-    ? hayJugable
-      ? 'tu'
-      : 'robar'
-    : 'ia'
+  const estado: 'tu' | 'robar' | 'ia' | 'fin' =
+    round.phase === 'over' ? 'fin' : humanTurn ? (hayJugable ? 'tu' : 'robar') : 'ia'
 
   const top = round.discardPile[round.discardPile.length - 1]
   const invertido = round.direction === -1
@@ -576,11 +573,24 @@ function Banner({
   curPlayer,
   roba = 0,
 }: {
-  estado: 'tu' | 'robar' | 'ia'
+  estado: 'tu' | 'robar' | 'ia' | 'fin'
   curPlayer: PlayerCfg | undefined
   /** Cartas que está robando el bot en turno (0 si no está robando). */
   roba?: number
 }) {
+  if (estado === 'fin') {
+    return (
+      <div
+        role="status"
+        data-testid="estado"
+        data-value="fin"
+        style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: 'var(--panel)', color: '#FFF8E7', border: '3px solid var(--borde)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 23, fontWeight: 700 }}
+      >
+        <Svg markup={`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 V4"></path><path d="M5 4 H18 L15.5 8 L18 12 H5"></path></svg>`} />
+        <span>Fin de la ronda</span>
+      </div>
+    )
+  }
   if (estado === 'ia') {
     return (
       <div
