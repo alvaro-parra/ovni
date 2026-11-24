@@ -118,4 +118,49 @@ test.describe('OVNI · happy paths', () => {
     await page.getByTestId('ver-mano-cerrar').click()
     await expect(page.getByTestId('mesa')).toBeVisible()
   })
+  test('Historia 5 · Letra grande y contraste, desde inicio y desde la mesa (R-UI-A11Y-4)', async ({
+    page,
+  }) => {
+    const vista = () =>
+      page.evaluate(() => {
+        const d = document.querySelector<HTMLElement>('[data-contraste]')!
+        return { grande: d.dataset.grande, contraste: d.dataset.contraste }
+      })
+    await page.goto('/?seed=7&fast=1')
+    await page.getByTestId('vista-grande').click()
+    await expect(page.getByTestId('vista-grande')).toHaveAttribute('aria-pressed', 'true')
+    expect(await vista()).toEqual({ grande: 'true', contraste: 'false' })
+
+    await page.getByTestId('jugar').click()
+    await page.getByTestId('abrir-vista').click()
+    await page.getByTestId('vista-contraste').click()
+    await page.getByTestId('cerrar-vista').click()
+    expect(await vista()).toEqual({ grande: 'true', contraste: 'true' })
+
+    // Se recuerda en el dispositivo.
+    await page.reload()
+    expect(await vista()).toEqual({ grande: 'true', contraste: 'true' })
+  })
+
+  for (const vp of [
+    { width: 320, height: 568 },
+    { width: 375, height: 667 },
+    { width: 844, height: 390 },
+    { width: 1440, height: 900 },
+  ]) {
+    test(`Historia 6 · ${vp.width}×${vp.height}: sin scroll horizontal y acción principal visible (R-UI-PLAT-1)`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(vp)
+      await page.goto('/?seed=7&fast=1')
+      await expect(page.getByTestId('jugar')).toBeInViewport()
+      await page.getByTestId('jugar').click()
+      await expect(page.getByTestId('mesa')).toBeVisible()
+      const anchoDoc = await page.evaluate(() => document.documentElement.scrollWidth)
+      expect(anchoDoc).toBeLessThanOrEqual(vp.width)
+      const res = await playRoundToEnd(page)
+      expect(res).toBe('fin-ronda')
+      await expect(page.getByTestId('siguiente-ronda')).toBeInViewport()
+    })
+  }
 })

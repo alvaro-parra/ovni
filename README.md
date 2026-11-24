@@ -24,14 +24,19 @@ pre-lectores.
 ```bash
 npm install
 npm run dev        # arranca la web app (http://localhost:5173)
-npm test           # tests unitarios del motor (77 tests)
-npm run e2e        # tests e2e de la UI (Playwright)
+npm test           # tests unitarios (motor + lógica de UI)
+npm run e2e        # tests e2e de la UI (Playwright; navegador chromium de @playwright/test 1.65.1)
 npm run typecheck  # comprobación de tipos
 npm run build      # build de producción
 npm run demo       # simula una partida completa por terminal (CLI)
 ```
 
 Parámetros de URL útiles para pruebas: `?seed=N` (partida reproducible), `?fast` (bots sin espera).
+
+## CI
+
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml) ejecuta typecheck, tests unitarios y e2e en
+cada push a `dev` y en los PR contra `main`.
 
 ## Publicación
 

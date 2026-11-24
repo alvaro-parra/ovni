@@ -1,0 +1,40 @@
+# Comprobaciones en cada push a dev y en los PR contra main: tipos, tests unitarios y e2e.
+name: CI
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Instalar navegador de Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Tests e2e
+        run: npm run e2e
+        env:
+          CI: '1'
+      - name: Informe e2e (si fallan)
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
