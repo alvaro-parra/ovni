@@ -32,3 +32,10 @@ npm run demo       # simula una partida completa por terminal (CLI)
 ```
 
 Parámetros de URL útiles para pruebas: `?seed=N` (partida reproducible), `?fast` (bots sin espera).
+
+## Publicación
+
+GitHub Pages se publica con el workflow [`.github/workflows/pages.yml`](./.github/workflows/pages.yml):
+cada push a `main` ejecuta typecheck, tests y build, y despliega `dist/` con `actions/deploy-pages`.
+Requiere **Settings → Pages → Source = "GitHub Actions"**. El build usa `base: './'`, así que
+funciona bajo cualquier subruta (`/ovni/` en Pages y en el preview local).

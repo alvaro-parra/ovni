@@ -41,11 +41,11 @@ export function rankVnum(rank: Rank): number {
 }
 
 export function cardImg(suit: Suit, rank: Rank): string {
-  return `/cartas/${suit}_${RANK_TO_V[rank]}.png`
+  return `${import.meta.env.BASE_URL}cartas/${suit}_${RANK_TO_V[rank]}.png`
 }
 
 export function dorsoImg(): string {
-  return '/cartas/dorso.png'
+  return `${import.meta.env.BASE_URL}cartas/dorso.png`
 }
 
 export const SUIT_COLOR: Record<Suit, string> = {
