@@ -311,3 +311,57 @@ export function CartelAviso({
     </div>
   )
 }
+
+/** Tres puntos que laten: el bot está pensando su jugada. */
+export function Pensando({ animar }: { animar: boolean }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    if (!animar || !ref.current) return
+    const anims = [...ref.current.children].map((el, i) =>
+      (el as HTMLElement).animate(
+        [{ transform: 'translateY(0)', opacity: 0.35 }, { transform: 'translateY(-4px)', opacity: 1 }, { transform: 'translateY(0)', opacity: 0.35 }],
+        { duration: 900, delay: i * 150, iterations: Infinity },
+      ),
+    )
+    return () => anims.forEach((a) => a.cancel())
+  }, [animar])
+  return (
+    <span
+      ref={ref}
+      data-testid="pensando"
+      aria-label="Pensando"
+      style={{
+        position: 'absolute',
+        bottom: -12,
+        left: -4,
+        zIndex: 2,
+        height: 24,
+        padding: '0 7px',
+        borderRadius: 12,
+        background: '#FFF8E7',
+        border: '2px solid #1A1A1A',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 3,
+      }}
+    >
+      {[0, 1, 2].map((i) => (
+        <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#1A1A1A', opacity: animar ? 0.35 : 1 }} />
+      ))}
+    </span>
+  )
+}
+
+/** Hace «latir» una vez el elemento cuando cambia `clave` (p. ej. al pasar a ser tu turno). */
+export function useLatido<T extends HTMLElement>(clave: string, activo: boolean) {
+  const ref = useRef<T>(null)
+  useLayoutEffect(() => {
+    if (!activo || !ref.current) return
+    const a = ref.current.animate(
+      [{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }],
+      { duration: 450, easing: 'ease-out', iterations: 2 },
+    )
+    return () => a.cancel()
+  }, [clave, activo])
+  return ref
+}

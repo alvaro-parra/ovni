@@ -11,7 +11,7 @@ import { Svg } from './dc'
 import { ALTO_REF_MESA, estiloTablero, useEscala } from './Pantalla'
 import { ajustarRejilla, PROPORCION_CARTA } from './ajuste'
 import { BotonVista, PanelVista } from './Vista'
-import { CapaVuelo, CartelAviso, claveCarta } from './Animaciones'
+import { CapaVuelo, CartelAviso, claveCarta, Pensando, useLatido } from './Animaciones'
 import {
   cardLabel,
   rankVnum,
@@ -254,6 +254,7 @@ export function Mesa({ game }: { game: Ovni }) {
                   <Svg markup={`<svg width="12" height="12" viewBox="0 0 24 24"><path d="M6 3 L21 12 L6 21 Z" fill="#1A1A1A"></path></svg>`} />
                 </span>
               )}
+              {activo && !game.jugada && !game.aviso && !game.overlay && <Pensando animar={game.dur.animar} />}
               {game.robosRecientes[rp.id] && (
                 <span
                   data-testid={`robo-${rp.id}`}
@@ -401,7 +402,7 @@ export function Mesa({ game }: { game: Ovni }) {
       </div>
 
       {/* Banner de estado */}
-      <Banner estado={estado} curPlayer={curPlayer} roba={game.jugada?.tipo === 'roba' && game.jugada.actorId === curId ? game.jugada.n : 0} />
+      <Banner estado={estado} animar={game.dur.animar} curPlayer={curPlayer} roba={game.jugada?.tipo === 'roba' && game.jugada.actorId === curId ? game.jugada.n : 0} />
 
       {/* Panel del jugador */}
       <div
@@ -570,14 +571,19 @@ export function Mesa({ game }: { game: Ovni }) {
 
 function Banner({
   estado,
+  animar,
   curPlayer,
   roba = 0,
 }: {
   estado: 'tu' | 'robar' | 'ia' | 'fin'
+  animar: boolean
   curPlayer: PlayerCfg | undefined
   /** Cartas que está robando el bot en turno (0 si no está robando). */
   roba?: number
 }) {
+  // Late al pasar a ser tu turno (o a tener que robar), para que se note el cambio.
+  const tuyo = estado === 'tu' || estado === 'robar'
+  const latido = useLatido<HTMLDivElement>(estado, animar && tuyo)
   if (estado === 'fin') {
     return (
       <div
@@ -607,6 +613,7 @@ function Banner({
   const robar = estado === 'robar'
   return (
     <div
+      ref={latido}
       role="status"
       data-testid="estado"
       data-value={estado}
