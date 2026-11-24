@@ -142,11 +142,9 @@ export function Mesa({ game }: { game: Ovni }) {
           />
           <span>Ronda {game.roundNumber}</span>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button aria-label="Sonido" style={headBtn}>
-            <Svg markup={`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9 H7.5 L12.5 5 V19 L7.5 15 H3.5 Z"></path><path d="M16 8.5 C17.6 10 17.6 14 16 15.5"></path><path d="M18.8 6 C21.8 9 21.8 15 18.8 18"></path></svg>`} />
-          </button>
-        </div>
+        {/* Hueco del ancho de un botón para mantener centrado el indicador de ronda.
+            Aquí iba el botón de sonido, retirado hasta decidir Q3 (R-UI-A11Y-10). */}
+        <div aria-hidden="true" style={{ width: headBtn.width, flexShrink: 0 }} />
       </div>
 
       {/* Rivales */}

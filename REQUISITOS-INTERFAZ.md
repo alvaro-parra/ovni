@@ -72,6 +72,7 @@
 - **R-UI-MODO-1.** **Un jugador humano contra 1–3 bots**, en un solo dispositivo
   (2–4 jugadores en total, R-CFG-1). No hay modo *pass-and-play* (varios humanos
   pasándose el dispositivo): está descartado. *(Decidido en §8, Q1.)*
+- *(Posible mejora futura, fuera de alcance por ahora: modo **online con lobby** entre varios humanos.)*
 
 ---
 
@@ -142,3 +143,5 @@
   definidos, o los propone el diseño?
 - **Q3.** **Apoyo sonoro/locución** (R-UI-A11Y-10): ¿se incluye desde el inicio o
   queda como mejora posterior?
+  *(Mientras no se decida, la mesa no muestra botón de sonido: se retiró porque
+  no hacía nada.)*
