@@ -1,4 +1,5 @@
 // Pantalla 2 · Mesa de juego (portado de Mesa.dc.html) + overlays.
+import { useLayoutEffect, useRef, useState } from 'react'
 import type { Card, Suit } from '../cards'
 import { isPlayable, type RoundState } from '../engine'
 import type { MatchState } from '../match'
@@ -7,6 +8,8 @@ import { Avatar, type AvatarKind } from './Avatar'
 import { Palo } from './Palo'
 import { Carta, CartaDe } from './Carta'
 import { Svg } from './dc'
+import { ALTO_REF_MESA, estiloTablero, useEscala } from './Pantalla'
+import { ajustarRejilla, PROPORCION_CARTA } from './ajuste'
 import {
   cardLabel,
   rankVnum,
@@ -61,6 +64,26 @@ const headBtn = {
   cursor: 'pointer',
 }
 
+/** Mide el tamaño de contenido de un elemento (px de diseño; no le afecta el escalado). */
+function useMedida<T extends HTMLElement>() {
+  const ref = useRef<T>(null)
+  const [tam, setTam] = useState({ ancho: 0, alto: 0 })
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const medir = () => {
+      const ancho = el.clientWidth
+      const alto = el.clientHeight
+      setTam((t) => (t.ancho === ancho && t.alto === alto ? t : { ancho, alto }))
+    }
+    medir()
+    const ro = new ResizeObserver(medir)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  return [ref, tam] as const
+}
+
 export function Mesa({ game }: { game: Ovni }) {
   const round = game.round!
   const match = game.match!
@@ -95,25 +118,36 @@ export function Mesa({ game }: { game: Ovni }) {
     .map((rp, idx) => ({ rp, idx }))
     .filter(({ rp }) => rp.id !== HUMAN_ID)
 
+  // R-UI-PLAT-1: en pantallas bajas (< 700 px de diseño) la zona central encoge un poco
+  // para dejar sitio a la mano; las cartas de la mano se ajustan al hueco que queda.
+  const { h: altoPantalla } = useEscala(ALTO_REF_MESA)
+  const muyBaja = altoPantalla < 560
+  const altoCentro = Math.round(Math.max(100, Math.min(142, 142 - (700 - altoPantalla) * 0.3)))
+  const wActiva = Math.min(88, Math.floor((altoCentro - 6) / PROPORCION_CARTA))
+  const wMazo = Math.round(wActiva * 0.75)
+  const [refMano, mano] = useMedida<HTMLDivElement>()
+  const huecoMano = { ancho: mano.ancho, alto: mano.alto, gapX: 8, gapY: 20, margenSup: 18 }
+  const rGrande = ajustarRejilla(n, huecoMano, 120)
+  // En modo dividido, debajo va la tira de cartas no jugables (~88 px).
+  // Tira de no jugables: encoge si la mano tiene poco alto.
+  const wTira = mano.alto < 240 ? 30 : 44
+  const altoTira = Math.round(wTira * PROPORCION_CARTA) + 12 + 8
+  const rDividido = ajustarRejilla(jugables.length, { ...huecoMano, alto: mano.alto - altoTira }, 120)
+  const nRejilla = Math.min(n, 12)
+  const rRejilla = ajustarRejilla(nRejilla, { ...huecoMano, gapX: 6, gapY: 12, margenSup: 6 }, 96)
+
   return (
     <div
       data-testid="mesa"
-      style={{
-        width: 390,
-        height: 844,
-        boxSizing: 'border-box',
-        position: 'relative',
-        overflow: 'hidden',
-        background: '#1D5A3A',
-        boxShadow: 'inset 0 0 0 8px #5A3A1E',
-        fontFamily: "'Atkinson Hyperlegible', system-ui, sans-serif",
-        color: '#FFF8E7',
-        padding: '16px 16px 14px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-      }}
+      // El tablero no hace scroll, así los overlays (absolutos) lo cubren entero.
+      style={estiloTablero({ overflowY: 'hidden' })}
     >
+      {/* Contenido. Solo hace scroll en pantallas muy bajas (móvil en horizontal), donde la
+          mano no cabría; en el resto la mano se adapta al hueco (R-UI-PLAT-1). */}
+      <div
+        data-testid="mesa-contenido"
+        style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 10, padding: '16px 16px 14px', overflowY: muyBaja ? 'auto' : 'hidden' }}
+      >
       {/* Cabecera */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <button aria-label="Salir al inicio" onClick={game.restart} style={headBtn}>
@@ -218,7 +252,7 @@ export function Mesa({ game }: { game: Ovni }) {
       </div>
 
       {/* Centro: mazo, carta activa, palo forzado / cambio de sentido */}
-      <div style={{ height: 142, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+      <div style={{ height: altoCentro, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
         <button
           data-testid="robar"
           aria-label={`Mazo de robo, ${round.drawPile.length} cartas`}
@@ -234,7 +268,7 @@ export function Mesa({ game }: { game: Ovni }) {
             lineHeight: 0,
           }}
         >
-          <Carta estado="dorso" w={66} />
+          <Carta estado="dorso" w={wMazo} />
           <span
             style={{
               position: 'absolute',
@@ -281,7 +315,7 @@ export function Mesa({ game }: { game: Ovni }) {
         </button>
 
         <div aria-label={`Carta en la mesa: ${cardLabel(top)}`} style={{ lineHeight: 0 }}>
-          <CartaDe card={top} estado="normal" w={88} />
+          <CartaDe card={top} estado="normal" w={wActiva} />
         </div>
 
         {forzado && !game.directionToast && (
@@ -343,7 +377,7 @@ export function Mesa({ game }: { game: Ovni }) {
       <div
         style={{
           flex: 1,
-          minHeight: 0,
+          minHeight: muyBaja ? 280 : 0,
           background: '#134229',
           borderRadius: 24,
           border: `${humanTurn ? 4 : 2}px solid ${humanTurn ? '#FFD23F' : '#2F6E4A'}`,
@@ -387,10 +421,11 @@ export function Mesa({ game }: { game: Ovni }) {
           </button>
         </div>
 
+        <div ref={refMano} data-testid="zona-mano" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {modo === 'grande' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '20px 8px', justifyItems: 'center', paddingTop: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rGrande.cols}, minmax(0, 1fr))`, gap: '20px 8px', justifyItems: 'center', alignContent: 'center', flex: 1, paddingTop: 18 }}>
             {hand.map((i, k) => (
-              <CartaBtn key={k} item={i} w={96} onPlay={game.playHuman} />
+              <CartaBtn key={k} item={i} w={rGrande.w} onPlay={game.playHuman} />
             ))}
           </div>
         )}
@@ -400,7 +435,7 @@ export function Mesa({ game }: { game: Ovni }) {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: `repeat(${jugables.length <= 6 ? 3 : 4}, minmax(0, 1fr))`,
+                gridTemplateColumns: `repeat(${rDividido.cols}, minmax(0, 1fr))`,
                 gap: '20px 8px',
                 justifyItems: 'center',
                 paddingTop: 18,
@@ -410,7 +445,7 @@ export function Mesa({ game }: { game: Ovni }) {
                 <CartaBtn
                   key={k}
                   item={i}
-                  w={jugables.length <= 3 ? 96 : jugables.length <= 6 ? 84 : 70}
+                  w={rDividido.w}
                   onPlay={game.playHuman}
                 />
               ))}
@@ -434,8 +469,8 @@ export function Mesa({ game }: { game: Ovni }) {
             >
               <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', opacity: 0.6, filter: 'saturate(0.5)' }}>
                 {hand.filter((i) => i.est !== 'jugable').map((i, k) => (
-                  <span key={k} style={{ marginLeft: k === 0 ? 0 : -18, lineHeight: 0 }}>
-                    <CartaDe card={i.card} estado="espera" w={44} />
+                  <span key={k} style={{ marginLeft: k === 0 ? 0 : -Math.round(wTira * 0.4), lineHeight: 0 }}>
+                    <CartaDe card={i.card} estado="espera" w={wTira} />
                   </span>
                 ))}
               </div>
@@ -445,9 +480,9 @@ export function Mesa({ game }: { game: Ovni }) {
         )}
 
         {modo === 'rejilla' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '12px 6px', justifyItems: 'center', paddingTop: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rRejilla.cols}, minmax(0, 1fr))`, gap: '12px 6px', justifyItems: 'center', paddingTop: 6 }}>
             {(n > 12 ? hand.slice(0, 11) : hand).map((i, k) => (
-              <CartaBtn key={k} item={i} w={72} onPlay={game.playHuman} />
+              <CartaBtn key={k} item={i} w={rRejilla.w} onPlay={game.playHuman} />
             ))}
             {n > 12 && (
               <button
@@ -455,8 +490,8 @@ export function Mesa({ game }: { game: Ovni }) {
                 aria-label={`Ver ${n - 11} cartas más`}
                 onClick={game.openVerMano}
                 style={{
-                  width: 72,
-                  height: 111,
+                  width: rRejilla.w,
+                  height: Math.round(rRejilla.w * PROPORCION_CARTA),
                   boxSizing: 'border-box',
                   borderRadius: 8,
                   border: '3px dashed #CFE8D8',
@@ -475,6 +510,9 @@ export function Mesa({ game }: { game: Ovni }) {
             )}
           </div>
         )}
+        </div>
+      </div>
+
       </div>
 
       {/* Overlays */}
@@ -502,7 +540,7 @@ function Banner({
         role="status"
         data-testid="estado"
         data-value="ia"
-        style={{ height: 52, boxSizing: 'border-box', borderRadius: 999, background: '#0F3A24', color: '#FFF8E7', border: '3px solid #3C7A57', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 23, fontWeight: 700 }}
+        style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: '#0F3A24', color: '#FFF8E7', border: '3px solid #3C7A57', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 23, fontWeight: 700 }}
       >
         {curPlayer && <Avatar quien={curPlayer.avatar} w={34} />}
         <span>Juega {curPlayer?.name ?? ''}</span>
@@ -515,7 +553,7 @@ function Banner({
       role="status"
       data-testid="estado"
       data-value={estado}
-      style={{ height: 52, boxSizing: 'border-box', borderRadius: 999, background: '#FFD23F', color: '#1A1A1A', border: '3px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: robar ? 23 : 24, fontWeight: 700 }}
+      style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: '#FFD23F', color: '#1A1A1A', border: '3px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: robar ? 23 : 24, fontWeight: 700 }}
     >
       {robar ? (
         <>

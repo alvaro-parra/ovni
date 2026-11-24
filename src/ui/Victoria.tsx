@@ -3,6 +3,7 @@ import type { Ovni } from './game'
 import { HUMAN_ID } from './game'
 import { Avatar } from './Avatar'
 import { Svg } from './dc'
+import { Tablero } from './Pantalla'
 
 const CONFETI_COLORES = ['#FFD23F', '#FF8A8A', '#8EC1FF', '#FFF8E7', '#B6E58A']
 
@@ -42,25 +43,32 @@ export function Victoria({ game }: { game: Ovni }) {
   const otrosGanadores = winners.filter((id) => id !== HUMAN_ID).map((id) => game.players.find((p) => p.id === id)?.name)
 
   return (
-    <div
+    <Tablero
       data-testid="victoria"
       data-value={estado}
-      style={{
-        width: 390,
-        height: 844,
-        boxSizing: 'border-box',
-        position: 'relative',
-        overflow: 'hidden',
-        background: '#1D5A3A',
-        boxShadow: 'inset 0 0 0 8px #5A3A1E',
-        fontFamily: "'Atkinson Hyperlegible', system-ui, sans-serif",
-        color: '#FFF8E7',
-        padding: '28px 18px 24px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 16,
-      }}
+      padding="28px 18px 24px"
+      gap={16}
+      alignItems="center"
+      pie={
+        <>
+          <button
+            data-testid="jugar-otra"
+            onClick={game.startGame}
+            style={{ height: 74, boxSizing: 'border-box', borderRadius: 22, background: '#FFD23F', color: '#1A1A1A', border: '4px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 28, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <Svg markup={`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12 a8 8 0 1 1 -2.3 -5.7"></path><path d="M20 4 V9 H15"></path></svg>`} />
+            <span>{estado === 'eliminado' ? 'Nueva partida' : 'Jugar otra vez'}</span>
+          </button>
+          <button
+            data-testid="inicio"
+            onClick={game.restart}
+            style={{ height: 60, boxSizing: 'border-box', borderRadius: 20, background: '#0F3A24', color: '#FFF8E7', border: '3px solid #3C7A57', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 22, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <Svg markup={`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 L12 3.5 L21 11"></path><path d="M5.5 9.5 V20.5 H18.5 V9.5"></path><path d="M10 20.5 V15 H14 V20.5"></path></svg>`} />
+            <span>Inicio</span>
+          </button>
+        </>
+      }
     >
       {fiesta && (
         <div aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, right: 0, height: 300 }}>
@@ -119,25 +127,7 @@ export function Victoria({ game }: { game: Ovni }) {
         ))}
       </section>
 
-      <div style={{ position: 'relative', marginTop: 'auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <button
-          data-testid="jugar-otra"
-          onClick={game.startGame}
-          style={{ height: 74, boxSizing: 'border-box', borderRadius: 22, background: '#FFD23F', color: '#1A1A1A', border: '4px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 28, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-        >
-          <Svg markup={`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12 a8 8 0 1 1 -2.3 -5.7"></path><path d="M20 4 V9 H15"></path></svg>`} />
-          <span>{estado === 'eliminado' ? 'Nueva partida' : 'Jugar otra vez'}</span>
-        </button>
-        <button
-          data-testid="inicio"
-          onClick={game.restart}
-          style={{ height: 60, boxSizing: 'border-box', borderRadius: 20, background: '#0F3A24', color: '#FFF8E7', border: '3px solid #3C7A57', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 22, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-        >
-          <Svg markup={`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 L12 3.5 L21 11"></path><path d="M5.5 9.5 V20.5 H18.5 V9.5"></path><path d="M10 20.5 V15 H14 V20.5"></path></svg>`} />
-          <span>Inicio</span>
-        </button>
-      </div>
-    </div>
+    </Tablero>
   )
 }
 

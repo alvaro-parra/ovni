@@ -3,6 +3,7 @@ import type { Ovni } from './game'
 import { Avatar } from './Avatar'
 import { CartaDe } from './Carta'
 import { Svg } from './dc'
+import { Tablero } from './Pantalla'
 
 export function FinRonda({ game }: { game: Ovni }) {
   const match = game.match!
@@ -33,23 +34,20 @@ export function FinRonda({ game }: { game: Ovni }) {
   })
 
   return (
-    <div
+    <Tablero
       data-testid="fin-ronda"
-      style={{
-        width: 390,
-        height: 844,
-        boxSizing: 'border-box',
-        position: 'relative',
-        overflow: 'hidden',
-        background: '#1D5A3A',
-        boxShadow: 'inset 0 0 0 8px #5A3A1E',
-        fontFamily: "'Atkinson Hyperlegible', system-ui, sans-serif",
-        color: '#FFF8E7',
-        padding: '22px 16px 22px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12,
-      }}
+      padding="22px 16px 22px"
+      gap={12}
+      pie={
+        <button
+          data-testid="siguiente-ronda"
+          onClick={game.nextRound}
+          style={{ height: 74, boxSizing: 'border-box', borderRadius: 22, background: '#FFD23F', color: '#1A1A1A', border: '4px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 28, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          <span>{match.phase === 'over' ? 'Ver resultado' : 'Siguiente ronda'}</span>
+          <Svg markup={`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 H20"></path><path d="M14 6 L20 12 L14 18"></path></svg>`} />
+        </button>
+      }
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ width: 52, height: 52, borderRadius: 16, background: '#FFD23F', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
@@ -125,14 +123,6 @@ export function FinRonda({ game }: { game: Ovni }) {
         </div>
       ))}
 
-      <button
-        data-testid="siguiente-ronda"
-        onClick={game.nextRound}
-        style={{ marginTop: 'auto', height: 74, boxSizing: 'border-box', borderRadius: 22, background: '#FFD23F', color: '#1A1A1A', border: '4px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 28, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-      >
-        <span>{match.phase === 'over' ? 'Ver resultado' : 'Siguiente ronda'}</span>
-        <Svg markup={`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 H20"></path><path d="M14 6 L20 12 L14 18"></path></svg>`} />
-      </button>
-    </div>
+    </Tablero>
   )
 }

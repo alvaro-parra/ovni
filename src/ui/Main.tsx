@@ -5,6 +5,7 @@ import { Avatar, type AvatarKind } from './Avatar'
 import { Palo } from './Palo'
 import { Carta } from './Carta'
 import { Svg, css } from './dc'
+import { ALTO_REF_PANTALLA, Tablero, useEscala } from './Pantalla'
 
 const BOTS: AvatarKind[] = ['robi', 'pixel', 'toby']
 const AVATARES: { q: AvatarKind; nombre: string }[] = [
@@ -18,8 +19,54 @@ const btnTop =
   'width: 52px; height: 52px; border-radius: 16px; border: 2px solid #3C7A57; background: #0F3A24; color: #FFF8E7; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer'
 
 export function Main({ game }: { game: Ovni }) {
+  // En pantallas bajas se quita el abanico decorativo y se compacta el título para que
+  // la elección de rivales y avatar quepa sin scroll (R-UI-PLAT-1).
+  const compacta = useEscala(ALTO_REF_PANTALLA).h < 760
   return (
-    <Marco>
+    <Marco
+      compacta={compacta}
+      pie={
+        <>
+          <button
+            data-testid="jugar"
+            onClick={game.startGame}
+            style={{
+              height: 80,
+              flexShrink: 0,
+              borderRadius: 24,
+              background: '#FFD23F',
+              color: '#1A1A1A',
+              border: '4px solid #1A1A1A',
+              boxSizing: 'border-box',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 14,
+              fontSize: 34,
+              fontWeight: 700,
+              letterSpacing: 2,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            <Svg markup={`<svg width="36" height="36" viewBox="0 0 24 24"><path d="M7 4.5 L19.5 12 L7 19.5 Z" fill="#1A1A1A"></path></svg>`} />
+            <span>JUGAR</span>
+          </button>
+
+          {/* Crédito exigido por la licencia CC BY-SA 3.0 de las imágenes (ver LICENCIA-CARTAS.md). */}
+          <p data-testid="credito-cartas" style={{ margin: 0, fontSize: 14, lineHeight: 1.3, textAlign: 'center', color: '#E8DFC8' }}>
+            Cartas:{' '}
+            <a href="https://commons.wikimedia.org/wiki/User:Basquetteur" target="_blank" rel="noopener noreferrer" style={{ color: '#FFF8E7' }}>
+              Basquetteur
+            </a>{' '}
+            ·{' '}
+            <a href="https://creativecommons.org/licenses/by-sa/3.0/deed.es" target="_blank" rel="noopener noreferrer" style={{ color: '#FFF8E7', whiteSpace: 'nowrap' }}>
+              CC BY-SA 3.0
+            </a>
+          </p>
+        </>
+      }
+    >
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
         <button aria-label="Cómo se juega" style={css(btnTop)}>
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M9.2 9.3 a3 3 0 0 1 5.6 1.2 c0 2 -2.8 2.4 -2.8 4"></path><path d="M12 17.6 V17.8"></path></svg>`} />
@@ -35,7 +82,7 @@ export function Main({ game }: { game: Ovni }) {
             background: '#FFF8E7',
             borderRadius: 999,
             padding: '8px 16px',
-            marginBottom: 6,
+            marginBottom: compacta ? 2 : 6,
           }}
         >
           <Palo palo="oros" w={36} />
@@ -43,14 +90,15 @@ export function Main({ game }: { game: Ovni }) {
           <Palo palo="espadas" w={36} />
           <Palo palo="bastos" w={36} />
         </div>
-        <h1 style={{ margin: 0, fontSize: 72, lineHeight: 1, fontWeight: 700, letterSpacing: 6, color: '#FFF8E7' }}>
+        <h1 style={{ margin: 0, fontSize: compacta ? 52 : 72, lineHeight: 1, fontWeight: 700, letterSpacing: 6, color: '#FFF8E7' }}>
           OVNI
         </h1>
       </div>
 
+      {!compacta && (
       <div
         aria-hidden="true"
-        style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', height: 104 }}
+        style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', height: 104, flex: 'none' }}
       >
         <div style={{ transform: 'rotate(-12deg) translateY(8px)', marginRight: -14 }}>
           <Carta rank="sota" suit="oros" w={64} />
@@ -62,6 +110,7 @@ export function Main({ game }: { game: Ovni }) {
           <Carta rank="2" suit="espadas" w={64} />
         </div>
       </div>
+      )}
 
       <section
         aria-label="Número de rivales"
@@ -150,44 +199,6 @@ export function Main({ game }: { game: Ovni }) {
         </div>
       </section>
 
-      <button
-        data-testid="jugar"
-        onClick={game.startGame}
-        style={{
-          marginTop: 'auto',
-          height: 80,
-          flexShrink: 0,
-          borderRadius: 24,
-          background: '#FFD23F',
-          color: '#1A1A1A',
-          border: '4px solid #1A1A1A',
-          boxSizing: 'border-box',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 14,
-          fontSize: 34,
-          fontWeight: 700,
-          letterSpacing: 2,
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-        }}
-      >
-        <Svg markup={`<svg width="36" height="36" viewBox="0 0 24 24"><path d="M7 4.5 L19.5 12 L7 19.5 Z" fill="#1A1A1A"></path></svg>`} />
-        <span>JUGAR</span>
-      </button>
-
-      {/* Crédito exigido por la licencia CC BY-SA 3.0 de las imágenes (ver LICENCIA-CARTAS.md). */}
-      <p data-testid="credito-cartas" style={{ margin: '-4px 0 0', fontSize: 14, lineHeight: 1.3, textAlign: 'center', color: '#E8DFC8' }}>
-        Cartas:{' '}
-        <a href="https://commons.wikimedia.org/wiki/User:Basquetteur" target="_blank" rel="noopener noreferrer" style={{ color: '#FFF8E7' }}>
-          Basquetteur
-        </a>{' '}
-        ·{' '}
-        <a href="https://creativecommons.org/licenses/by-sa/3.0/deed.es" target="_blank" rel="noopener noreferrer" style={{ color: '#FFF8E7', whiteSpace: 'nowrap' }}>
-          CC BY-SA 3.0
-        </a>
-      </p>
     </Marco>
   )
 }
@@ -214,28 +225,11 @@ function Marca() {
   )
 }
 
-/** Marco de pantalla móvil 390×844 con borde de madera. */
-export function Marco({ children }: { children: ReactNode }) {
+/** Tablero de la pantalla de inicio: ocupa todo el marco y hace scroll si no cabe. */
+export function Marco({ children, pie, compacta = false }: { children: ReactNode; pie?: ReactNode; compacta?: boolean }) {
   return (
-    <div
-      style={{
-        width: 390,
-        minHeight: 844,
-        height: 844,
-        boxSizing: 'border-box',
-        position: 'relative',
-        overflow: 'hidden',
-        background: '#1D5A3A',
-        boxShadow: 'inset 0 0 0 8px #5A3A1E',
-        fontFamily: "'Atkinson Hyperlegible', system-ui, sans-serif",
-        color: '#FFF8E7',
-        padding: '20px 18px 24px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 16,
-      }}
-    >
+    <Tablero padding={compacta ? '12px 18px 14px' : '20px 18px 24px'} gap={compacta ? 12 : 16} pie={pie}>
       {children}
-    </div>
+    </Tablero>
   )
 }
