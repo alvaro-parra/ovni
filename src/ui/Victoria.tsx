@@ -4,23 +4,20 @@ import { HUMAN_ID } from './game'
 import { Avatar } from './Avatar'
 import { Svg } from './dc'
 import { Tablero } from './Pantalla'
+import { ordenClasificacion, resumenFinal } from './resultado'
 
 const CONFETI_COLORES = ['#FFD23F', '#FF8A8A', '#8EC1FF', '#FFF8E7', '#B6E58A']
 
 export function Victoria({ game }: { game: Ovni }) {
   const match = game.match!
   const winners = match.winners ?? []
-  const humanWins = winners.includes(HUMAN_ID)
-  const estado: 'gana' | 'empate' | 'eliminado' = humanWins
-    ? winners.length > 1
-      ? 'empate'
-      : 'gana'
-    : 'eliminado'
+  // El motivo distingue R-OBJ-4 (único por debajo de 101) de R-OBJ-5 (todos pasan de 101
+  // en la misma ronda y gana quien tiene menos puntos): cada caso lleva su propio mensaje.
+  const { estado, motivo } = resumenFinal(match, HUMAN_ID)
   const fiesta = estado !== 'eliminado'
 
   const human = match.players.find((p) => p.id === HUMAN_ID)!
-  const tabla = [...match.players]
-    .sort((a, b) => a.score - b.score)
+  const tabla = ordenClasificacion(match.players, winners)
     .map((p) => {
       const cfg = game.players.find((c) => c.id === p.id)!
       return {
@@ -85,7 +82,9 @@ export function Victoria({ game }: { game: Ovni }) {
             <Avatar quien={game.humanAvatar} w={104} />
           </div>
           <h1 style={{ margin: '4px 0 0', fontSize: 46, lineHeight: 1.05, fontWeight: 700, textAlign: 'center' }}>¡Has ganado!</h1>
-          <p style={{ margin: 0, fontSize: 20, color: 'var(--texto-2)', textAlign: 'center' }}>Eres el único por debajo de 101</p>
+          <p style={{ margin: 0, fontSize: 20, color: 'var(--texto-2)', textAlign: 'center' }}>
+            {motivo === 'por-debajo' ? 'Eres el único por debajo de 101' : 'Todos pasasteis de 101, pero tú tienes menos puntos'}
+          </p>
         </div>
       )}
 
@@ -111,7 +110,9 @@ export function Victoria({ game }: { game: Ovni }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 24, fontWeight: 700, color: '#FF8A8A' }}>
             <span>{human.score} puntos (101 o más)</span>
           </div>
-          <p style={{ margin: 0, fontSize: 20, color: 'var(--texto-2)', textAlign: 'center' }}>Ganó quien quedó por debajo de 101</p>
+          <p style={{ margin: 0, fontSize: 20, color: 'var(--texto-2)', textAlign: 'center' }}>
+            {motivo === 'por-debajo' ? 'Ganó quien quedó por debajo de 101' : 'Todos pasaron de 101: gana quien tiene menos puntos'}
+          </p>
         </div>
       )}
 
