@@ -1,13 +1,14 @@
 // Partidas completas a ritmo real (velocidad rápida) para detectar atascos.
-// Uso: node robusto.mjs <url> <seedDesde> <seedHasta> <rivales> <limiteSegPorPartida>
+// Uso: node robusto.mjs <url> <seedDesde> <seedHasta> <rivales> <limiteSegPorPartida> [WxH]
 // Un solo navegador y UNA página a la vez (el sandbox tiene 2 GB): se cierra siempre.
 import { chromium } from '@playwright/test'
 
-const [url, desde, hasta, rivales, limiteS] = process.argv.slice(2)
+const [url, desde, hasta, rivales, limiteS, tam = '390x844'] = process.argv.slice(2)
+const [vw, vh] = tam.split('x').map(Number)
 const b = await chromium.launch()
 try {
   for (let seed = Number(desde); seed < Number(hasta); seed++) {
-    const p = await b.newPage({ viewport: { width: 390, height: 844 } })
+    const p = await b.newPage({ viewport: { width: vw, height: vh } })
     const errs = []
     p.on('pageerror', (e) => errs.push(e.message))
     await p.addInitScript(() => localStorage.setItem('ovni.vista', JSON.stringify({ velocidad: 'rapida' })))
