@@ -15,7 +15,7 @@ import { AvisoRoba2 } from './Roba2'
 import { useFocoDialogo } from './foco'
 import { textoPista, type MotivoPista } from './pistas'
 import { anuncioJuega, anuncioRoba } from './anuncios'
-import { animarLlegada, CapaVuelo, CartelAviso, claveCarta, Pensando, useLatido } from './Animaciones'
+import { animarLlegada, CapaVuelo, CartelAviso, claveCarta, ManitaAyuda, Pensando, useLatido } from './Animaciones'
 import {
   cardLabel,
   rankVnum,
@@ -25,6 +25,10 @@ import {
 } from './deck'
 
 const SUITS: Suit[] = ['oros', 'copas', 'espadas', 'bastos']
+
+/** Turnos con la manita de ayuda para quien juega por primera vez. */
+const TURNOS_AYUDA = 3
+const CLAVE_AYUDA = 'ovni.ayudaTurnos'
 
 interface HandItem {
   card: Card
@@ -174,6 +178,32 @@ export function Mesa({ game }: { game: Ovni }) {
   }
   // Cambia el turno o la mesa: la pista ya no aplica.
   useEffect(() => setPista(null), [round.currentPlayerIndex, round.discardPile.length])
+
+  // Ayuda en los primeros turnos: una manita señala qué tocar. Se descuenta un turno cada
+  // vez que el tuyo termina; al llegar a 0 no vuelve a salir (se guarda en el dispositivo).
+  const [ayudas, setAyudas] = useState(() => {
+    try {
+      const v = localStorage.getItem(CLAVE_AYUDA)
+      return v === null ? TURNOS_AYUDA : Number(v) || 0
+    } catch {
+      return TURNOS_AYUDA
+    }
+  })
+  const estadoPrevio = useRef(estado)
+  useEffect(() => {
+    const eraMio = estadoPrevio.current === 'tu' || estadoPrevio.current === 'robar'
+    estadoPrevio.current = estado
+    if (eraMio && (estado === 'ia' || estado === 'fin') && ayudas > 0) {
+      const quedan = ayudas - 1
+      setAyudas(quedan)
+      try {
+        localStorage.setItem(CLAVE_AYUDA, String(quedan))
+      } catch {
+        // sin almacenamiento: la ayuda vuelve en la próxima visita
+      }
+    }
+  }, [estado, ayudas])
+  const verAyuda = ayudas > 0 && (estado === 'tu' || estado === 'robar') && !game.overlay && !game.aviso && !game.jugada
 
   // La carta propia en vuelo se oculta de la mano solo si de verdad se ve volar.
   const vueloVisible = game.dur.animar ? game.jugada : null
@@ -650,6 +680,10 @@ export function Mesa({ game }: { game: Ovni }) {
       >
         {anuncio}
       </div>
+
+      {verAyuda && (
+        <ManitaAyuda selector={estado === 'tu' ? '[data-testid="carta-jugable"]' : '[data-vuelo="mazo"]'} animar={game.dur.animar} />
+      )}
 
       {/* Cartas en movimiento y avisos grandes de lo que pasa */}
       <CapaVuelo jugada={game.jugada} dur={game.dur} raiz={raizRef} wPila={wActiva} wMazo={wMazo} />

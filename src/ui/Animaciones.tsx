@@ -414,3 +414,51 @@ export function useLatido<T extends HTMLElement>(clave: string, activo: boolean)
   }, [clave, activo])
   return ref
 }
+
+const ICONO_MANITA = `<svg width="54" height="54" viewBox="0 0 24 24" fill="#FFF8E7" stroke="#1A1A1A" stroke-width="1.5" stroke-linejoin="round"><path d="M8.5 13 V5.2 a1.75 1.75 0 0 1 3.5 0 V11 l5.2 1 a2 2 0 0 1 1.6 2.2 L18.1 19 a2 2 0 0 1 -2 1.7 H11 a2 2 0 0 1 -1.6 -0.8 L5.8 15.3 a1.6 1.6 0 0 1 2.7 -1.8 Z"></path></svg>`
+
+/**
+ * Manita que señala qué tocar en tus primeros turnos (una carta jugable o el mazo). No
+ * captura toques. Se coloca midiendo el objetivo; si este se mueve, se recoloca.
+ */
+export function ManitaAyuda({ selector, animar }: { selector: string; animar: boolean }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    const raiz = el?.closest<HTMLElement>('[data-testid="mesa"]')
+    if (!el || !raiz) return
+    const colocar = () => {
+      const objetivo = raiz.querySelector<HTMLElement>(selector)
+      if (!objetivo) {
+        el.style.visibility = 'hidden'
+        return
+      }
+      const R = raiz.getBoundingClientRect()
+      const s = R.width / raiz.offsetWidth || 1
+      const r = objetivo.getBoundingClientRect()
+      el.style.left = `${(r.left - R.left) / s + r.width / s / 2 - 20}px`
+      el.style.top = `${(r.top - R.top) / s + r.height / s * 0.55}px`
+      el.style.visibility = 'visible'
+    }
+    colocar()
+    const ro = new ResizeObserver(colocar)
+    ro.observe(raiz)
+    const anim = animar
+      ? el.animate([{ transform: 'translate(0, 0)' }, { transform: 'translate(-6px, -14px)' }, { transform: 'translate(0, 0)' }], { duration: 900, iterations: Infinity, easing: 'ease-in-out' })
+      : null
+    return () => {
+      ro.disconnect()
+      anim?.cancel()
+    }
+  }, [selector, animar])
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      data-testid="manita-ayuda"
+      style={{ position: 'absolute', zIndex: 4, pointerEvents: 'none', visibility: 'hidden', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))', lineHeight: 0 }}
+    >
+      <Svg markup={ICONO_MANITA} />
+    </div>
+  )
+}
