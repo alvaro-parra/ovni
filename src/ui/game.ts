@@ -234,6 +234,13 @@ export function useOvni(): Ovni {
   )
 
   const [screen, setScreen] = useState<Screen>('inicio')
+  // Pestaña oculta (cambias de app un momento): los bots esperan, para no jugar sin que lo veas.
+  const [oculta, setOculta] = useState(() => typeof document !== 'undefined' && document.visibilityState === 'hidden')
+  useEffect(() => {
+    const on = () => setOculta(document.visibilityState === 'hidden')
+    document.addEventListener('visibilitychange', on)
+    return () => document.removeEventListener('visibilitychange', on)
+  }, [])
   const [players, setPlayers] = useState<PlayerCfg[]>([])
   const [match, setMatch] = useState<MatchState | null>(null)
   const [round, setRound] = useState<RoundState | null>(null)
@@ -438,7 +445,7 @@ export function useOvni(): Ovni {
   // Se para mientras haya un overlay, un aviso o un movimiento en curso.
   useEffect(() => {
     if (screen !== 'mesa' || !round || round.phase !== 'playing') return
-    if (overlay || aviso || jugada) return
+    if (overlay || aviso || jugada || oculta) return
     const idx = round.currentPlayerIndex
     const cur = round.players[idx]
     if (cur.id === HUMAN_ID) return // espera al humano
@@ -476,7 +483,7 @@ export function useOvni(): Ovni {
       )
     }, dur.pensar)
     return () => clearTimeout(timer)
-  }, [round, screen, overlay, aviso, jugada, shuffle, dur, animarYAplicar, aplicarJugada, marcarRobo, mostrarAviso])
+  }, [round, screen, overlay, aviso, jugada, oculta, shuffle, dur, animarYAplicar, aplicarJugada, marcarRobo, mostrarAviso])
 
   // --- fin de ronda -------------------------------------------------------
   // Aviso «sin cartas» (o «mazo agotado») y, después, el recuento. Espera a que se cierre

@@ -307,6 +307,25 @@ test.describe('OVNI · happy paths', () => {
     await auditar()
   })
 
+  test('Historia 16 · Si cambias de app, los bots esperan a que vuelvas', async ({ page }) => {
+    // Semilla en la que empieza un bot (Toby).
+    await page.goto('/?seed=33&fast=1')
+    const ocultar = (oculta: boolean) =>
+      page.evaluate((o) => {
+        Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => (o ? 'hidden' : 'visible') })
+        document.dispatchEvent(new Event('visibilitychange'))
+      }, oculta)
+    await page.getByTestId('rivales-3').click()
+    await ocultar(true)
+    await page.getByTestId('jugar').click()
+    const mesa = await page.locator('[data-vuelo="pila"]').getAttribute('aria-label')
+    await page.waitForTimeout(600)
+    await expect(page.getByTestId('estado')).toHaveAttribute('data-value', 'ia')
+    await expect(page.locator('[data-vuelo="pila"]')).toHaveAttribute('aria-label', mesa!)
+    await ocultar(false)
+    await expect(page.getByTestId('estado')).toHaveAttribute('data-value', 'tu')
+  })
+
   // Aviso del +2 en los casos límite del mazo (banco de pruebas: e2e/banco/roba2.html).
   for (const [caso, robadas, robo, consecuencia] of [
     ['normal', 2, 'Robas estas 2 cartas', 'Pierdes el turno'],
