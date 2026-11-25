@@ -176,7 +176,7 @@ export function Mesa({ game }: { game: Ovni }) {
       >
       {/* Cabecera */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <button aria-label="Salir al inicio" onClick={game.restart} style={headBtn}>
+        <button data-testid="salir" aria-label="Salir al inicio" onClick={game.openSalir} style={headBtn}>
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 L12 3.5 L21 11"></path><path d="M5.5 9.5 V20.5 H18.5 V9.5"></path><path d="M10 20.5 V15 H14 V20.5"></path></svg>`} />
         </button>
         <div
@@ -565,6 +565,7 @@ export function Mesa({ game }: { game: Ovni }) {
         <SelectorPalo sota={game.overlay.card} mano={human.hand} onPick={game.chooseSuit} />
       )}
       {game.overlay?.kind === 'vista' && <PanelVista onClose={game.closeOverlay} />}
+      {game.overlay?.kind === 'salir' && <ConfirmarSalir onSeguir={game.closeOverlay} onSalir={game.restart} />}
       {game.overlay?.kind === 'roba2' && (
         <AvisoRoba2 datos={game.overlay} onOk={game.dismissRoba2} />
       )}
@@ -735,6 +736,27 @@ function SelectorPalo({ sota, mano, onPick }: { sota: Card; mano: Card[]; onPick
             </button>
           ))}
         </div>
+      </div>
+    </div>
+  )
+}
+
+/** Confirmación antes de abandonar: un toque sin querer en la casita no debe perder la partida. */
+function ConfirmarSalir({ onSeguir, onSalir }: { onSeguir: () => void; onSalir: () => void }) {
+  const boton = { height: 72, width: '100%', borderRadius: 22, border: '4px solid #1A1A1A', fontFamily: 'inherit', fontSize: 26, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 } as const
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 6, background: 'rgba(6,20,12,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div role="alertdialog" aria-label="¿Salir de la partida?" style={{ width: '100%', maxWidth: 340, background: '#FFF8E7', color: '#1A1A1A', borderRadius: 28, border: '4px solid #1A1A1A', padding: '24px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
+        <Svg markup={`<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 L12 3.5 L21 11"></path><path d="M5.5 9.5 V20.5 H18.5 V9.5"></path><path d="M10 20.5 V15 H14 V20.5"></path></svg>`} />
+        <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.15 }}>¿Salir de la partida?</div>
+        <div style={{ fontSize: 19, color: '#4A4A4A' }}>Se perderá la partida</div>
+        <button data-testid="seguir-jugando" onClick={onSeguir} style={{ ...boton, background: '#FFD23F', color: '#1A1A1A' }}>
+          <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24"><path d="M7 4.5 L19.5 12 L7 19.5 Z" fill="#1A1A1A"></path></svg>`} />
+          <span>Seguir jugando</span>
+        </button>
+        <button data-testid="confirmar-salir" onClick={onSalir} style={{ ...boton, height: 60, fontSize: 22, background: '#FFFFFF', color: '#1A1A1A', border: '3px solid #1A1A1A' }}>
+          Salir
+        </button>
       </div>
     </div>
   )

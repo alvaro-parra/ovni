@@ -174,6 +174,16 @@ test.describe('OVNI · happy paths', () => {
     await expect(page.getByTestId('jugar')).toBeVisible()
   })
 
+  test('Historia 10 · La casita pide confirmación antes de abandonar la partida', async ({ page }) => {
+    await empezarPartida(page, 2)
+    await page.getByTestId('salir').click()
+    await page.getByTestId('seguir-jugando').click()
+    await expect(page.getByTestId('mesa')).toBeVisible() // un toque sin querer no pierde nada
+    await page.getByTestId('salir').click()
+    await page.getByTestId('confirmar-salir').click()
+    await expect(page.getByTestId('jugar')).toBeVisible()
+  })
+
   // Aviso del +2 en los casos límite del mazo (banco de pruebas: e2e/banco/roba2.html).
   for (const [caso, robadas, robo, consecuencia] of [
     ['normal', 2, 'Robas estas 2 cartas', 'Pierdes el turno'],

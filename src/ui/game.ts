@@ -32,6 +32,7 @@ export type Overlay =
   | ({ kind: 'roba2'; byName: string; byAvatar: AvatarKind; card: Card } & Omit<Roba2Info, 'victimaId'>)
   | { kind: 'verMano' }
   | { kind: 'vista' } // ajustes de letra grande / contraste (R-UI-A11Y-4)
+  | { kind: 'salir' } // confirmar antes de abandonar la partida
 
 /** Movimiento de cartas en curso (se anima en la mesa; el estado se aplica al terminar). */
 export type Jugada =
@@ -166,6 +167,7 @@ export interface Ovni {
   dismissRoba2: () => void
   openVerMano: () => void
   openVista: () => void
+  openSalir: () => void
   closeOverlay: () => void
   nextRound: () => void
   restart: () => void
@@ -497,6 +499,7 @@ export function useOvni(): Ovni {
   const dismissRoba2 = useCallback(() => setOverlay(null), [])
   const openVerMano = useCallback(() => setOverlay({ kind: 'verMano' }), [])
   const openVista = useCallback(() => setOverlay({ kind: 'vista' }), [])
+  const openSalir = useCallback(() => setOverlay({ kind: 'salir' }), [])
   const closeOverlay = useCallback(() => setOverlay(null), [])
 
   // --- simula el resto de la partida (cuando el humano queda eliminado) ---
@@ -583,6 +586,7 @@ export function useOvni(): Ovni {
     dismissRoba2,
     openVerMano,
     openVista,
+    openSalir,
     closeOverlay,
     nextRound,
     restart,
