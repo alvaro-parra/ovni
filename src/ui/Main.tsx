@@ -1,5 +1,5 @@
 // Pantalla 1 · Inicio (portado de Main.dc.html): nº de rivales (1–3 bots), avatar, JUGAR.
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Ovni } from './game'
 import { Avatar, type AvatarKind } from './Avatar'
 import { Palo } from './Palo'
@@ -7,6 +7,7 @@ import { Carta } from './Carta'
 import { Svg, css } from './dc'
 import { ALTO_REF_PANTALLA, Tablero, useEscala } from './Pantalla'
 import { InterruptoresVista } from './Vista'
+import { Reglas } from './Reglas'
 
 const BOTS: AvatarKind[] = ['robi', 'pixel', 'toby']
 const AVATARES: { q: AvatarKind; nombre: string }[] = [
@@ -23,6 +24,7 @@ export function Main({ game }: { game: Ovni }) {
   // En pantallas bajas se quita el abanico decorativo y se compacta el título para que
   // la elección de rivales y avatar quepa sin scroll (R-UI-PLAT-1).
   const compacta = useEscala(ALTO_REF_PANTALLA).h < 760
+  const [verReglas, setVerReglas] = useState(false)
   return (
     <Marco
       compacta={compacta}
@@ -72,7 +74,7 @@ export function Main({ game }: { game: Ovni }) {
       <div style={{ display: 'flex', gap: 10, flex: 'none', paddingTop: 8 }}>
         <InterruptoresVista />
         <span style={{ flex: 1 }} />
-        <button aria-label="Cómo se juega" style={css(btnTop)}>
+        <button data-testid="abrir-reglas" aria-label="Cómo se juega" onClick={() => setVerReglas(true)} style={css(btnTop)}>
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M9.2 9.3 a3 3 0 0 1 5.6 1.2 c0 2 -2.8 2.4 -2.8 4"></path><path d="M12 17.6 V17.8"></path></svg>`} />
         </button>
       </div>
@@ -203,6 +205,8 @@ export function Main({ game }: { game: Ovni }) {
         </div>
       </section>
 
+      {/* Absoluto respecto al tablero: no se desplaza con el scroll del contenido. */}
+      {verReglas && <Reglas onClose={() => setVerReglas(false)} />}
     </Marco>
   )
 }

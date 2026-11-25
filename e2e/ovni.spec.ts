@@ -163,6 +163,17 @@ test.describe('OVNI · happy paths', () => {
     expect(JSON.parse(guardado!).velocidad).toBe('lenta')
   })
 
+  test('Historia 9 · «¿Cómo se juega?» abre las reglas resumidas y se cierra', async ({ page }) => {
+    await page.goto('/?seed=7&fast=1')
+    await page.getByTestId('abrir-reglas').click()
+    await expect(page.getByTestId('reglas')).toBeVisible()
+    await expect(page.locator('[data-testid^="regla-"]')).toHaveCount(7)
+    await expect(page.getByTestId('reglas-ok')).toBeInViewport()
+    await page.getByTestId('reglas-ok').click()
+    await expect(page.getByTestId('reglas')).toHaveCount(0)
+    await expect(page.getByTestId('jugar')).toBeVisible()
+  })
+
   // Aviso del +2 en los casos límite del mazo (banco de pruebas: e2e/banco/roba2.html).
   for (const [caso, robadas, robo, consecuencia] of [
     ['normal', 2, 'Robas estas 2 cartas', 'Pierdes el turno'],
