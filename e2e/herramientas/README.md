@@ -13,3 +13,5 @@ Scripts para revisar la UI fuera de los e2e. No los ejecuta el CI.
 Todas usan un solo navegador y una página a la vez (el sandbox tiene 2 GB de RAM).
 - `medidas.mjs <url> <seed> <rivales> <WxH,...> [vistaJSON]` — ancho real de las cartas de tu
   mano y de la mesa en tu primer turno, a varios tamaños (para comparar antes/después).
+- `tira.mjs <url> <salida.png> <WxH> <seed> <rivales> <ms> <paso> [desde] [hasta]` — tira de
+  fotogramas a ritmo real (sin `?fast`) para revisar animaciones, avisos y ritmo.

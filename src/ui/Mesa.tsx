@@ -181,10 +181,10 @@ export function Mesa({ game }: { game: Ovni }) {
   // Vertical: por debajo de ~800 px de alto la zona central cede sitio a la mano (142 px en
   // 844, ~109 en 667, mínimo 100). Apaisada: la columna de la mesa es solo para ella.
   const altoCentro = apaisada
-    ? Math.round(Math.max(100, Math.min(170, altoPantalla - 290)))
+    ? Math.round(Math.max(100, Math.min(210, altoPantalla - 290)))
     : Math.round(Math.max(100, Math.min(142, 142 - (800 - altoPantalla) * 0.25)))
   const bajo = altoPantalla < 760
-  const wActiva = Math.min(apaisada ? 110 : 88, Math.floor((altoCentro - 6) / PROPORCION_CARTA))
+  const wActiva = Math.min(apaisada ? 130 : 88, Math.floor((altoCentro - 6) / PROPORCION_CARTA))
   const wMazo = Math.round(wActiva * 0.75)
   const [refMano, mano] = useMedida<HTMLDivElement>()
   const huecoMano = { ancho: mano.ancho, alto: mano.alto, gapX: 8, gapY: 20, margenSup: 18 }
