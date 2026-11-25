@@ -28,4 +28,17 @@ describe('calcularEscala (R-UI-PLAT-1)', () => {
   it('no pasa de la escala máxima', () => {
     expect(calcularEscala(3840, 2160, ALTO_REF_MESA).s).toBe(1.8)
   })
+
+  it('modo grande: amplía ×1,25 si cabe, pero sin bajar de 320 px de ancho de diseño', () => {
+    expect(calcularEscala(414, 896, ALTO_REF_MESA, 1.25).s).toBeCloseTo(1.2938, 3) // 414/320
+    expect(calcularEscala(390, 844, ALTO_REF_MESA, 1.25).w).toBeCloseTo(320)
+    const pequeno = calcularEscala(360, 640, ALTO_REF_MESA, 1.25)
+    expect(pequeno.s).toBeCloseTo(1.125)
+    expect(pequeno.w).toBeCloseTo(320)
+    // En un móvil muy estrecho no amplía nada, pero tampoco reduce.
+    expect(calcularEscala(320, 568, ALTO_REF_MESA, 1.25).s).toBe(1)
+    // En escritorio el ×1,25 completo.
+    const esc = calcularEscala(1440, 900, ALTO_REF_MESA, 1.25)
+    expect(esc.s).toBeCloseTo(Math.min(1.8, (900 / 700) * 1.25))
+  })
 })

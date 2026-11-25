@@ -25,6 +25,8 @@ const ESCALA_MAX = 1.8
 const ESCALA_MIN = 1
 /** Más ancho que esto no aporta nada a un diseño vertical: se centra con bandas. */
 const ANCHO_MAX = 560
+/** Ancho de diseño mínimo con el modo grande activo. */
+const ANCHO_MIN_GRANDE = 320
 
 export interface Escala {
   /** Factor de escala aplicado (≥ 1). */
@@ -38,7 +40,9 @@ export interface Escala {
 
 export function calcularEscala(vw: number, vh: number, altoRef: number, factor = 1): Escala {
   const base = Math.min(ESCALA_MAX, Math.max(ESCALA_MIN, Math.min(vw / ANCHO_REF, vh / altoRef)))
-  const s = base * factor
+  // El modo grande amplía hasta `factor`, pero sin dejar el ancho de diseño por debajo de
+  // ANCHO_MIN_GRANDE: más estrecho, la mesa no cabe y la mano se sale de la pantalla.
+  const s = factor > 1 ? Math.max(base, Math.min(base * factor, vw / ANCHO_MIN_GRANDE)) : base
   const w = Math.min(ANCHO_MAX, vw / s)
   const h = vh / s
   return { s, w, h, left: (vw - w * s) / 2 }

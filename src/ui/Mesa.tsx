@@ -473,6 +473,8 @@ export function Mesa({ game }: { game: Ovni }) {
                 gridTemplateColumns: `repeat(${rDividido.cols}, minmax(0, 1fr))`,
                 gap: '20px 8px',
                 justifyItems: 'center',
+                alignContent: 'center',
+                flex: 1,
                 paddingTop: 18,
               }}
             >
@@ -517,7 +519,7 @@ export function Mesa({ game }: { game: Ovni }) {
         )}
 
         {modo === 'rejilla' && (
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rRejilla.cols}, minmax(0, 1fr))`, gap: '12px 6px', justifyItems: 'center', paddingTop: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rRejilla.cols}, minmax(0, 1fr))`, gap: '12px 6px', justifyItems: 'center', alignContent: 'center', flex: 1, paddingTop: 6 }}>
             {(n > 12 ? hand.slice(0, 11) : hand).map((i, k) => (
               <CartaBtn key={k} item={i} w={rRejilla.w} onPlay={game.playHuman} vuelo={vueloVisible} oculta={llegando} />
             ))}
