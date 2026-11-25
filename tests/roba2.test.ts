@@ -87,6 +87,11 @@ describe('textosRoba2: lo que dice el aviso en cada caso', () => {
     expect(t.consecuencia).toBe('Pierdes el turno')
   })
 
+  it('fin de ronda por un 2 tuyo: en segunda persona', () => {
+    const t = textosRoba2({ n: 2, rebarajado: false, finRonda: true }, 'Robi', null)
+    expect(t.consecuencia).toBe('Te quedas sin cartas: fin de la ronda. Lo robado cuenta en sus puntos')
+  })
+
   it('fin de ronda: dice que se acaba y que lo robado cuenta en tus puntos', () => {
     const t = textosRoba2({ n: 2, rebarajado: false, finRonda: true }, null, 'Toby')
     expect(t.consecuencia).toBe('Toby se queda sin cartas: fin de la ronda. Estas cartas cuentan en tus puntos')

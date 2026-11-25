@@ -226,7 +226,7 @@ export function CartelAviso({
     const t = textosRoba2(
       { n: aviso.n, rebarajado: aviso.rebarajado, finRonda: aviso.finRonda },
       esYo(aviso.victimaId) ? null : nombre(aviso.victimaId),
-      esYo(aviso.actorId) ? 'Tú' : nombre(aviso.actorId),
+      esYo(aviso.actorId) ? null : nombre(aviso.actorId),
     )
     etiqueta = t.resumen
     contenido = (

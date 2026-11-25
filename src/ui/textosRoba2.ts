@@ -24,9 +24,9 @@ export interface TextosRoba2 {
 
 /**
  * @param victima nombre de quien roba, o null si eres tú (segunda persona).
- * @param actor nombre de quien jugó el 2 (para el caso de fin de ronda).
+ * @param actor nombre de quien jugó el 2 (para el caso de fin de ronda), o null si eres tú.
  */
-export function textosRoba2(d: DatosRoba2, victima: string | null, actor: string): TextosRoba2 {
+export function textosRoba2(d: DatosRoba2, victima: string | null, actor: string | null): TextosRoba2 {
   const tu = victima === null
   const robo =
     d.n >= 2
@@ -35,10 +35,12 @@ export function textosRoba2(d: DatosRoba2, victima: string | null, actor: string
         ? tu ? 'Robas 1 carta: no quedaban más' : `${victima} roba 1 carta: no quedaban más`
         : tu ? 'No quedan cartas: no robas' : `No quedan cartas: ${victima} no roba`
   const rebaraje = d.rebarajado ? 'Se barajaron las cartas de la mesa para hacer un mazo nuevo' : null
+  // `actor` null: el 2 lo has jugado tú (segunda persona: «te quedas sin cartas»).
+  const sinCartas = actor === null ? 'Te quedas sin cartas' : `${actor} se queda sin cartas`
   const consecuencia = d.finRonda
     ? d.n > 0
-      ? `${actor} se queda sin cartas: fin de la ronda. ${tu ? 'Estas cartas cuentan en tus puntos' : 'Lo robado cuenta en sus puntos'}`
-      : `${actor} se queda sin cartas: fin de la ronda`
+      ? `${sinCartas}: fin de la ronda. ${tu ? 'Estas cartas cuentan en tus puntos' : 'Lo robado cuenta en sus puntos'}`
+      : `${sinCartas}: fin de la ronda`
     : tu ? 'Pierdes el turno' : `${victima} pierde el turno`
   const resumen = [robo, rebaraje, consecuencia].filter(Boolean).join('. ')
   return { robo, rebaraje, consecuencia, resumen }

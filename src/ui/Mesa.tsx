@@ -543,6 +543,11 @@ export function Mesa({ game }: { game: Ovni }) {
           borderRadius: 24,
           border: `${humanTurn ? 4 : 2}px solid ${humanTurn ? '#FFD23F' : 'var(--borde-suave)'}`,
           padding: grande ? '6px 6px 8px' : '10px 10px 12px',
+          // Turno de otro: la mano se atenúa un poco (sigue legible), para que se vea de un
+          // vistazo que ahora no te toca. Al pasar a tu turno vuelve a plena intensidad.
+          opacity: estado === 'ia' ? 0.72 : 1,
+          filter: estado === 'ia' ? 'saturate(0.7)' : 'none',
+          transition: game.dur.animar ? 'opacity 300ms, filter 300ms' : 'none',
           display: 'flex',
           flexDirection: 'column',
           gap: 8,
