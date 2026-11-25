@@ -142,6 +142,20 @@ test.describe('OVNI · happy paths', () => {
     expect(await vista()).toEqual({ grande: 'true', contraste: 'true' })
   })
 
+  test('Historia 5b · «Más grande» no hace más pequeñas las cartas de tu mano (R-UI-A11Y-4)', async ({ page }) => {
+    const anchoCarta = async (vista: string) => {
+      await page.addInitScript((v) => localStorage.setItem('ovni.vista', v), vista)
+      await page.goto('/?seed=7&fast=1')
+      await page.getByTestId('rivales-3').click()
+      await page.getByTestId('jugar').click()
+      await expect(page.getByTestId('estado')).toHaveAttribute('data-value', 'tu')
+      return (await page.locator('[data-testid="zona-mano"] [data-vuelo^="carta-"]').first().boundingBox())!.width
+    }
+    const normal = await anchoCarta('{}')
+    const grande = await anchoCarta('{"grande":true}')
+    expect(grande).toBeGreaterThanOrEqual(normal)
+  })
+
   test('Historia 7 · Ritmo: la jugada de un bot se ve volar a la mesa; la velocidad se puede cambiar', async ({
     page,
   }) => {
