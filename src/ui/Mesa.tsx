@@ -331,13 +331,14 @@ export function Mesa({ game }: { game: Ovni }) {
           const cfg = players.find((p) => p.id === rp.id)!
           const pts = scoreOf(rp.id)
           const activo = idx === round.currentPlayerIndex && round.phase === 'playing'
+          const ultima = rp.hand.length === 1 && round.phase === 'playing'
           const color = colorPuntos(pts)
           return (
             <div
               key={rp.id}
               data-vuelo={`jugador-${rp.id}`}
               role="group"
-              aria-label={`${cfg.name}: ${rp.hand.length} cartas, ${pts} puntos${activo ? ', está jugando' : ''}`}
+              aria-label={`${cfg.name}: ${rp.hand.length === 1 ? 'le queda 1 carta' : `${rp.hand.length} cartas`}, ${pts} puntos${activo ? ', está jugando' : ''}`}
               style={{
                 position: 'relative',
                 boxSizing: 'border-box',
@@ -415,8 +416,17 @@ export function Mesa({ game }: { game: Ovni }) {
               <Avatar quien={cfg.avatar} w={estrecho ? 28 : 40} />
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: estrecho ? 2 : 4, fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
-                  <Svg markup={`<svg width="${estrecho ? 12 : 16}" height="${estrecho ? 12 : 16}" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="7" width="11" height="14" rx="2" fill="#FFF8E7"></rect><path d="M8 4 H19 a2 2 0 0 1 2 2 V16"></path></svg>`} />
-                  <span>{rp.hand.length}</span>
+                  {!ultima && (
+                    <Svg markup={`<svg width="${estrecho ? 12 : 16}" height="${estrecho ? 12 : 16}" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="7" width="11" height="14" rx="2" fill="#FFF8E7"></rect><path d="M8 4 H19 a2 2 0 0 1 2 2 V16"></path></svg>`} />
+                  )}
+                  {ultima ? (
+                    // Última carta: está a punto de ganar la ronda (destacado, no solo por color).
+                    <span data-testid={`ultima-${rp.id}`} style={{ background: '#B8202A', color: '#FFFFFF', border: '2px solid #FFF8E7', borderRadius: 999, padding: estrecho ? '1px 4px' : '1px 6px', fontSize: estrecho ? 17 : 19 }}>
+                      ¡1!
+                    </span>
+                  ) : (
+                    <span>{rp.hand.length}</span>
+                  )}
                   {/* Con 1 o 2 rivales sobra sitio: su nombre, para no depender solo del avatar. */}
                   {conNombre && (
                     <span style={{ marginLeft: 'auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 18, color: 'var(--texto-2)' }}>
