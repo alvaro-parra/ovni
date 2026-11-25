@@ -1,8 +1,9 @@
 // Pantalla 8/9 · Final de partida (portado de Victoria.dc.html): gana / empate / eliminado.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Ovni } from './game'
 import { HUMAN_ID } from './game'
 import { Avatar } from './Avatar'
+import { Confeti } from './Animaciones'
 import { Svg } from './dc'
 import { ALTO_REF_PANTALLA, Tablero, useEscala } from './Pantalla'
 import { estaFuera, ordenClasificacion, resumenFinal } from './resultado'
@@ -10,8 +11,6 @@ import { anotarPartida, leerEstadisticas, type Estadisticas } from './estadistic
 
 // Partidas ya anotadas (por si la pantalla se vuelve a montar): cada una cuenta una vez.
 const anotadas = new WeakSet<object>()
-
-const CONFETI_COLORES = ['#FFD23F', '#FF8A8A', '#8EC1FF', '#FFF8E7', '#B6E58A']
 
 export function Victoria({ game }: { game: Ovni }) {
   const { apaisada } = useEscala(ALTO_REF_PANTALLA, true)
@@ -44,31 +43,7 @@ export function Victoria({ game }: { game: Ovni }) {
       }
     })
 
-  // Al ganar, el confeti cae un par de veces (quieto si se pide reducir movimiento).
-  const refConfeti = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const el = refConfeti.current
-    if (!el || !game.dur.animar) return
-    const anims = [...el.children].map((c, i) =>
-      (c as HTMLElement).animate(
-        [
-          { transform: `translateY(-80px) rotate(0deg)`, opacity: 1 },
-          { transform: `translateY(260px) rotate(${360 + i * 40}deg)`, opacity: 0 },
-        ],
-        { duration: 2200 + (i % 5) * 300, delay: (i % 7) * 180, iterations: 2, easing: 'ease-in' },
-      ),
-    )
-    return () => anims.forEach((a) => a.cancel())
-  }, [game.dur.animar])
 
-  const confeti = Array.from({ length: 22 }, (_, i) => ({
-    x: ((i * 53) % 370) + 6,
-    y: ((i * 37) % 260) + 8,
-    w: 8 + (i % 3) * 3,
-    h: 14 - (i % 3) * 2,
-    c: CONFETI_COLORES[i % CONFETI_COLORES.length],
-    r: (i * 47) % 180,
-  }))
 
   const otrosGanadores = winners.filter((id) => id !== HUMAN_ID).map((id) => game.players.find((p) => p.id === id)?.name)
 
@@ -101,13 +76,8 @@ export function Victoria({ game }: { game: Ovni }) {
         </>
       }
     >
-      {fiesta && (
-        <div ref={refConfeti} aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, right: 0, height: 320, overflow: 'hidden', pointerEvents: 'none' }}>
-          {confeti.map((k, i) => (
-            <div key={i} style={{ position: 'absolute', left: `${((i * 37) % 94) + 3}%`, top: k.y, width: k.w, height: k.h, background: k.c, transform: `rotate(${k.r}deg)`, borderRadius: 2 }} />
-          ))}
-        </div>
-      )}
+      {/* Al ganar, el confeti cae un par de veces (quieto si se pide reducir movimiento). */}
+      {fiesta && <Confeti animar={game.dur.animar} veces={2} />}
 
       {/* Apaisado: el resultado a la izquierda y la clasificación a la derecha. */}
       <div style={apaisada ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'center', width: '100%', flex: 1 } : { display: 'contents' }}>

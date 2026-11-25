@@ -520,3 +520,47 @@ export function ManitaAyuda({ selector, animar }: { selector: string; animar: bo
     </div>
   )
 }
+
+const CONFETI_COLORES = ['#FFD23F', '#FF8A8A', '#8EC1FF', '#FFF8E7', '#B6E58A']
+
+/**
+ * Confeti que cae desde arriba (pantalla final y ronda ganada). Con movimiento reducido se
+ * queda quieto, o no se pinta si `soloAnimado`.
+ */
+export function Confeti({ animar, veces, soloAnimado = false }: { animar: boolean; veces: number; soloAnimado?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || !animar) return
+    const anims = [...el.children].map((c, i) =>
+      (c as HTMLElement).animate(
+        [
+          { transform: `translateY(-80px) rotate(0deg)`, opacity: 1 },
+          { transform: `translateY(260px) rotate(${360 + i * 40}deg)`, opacity: 0 },
+        ],
+        { duration: 2200 + (i % 5) * 300, delay: (i % 7) * 180, iterations: veces, easing: 'ease-in', fill: soloAnimado ? 'forwards' : 'none' },
+      ),
+    )
+    return () => anims.forEach((a) => a.cancel())
+  }, [animar, veces, soloAnimado])
+  if (soloAnimado && !animar) return null
+  return (
+    <div ref={ref} aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, right: 0, height: 320, overflow: 'hidden', pointerEvents: 'none' }}>
+      {Array.from({ length: 22 }, (_, i) => (
+        <div
+          key={i}
+          style={{
+            position: 'absolute',
+            left: `${((i * 37) % 94) + 3}%`,
+            top: ((i * 37) % 260) + 8,
+            width: 8 + (i % 3) * 3,
+            height: 14 - (i % 3) * 2,
+            background: CONFETI_COLORES[i % CONFETI_COLORES.length],
+            transform: `rotate(${(i * 47) % 180}deg)`,
+            borderRadius: 2,
+          }}
+        />
+      ))}
+    </div>
+  )
+}

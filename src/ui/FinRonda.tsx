@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { HUMAN_ID, type Ovni } from './game'
 import { estaFuera, textoEliminados } from './resultado'
 import { Avatar } from './Avatar'
+import { Confeti } from './Animaciones'
 import { CartaDe } from './Carta'
 import { Svg } from './dc'
 import { ALTO_REF_PANTALLA, Tablero, useEscala } from './Pantalla'
@@ -90,6 +91,9 @@ export function FinRonda({ game }: { game: Ovni }) {
           </span>
         </div>
       </div>
+
+      {/* Ronda ganada: un poco de confeti (solo si hay animaciones). */}
+      {ganoYo && <Confeti animar={animar} veces={1} soloAnimado />}
 
       {/* R-MAZO-3: la ronda terminó porque no quedaban cartas, no porque alguien ganara. */}
       {result.winnerId === null && (
