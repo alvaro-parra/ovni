@@ -291,7 +291,8 @@ test.describe('OVNI · happy paths', () => {
     await expect(page.getByTestId('ganadas')).toHaveAttribute('aria-label', /Has ganado [01] de 1 partidas/)
   })
 
-  test('Historia 15 · Sin problemas de accesibilidad (axe: WCAG 2 A/AA) en inicio, reglas y mesa', async ({ page }) => {
+  test('Historia 15 · Sin problemas de accesibilidad (axe: WCAG 2 A/AA) en inicio, reglas, mesa, recuento y final', async ({ page }) => {
+    test.setTimeout(120_000)
     const auditar = async () => {
       const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
       expect(r.violations.map((v) => `${v.id}: ${v.nodes[0]?.html.slice(0, 80)}`)).toEqual([])
@@ -304,6 +305,14 @@ test.describe('OVNI · happy paths', () => {
     await page.getByTestId('rivales-3').click()
     await page.getByTestId('jugar').click()
     await expect(page.getByTestId('estado')).toHaveAttribute('data-value', 'tu')
+    await auditar()
+    // Recuento de la ronda y pantalla final.
+    if ((await playRoundToEnd(page)) === 'fin-ronda') {
+      await auditar()
+      await page.getByTestId('siguiente-ronda').click()
+      await playToVictory(page)
+    }
+    await expect(page.getByTestId('victoria')).toBeVisible()
     await auditar()
   })
 

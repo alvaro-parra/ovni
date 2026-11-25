@@ -208,6 +208,7 @@ export function Tablero({
   // Enfocable solo si el contenido no cabe: así se puede desplazar con el teclado
   // (flechas) sin añadir una parada de tabulador inútil cuando no hay nada que desplazar.
   const ref = useRef<HTMLDivElement>(null)
+  const fin = useRef<HTMLDivElement>(null)
   const [desborda, setDesborda] = useState(false)
   useEffect(() => {
     const el = ref.current
@@ -217,7 +218,14 @@ export function Tablero({
     const ro = new ResizeObserver(medir)
     ro.observe(el)
     for (const hijo of el.children) ro.observe(hijo)
-    return () => ro.disconnect()
+    // El contenido puede crecer después (imágenes que cargan, hijos con display: contents que
+    // ResizeObserver no ve): un marcador al final avisa cuando entra o sale de la vista.
+    const io = fin.current ? new IntersectionObserver(medir, { root: el }) : null
+    if (io && fin.current) io.observe(fin.current)
+    return () => {
+      ro.disconnect()
+      io?.disconnect()
+    }
   }, [])
   return (
     <div {...rest} style={estiloTablero({ padding, gap: 12, overflowY: 'hidden' })}>
@@ -229,6 +237,8 @@ export function Tablero({
         style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap, alignItems, padding: 7, margin: -7 }}
       >
         {children}
+        {/* Marcador de final del contenido (ver arriba); el margen anula el `gap`. */}
+        <div ref={fin} aria-hidden="true" style={{ flex: 'none', height: 1, marginTop: -gap }} />
       </div>
       {pie && (
         <div style={pieEnFila ? { flex: 'none', display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(0, 1fr)', gap: 12, alignItems: 'center' } : { flex: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
