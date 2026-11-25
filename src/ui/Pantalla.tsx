@@ -8,7 +8,7 @@
 //    conserva su tamaño y es el contenido el que se reorganiza (o hace scroll).
 // Se usa `transform` (y no `zoom`) porque no altera las medidas de layout: los
 // ResizeObserver de dentro siguen midiendo en píxeles de diseño.
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { FACTOR_GRANDE, usePreferencias, variablesTema } from './preferencias'
 
 /**
@@ -202,12 +202,26 @@ export function Tablero({
   'data-testid'?: string
   'data-value'?: string
 }) {
+  // Enfocable solo si el contenido no cabe: así se puede desplazar con el teclado
+  // (flechas) sin añadir una parada de tabulador inútil cuando no hay nada que desplazar.
+  const ref = useRef<HTMLDivElement>(null)
+  const [desborda, setDesborda] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const medir = () => setDesborda(el.scrollHeight > el.clientHeight + 1)
+    medir()
+    const ro = new ResizeObserver(medir)
+    ro.observe(el)
+    for (const hijo of el.children) ro.observe(hijo)
+    return () => ro.disconnect()
+  }, [])
   return (
     <div {...rest} style={estiloTablero({ padding, gap: 12, overflowY: 'hidden' })}>
       <div
+        ref={ref}
         data-testid="tablero-scroll"
-        // Enfocable: así también se puede desplazar con el teclado (flechas) si no cabe.
-        tabIndex={0}
+        tabIndex={desborda ? 0 : undefined}
         // padding + margin negativo: deja sitio al anillo de foco (si no, el scroll lo recorta).
         style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap, alignItems, padding: 7, margin: -7 }}
       >
