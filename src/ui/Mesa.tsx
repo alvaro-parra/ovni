@@ -13,6 +13,7 @@ import { ajustarRejilla, PROPORCION_CARTA } from './ajuste'
 import { BotonVista, PanelVista } from './Vista'
 import { AvisoRoba2 } from './Roba2'
 import { useFocoDialogo } from './foco'
+import { FACTOR_GRANDE, usePreferencias } from './preferencias'
 import { textoPista, type MotivoPista } from './pistas'
 import { anuncioJuega, anuncioRoba } from './anuncios'
 import { animarLlegada, CapaVuelo, CartelAviso, claveCarta, ManitaAyuda, Pensando, useLatido } from './Animaciones'
@@ -215,6 +216,7 @@ export function Mesa({ game }: { game: Ovni }) {
   // R-UI-PLAT-1: en pantallas bajas (< 700 px de diseño) la zona central encoge un poco
   // para dejar sitio a la mano; las cartas de la mano se ajustan al hueco que queda.
   const { h: altoPantalla, w: anchoTotal, apaisada } = useEscala(ALTO_REF_MESA, true)
+  const { grande } = usePreferencias()
   // Apaisada (tableta/ordenador en horizontal, móvil girado): dos columnas, mesa a la
   // izquierda y tu mano a la derecha. `anchoPantalla` es el ancho de la columna de la mesa.
   const anchoPantalla = apaisada ? (anchoTotal - 32 - 14) / 2 : anchoTotal
@@ -224,20 +226,26 @@ export function Mesa({ game }: { game: Ovni }) {
   const muyBaja = !apaisada && altoPantalla < 560
   // Vertical: por debajo de ~800 px de alto la zona central cede sitio a la mano (142 px en
   // 844, ~109 en 667, mínimo 100). Apaisada: la columna de la mesa es solo para ella.
-  const altoCentro = apaisada
+  const altoCentroBase = apaisada
     ? Math.round(Math.max(100, Math.min(210, altoPantalla - 290)))
     : Math.round(Math.max(100, Math.min(142, 142 - (800 - altoPantalla) * 0.25)))
+  // «Más grande»: la mesa (mazo y pila) se queda a su tamaño en pantalla y el alto que libera
+  // va a tu mano, que es lo que hay que ver bien (si no, la mano acaba más pequeña).
+  const altoCentro = grande && !apaisada ? Math.max(96, Math.round(altoCentroBase / FACTOR_GRANDE)) : altoCentroBase
   const bajo = altoPantalla < 760
   const wActiva = Math.min(apaisada ? 130 : 88, Math.floor((altoCentro - 6) / PROPORCION_CARTA))
   const wMazo = Math.round(wActiva * 0.75)
   const [refMano, mano] = useMedida<HTMLDivElement>()
-  const huecoMano = { ancho: mano.ancho, alto: mano.alto, gapX: 8, gapY: 20, margenSup: 18 }
-  const rGrande = ajustarRejilla(n, huecoMano, 120)
+  // Con «Más grande», separación entre cartas menor: con todo ampliado, cada píxel cuenta
+  // para que las cartas de la mano sean de verdad más grandes que en el modo normal.
+  const huecoMano = { ancho: mano.ancho, alto: mano.alto, gapX: grande ? 6 : 8, gapY: grande ? 12 : 20, margenSup: grande ? 14 : 18 }
+  const topeCarta = grande ? 150 : 120
+  const rGrande = ajustarRejilla(n, huecoMano, topeCarta)
   // En modo dividido, debajo va la tira de cartas no jugables (~88 px).
   // Tira de no jugables: encoge si la mano tiene poco alto.
   const wTira = mano.alto < 240 ? 30 : 44
   const altoTira = Math.round(wTira * PROPORCION_CARTA) + 12 + 8
-  const rDividido = ajustarRejilla(jugables.length, { ...huecoMano, alto: mano.alto - altoTira }, 120)
+  const rDividido = ajustarRejilla(jugables.length, { ...huecoMano, alto: mano.alto - altoTira }, topeCarta)
   const nRejilla = Math.min(n, 12)
   const rRejilla = ajustarRejilla(nRejilla, { ...huecoMano, gapX: 6, gapY: 12, margenSup: 6 }, 96)
 
@@ -253,7 +261,7 @@ export function Mesa({ game }: { game: Ovni }) {
       <div
         data-testid="mesa-contenido"
         data-apaisada={apaisada}
-        style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: apaisada ? 'row' : 'column', gap: apaisada ? 14 : 10, padding: '16px 16px 14px', overflowY: muyBaja ? 'auto' : 'hidden' }}
+        style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: apaisada ? 'row' : 'column', gap: apaisada ? 14 : grande ? 6 : 10, padding: grande ? '10px 10px 10px' : '16px 16px 14px', overflowY: muyBaja ? 'auto' : 'hidden' }}
       >
       {/* Columna de la mesa: en vertical es transparente (display: contents) y todo va en
           una sola columna; en apaisado agrupa cabecera, rivales, centro y banner. */}
@@ -534,7 +542,7 @@ export function Mesa({ game }: { game: Ovni }) {
           background: 'var(--panel-mano)',
           borderRadius: 24,
           border: `${humanTurn ? 4 : 2}px solid ${humanTurn ? '#FFD23F' : 'var(--borde-suave)'}`,
-          padding: '10px 10px 12px',
+          padding: grande ? '6px 6px 8px' : '10px 10px 12px',
           display: 'flex',
           flexDirection: 'column',
           gap: 8,
