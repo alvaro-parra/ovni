@@ -281,6 +281,7 @@ test.describe('OVNI · happy paths', () => {
     { width: 320, height: 568 },
     { width: 375, height: 667 },
     { width: 844, height: 390 },
+    { width: 1024, height: 768 },
     { width: 1440, height: 900 },
   ]) {
     test(`Historia 6 · ${vp.width}×${vp.height}: sin scroll horizontal y acción principal visible (R-UI-PLAT-1)`, async ({
@@ -291,6 +292,8 @@ test.describe('OVNI · happy paths', () => {
       await expect(page.getByTestId('jugar')).toBeInViewport()
       await page.getByTestId('jugar').click()
       await expect(page.getByTestId('mesa')).toBeVisible()
+      // Pantallas apaisadas: mesa en dos columnas (mesa | tu mano).
+      await expect(page.getByTestId('mesa-contenido')).toHaveAttribute('data-apaisada', String(vp.width / vp.height > 1.25))
       const anchoDoc = await page.evaluate(() => document.documentElement.scrollWidth)
       expect(anchoDoc).toBeLessThanOrEqual(vp.width)
       const res = await playRoundToEnd(page)
