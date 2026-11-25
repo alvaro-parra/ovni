@@ -133,7 +133,14 @@ export function Mesa({ game }: { game: Ovni }) {
     const claves = new Set(human.hand.map(claveCarta))
     const prev = prevMano.current
     prevMano.current = { ronda: game.roundNumber, claves }
-    if (!prev || prev.ronda !== game.roundNumber) return
+    if (!prev || prev.ronda !== game.roundNumber) {
+      // Reparto: al empezar la ronda tus cartas llegan volando del mazo (no al continuar una
+      // partida a medias: «recién repartida» = nadie ha jugado aún y el mazo está casi entero).
+      const n = round.players.length
+      const recien = round.discardPile.length === 1 && round.drawPile.length >= 40 - 1 - 5 * n - 2
+      if (recien && game.dur.animar) setLlegando(human.hand.map(claveCarta))
+      return
+    }
     const llegadas = [...claves].filter((k) => !prev.claves.has(k))
     if (llegadas.length === 0) return
     setAnuncio(anuncioRoba(null, llegadas.length, human.hand.filter((c) => llegadas.includes(claveCarta(c)))))
