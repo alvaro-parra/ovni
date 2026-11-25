@@ -16,6 +16,7 @@ const FIJOS = [
   'iconos/icono-192.png',
   'iconos/icono-512.png',
   'iconos/apple-touch-icon.png',
+  'iconos/icono-maskable-512.png',
   'cartas/dorso.png',
   ...PALOS.flatMap((p) => VALORES.map((v) => `cartas/${p}_${v}.png`)),
 ]
