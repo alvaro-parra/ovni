@@ -296,9 +296,11 @@ export function Mesa({ game }: { game: Ovni }) {
             whiteSpace: 'nowrap',
             height: 52,
             boxSizing: 'border-box',
-            background: invertido ? '#FFD23F' : 'var(--panel)',
-            color: invertido ? '#1A1A1A' : '#FFF8E7',
-            border: `2px solid ${invertido ? '#1A1A1A' : 'var(--panel)'}`,
+            // Sin resaltar en amarillo cuando el sentido se invierte: el amarillo es «te toca»
+            // y el sentido ya lo dicen las flechas entre rivales; aquí solo gira el icono.
+            background: 'var(--panel)',
+            color: '#FFF8E7',
+            border: '2px solid var(--panel)',
             borderRadius: 999,
             padding: estrecho ? '0 12px 0 8px' : '0 16px 0 10px',
             fontSize: 20,
