@@ -9,6 +9,7 @@ import { ALTO_REF_PANTALLA, Tablero, useEscala } from './Pantalla'
 import { ConRotulo, InterruptoresVista } from './Vista'
 import { Reglas } from './Reglas'
 import { leerEstadisticas } from './estadisticas'
+import { useFocoDialogo } from './foco'
 
 const BOTS: AvatarKind[] = ['robi', 'pixel', 'toby']
 const AVATARES: { q: AvatarKind; nombre: string }[] = [
@@ -37,6 +38,8 @@ export function Main({ game }: { game: Ovni }) {
   // Apaisado estrecho (p. ej. 667×375): no caben 3 columnas; el título pasa a la cabecera.
   const sinColumnaTitulo = apaisada && anchoInicio < 760
   const [verReglas, setVerReglas] = useState(false)
+  // «Nueva partida» con una a medias: se pregunta antes de borrarla (como al salir de la mesa).
+  const [confirmarNueva, setConfirmarNueva] = useState(false)
   const [estadisticas] = useState(leerEstadisticas)
   const pastillaGanadas = estadisticas.jugadas > 0 && (
     <div
@@ -105,7 +108,7 @@ export function Main({ game }: { game: Ovni }) {
           )}
           <button
             data-testid="jugar"
-            onClick={game.startGame}
+            onClick={guardada ? () => setConfirmarNueva(true) : game.startGame}
             style={{
               height: guardada || apaisada ? 60 : 80,
               flexShrink: 0,
@@ -318,6 +321,9 @@ export function Main({ game }: { game: Ovni }) {
 
       {/* Absoluto respecto al tablero: no se desplaza con el scroll del contenido. */}
       {verReglas && <Reglas onClose={() => setVerReglas(false)} />}
+      {confirmarNueva && guardada && (
+        <ConfirmarNueva ronda={guardada.ronda} onSeguir={game.continuarPartida} onNueva={game.startGame} onCerrar={() => setConfirmarNueva(false)} />
+      )}
     </Marco>
   )
 }
@@ -350,5 +356,26 @@ export function Marco({ children, pie, compacta = false }: { children: ReactNode
     <Tablero padding={compacta ? '6px 18px 14px' : '12px 18px 24px'} gap={compacta ? 12 : 14} pie={pie}>
       {children}
     </Tablero>
+  )
+}
+
+/** ¿Empezar otra partida habiendo una a medias? Lo seguro (continuar) va primero y con el foco. */
+function ConfirmarNueva({ ronda, onSeguir, onNueva, onCerrar }: { ronda: number; onSeguir: () => void; onNueva: () => void; onCerrar: () => void }) {
+  const ref = useFocoDialogo<HTMLDivElement>(onCerrar)
+  const boton = { height: 72, width: '100%', borderRadius: 22, border: '4px solid #1A1A1A', fontFamily: 'inherit', fontSize: 24, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 } as const
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 6, background: 'rgba(6,20,12,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div ref={ref} role="alertdialog" data-claro aria-label="¿Empezar una partida nueva?" style={{ width: '100%', maxWidth: 340, background: '#FFF8E7', color: '#1A1A1A', borderRadius: 28, border: '4px solid #1A1A1A', padding: '24px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
+        <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.15 }}>¿Empezar una partida nueva?</div>
+        <div style={{ fontSize: 19, color: '#4A4A4A' }}>Se perderá la partida a medias (ronda {ronda})</div>
+        <button data-testid="confirmar-seguir-guardada" data-autofoco onClick={onSeguir} style={{ ...boton, background: '#FFD23F', color: '#1A1A1A' }}>
+          <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5 V19"></path><path d="M10 5 L20 12 L10 19 Z" fill="#1A1A1A"></path></svg>`} />
+          <span>Continuar</span>
+        </button>
+        <button data-testid="confirmar-nueva" onClick={onNueva} style={{ ...boton, height: 60, fontSize: 22, background: '#FFFFFF', color: '#1A1A1A', border: '3px solid #1A1A1A' }}>
+          Empezar una nueva
+        </button>
+      </div>
+    </div>
   )
 }

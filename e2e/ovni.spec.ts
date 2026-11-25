@@ -220,6 +220,11 @@ test.describe('OVNI · happy paths', () => {
     const mesa = await page.locator('[data-vuelo="pila"]').getAttribute('aria-label')
 
     await page.reload()
+    // «Nueva partida» con una a medias pregunta antes de borrarla; Escape no borra nada.
+    await page.getByTestId('jugar').click()
+    await expect(page.getByTestId('confirmar-seguir-guardada')).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('confirmar-nueva')).toHaveCount(0)
     await page.getByTestId('continuar').click()
     await expect(page.getByTestId('mesa')).toBeVisible()
     await expect(page.getByTestId('mis-cartas')).toHaveText(cartas)
