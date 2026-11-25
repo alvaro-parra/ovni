@@ -1,7 +1,7 @@
 // Pantalla 7 · Fin de ronda (portado de FinRonda.dc.html): recuento y barra hacia 101.
 import { useEffect, useState } from 'react'
 import { HUMAN_ID, type Ovni } from './game'
-import { estaFuera } from './resultado'
+import { estaFuera, textoEliminados } from './resultado'
 import { Avatar } from './Avatar'
 import { CartaDe } from './Carta'
 import { Svg } from './dc'
@@ -42,6 +42,8 @@ export function FinRonda({ game }: { game: Ovni }) {
       total,
       ganador: result.winnerId === p.id,
       elim,
+      // Cae en esta ronda (antes de sumarla seguía por debajo de 101).
+      caeAhora: elim && total - suma < 101,
       aviso: total >= 70 && !elim,
       color,
       sumaColor: suma === 0 ? '#8FE3A6' : '#FFF8E7',
@@ -50,6 +52,12 @@ export function FinRonda({ game }: { game: Ovni }) {
       pctAntes: Math.min(100, Math.round(((total - suma) / 101) * 100)),
     }
   })
+
+  const caen = rows.filter((r) => r.caeAhora)
+  const notaFuera = textoEliminados(
+    caen.filter((r) => r.cfg.id !== HUMAN_ID).map((r) => r.cfg.name),
+    caen.some((r) => r.cfg.id === HUMAN_ID),
+  )
 
   return (
     <Tablero
@@ -94,6 +102,20 @@ export function FinRonda({ game }: { game: Ovni }) {
             0
           </span>
           <span>Se acabó el mazo: nadie gana la ronda y todos suman sus cartas</span>
+        </div>
+      )}
+
+      {/* Quién queda fuera en esta ronda (R-OBJ-3, CL-1): su tarjeta puede quedar abajo. */}
+      {notaFuera && (
+        <div
+          data-testid="fin-fuera"
+          role="note"
+          style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#FFE1E1', color: '#1A1A1A', border: '3px solid #8E0F18', borderRadius: 18, padding: '10px 14px', fontSize: 19, fontWeight: 700, lineHeight: 1.25 }}
+        >
+          <span aria-hidden="true" style={{ flex: 'none', width: 40, height: 40, borderRadius: '50%', background: '#FFFFFF', border: '3px solid #8E0F18', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Svg markup={`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8E0F18" stroke-width="3.6" stroke-linecap="round"><path d="M6 6 L18 18"></path><path d="M18 6 L6 18"></path></svg>`} />
+          </span>
+          <span>{notaFuera}</span>
         </div>
       )}
 

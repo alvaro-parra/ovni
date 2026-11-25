@@ -45,3 +45,18 @@ export function ordenClasificacion<T extends { id: string; score: number }>(
       Number(winners.includes(b.id)) - Number(winners.includes(a.id)) || a.score - b.score,
   )
 }
+
+/**
+ * Nota del fin de ronda para quien queda fuera en esta ronda (R-OBJ-3), o null si nadie.
+ * @param nombres de los eliminados en esta ronda, sin contarte a ti
+ * @param yo si tú también quedas fuera en esta ronda
+ */
+export function textoEliminados(nombres: string[], yo: boolean): string | null {
+  const lista = (xs: string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}`)
+  if (yo && nombres.length === 0) return 'Quedas fuera: llegas a 101 puntos o más'
+  if (yo) return `Quedáis fuera tú y ${lista(nombres)}: llegáis a 101 puntos o más`
+  if (nombres.length === 0) return null
+  return nombres.length === 1
+    ? `${nombres[0]} queda fuera: llega a 101 puntos o más`
+    : `${lista(nombres)} quedan fuera: llegan a 101 puntos o más`
+}

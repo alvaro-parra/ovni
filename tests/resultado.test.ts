@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { applyRoundResult, createMatch } from '../src/match'
-import { estaFuera, ordenClasificacion, resumenFinal } from '../src/ui/resultado'
+import { estaFuera, ordenClasificacion, resumenFinal, textoEliminados } from '../src/ui/resultado'
 
 // Mensajes de la pantalla final (UI). Se apoyan en R-OBJ-4 / R-OBJ-5 del motor.
 describe('resumenFinal: mensaje de la pantalla final', () => {
@@ -49,4 +49,13 @@ describe('resumenFinal: mensaje de la pantalla final', () => {
     const m = partidaReportada()
     expect(ordenClasificacion(m.players, m.winners!).map((p) => p.id)).toEqual(['yo', 'toby', 'pixel', 'robi'])
   })
+})
+
+describe('textoEliminados: nota del fin de ronda', () => {
+  it('nadie: sin nota', () => expect(textoEliminados([], false)).toBeNull())
+  it('un rival', () => expect(textoEliminados(['Robi'], false)).toBe('Robi queda fuera: llega a 101 puntos o más'))
+  it('varios rivales (CL-1)', () =>
+    expect(textoEliminados(['Robi', 'Pixel', 'Toby'], false)).toBe('Robi, Pixel y Toby quedan fuera: llegan a 101 puntos o más'))
+  it('tú solo', () => expect(textoEliminados([], true)).toBe('Quedas fuera: llegas a 101 puntos o más'))
+  it('tú y otro', () => expect(textoEliminados(['Pixel'], true)).toBe('Quedáis fuera tú y Pixel: llegáis a 101 puntos o más'))
 })
