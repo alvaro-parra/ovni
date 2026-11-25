@@ -73,7 +73,9 @@ export function Main({ game }: { game: Ovni }) {
       compacta={compacta}
       pie={
         <>
-          {/* Partida a medias (p. ej. el navegador recargó la página): se ofrece seguirla. */}
+          {/* Partida a medias (p. ej. el navegador recargó la página): se ofrece seguirla.
+              Apaisada: «Continuar» y «Nueva partida» en fila, que en alto no caben las dos. */}
+          <div style={guardada && apaisada ? { display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 12 } : { display: 'contents' }}>
           {guardada && (
             <button
               data-testid="continuar"
@@ -126,6 +128,7 @@ export function Main({ game }: { game: Ovni }) {
             <Svg markup={`<svg width="${guardada ? 28 : 36}" height="${guardada ? 28 : 36}" viewBox="0 0 24 24"><path d="M7 4.5 L19.5 12 L7 19.5 Z" fill="${guardada ? '#FFF8E7' : '#1A1A1A'}"></path></svg>`} />
             <span>{guardada ? 'Nueva partida' : 'JUGAR'}</span>
           </button>
+          </div>
 
           {/* Crédito exigido por la licencia CC BY-SA 3.0 de las imágenes (ver LICENCIA-CARTAS.md). */}
           <p data-testid="credito-cartas" style={{ margin: 0, fontSize: 14, lineHeight: 1.3, textAlign: 'center', color: 'var(--texto-3)' }}>
