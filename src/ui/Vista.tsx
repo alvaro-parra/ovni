@@ -49,13 +49,24 @@ function estiloBoton(activo: boolean, extra: CSSProperties): CSSProperties {
     padding: 0,
     cursor: 'pointer',
     fontFamily: 'inherit',
+    flexShrink: 0, // áreas táctiles fijas: no se encogen en pantallas estrechas
     ...extra,
   }
 }
 
-/** Dos botones cuadrados (solo icono), para la cabecera de la pantalla de inicio. */
+const VELOCIDADES: { v: Velocidad; icono: string; texto: string }[] = [
+  { v: 'lenta', icono: '🐢', texto: 'Despacio' },
+  { v: 'normal', icono: '🚶', texto: 'Normal' },
+  { v: 'rapida', icono: '🐇', texto: 'Rápido' },
+]
+
+/** Botones cuadrados (solo icono) para la cabecera de la pantalla de inicio: letra grande,
+ *  contraste y velocidad (este último pasa a la siguiente con cada toque). */
 export function InterruptoresVista() {
-  const { grande, contraste, setGrande, setContraste } = usePreferencias()
+  const { grande, contraste, setGrande, setContraste, velocidad, setVelocidad } = usePreferencias()
+  const iVel = VELOCIDADES.findIndex((x) => x.v === velocidad)
+  const vel = VELOCIDADES[iVel]
+  const siguiente = VELOCIDADES[(iVel + 1) % VELOCIDADES.length]
   return (
     <>
       <button
@@ -78,6 +89,15 @@ export function InterruptoresVista() {
         <Svg markup={ICONO_CONTRASTE(contraste ? '#1A1A1A' : '#FFF8E7', 28)} />
         {contraste && <Check />}
       </button>
+      <button
+        data-testid="vista-velocidad"
+        data-value={velocidad}
+        aria-label={`Velocidad: ${vel.texto}. Toca para ${siguiente.texto.toLowerCase()}`}
+        onClick={() => setVelocidad(siguiente.v)}
+        style={estiloBoton(velocidad !== 'normal', { width: 52, height: 52 })}
+      >
+        <span aria-hidden="true" style={{ fontSize: 28, lineHeight: 1 }}>{vel.icono}</span>
+      </button>
     </>
   )
 }
@@ -97,11 +117,6 @@ export function BotonVista({ onClick }: { onClick: () => void }) {
 }
 
 /** Panel inferior con los dos interruptores grandes (icono + texto), para la mesa. */
-const VELOCIDADES: { v: Velocidad; icono: string; texto: string }[] = [
-  { v: 'lenta', icono: '🐢', texto: 'Despacio' },
-  { v: 'normal', icono: '🚶', texto: 'Normal' },
-  { v: 'rapida', icono: '🐇', texto: 'Rápido' },
-]
 
 export function PanelVista({ onClose }: { onClose: () => void }) {
   const { grande, contraste, setGrande, setContraste, velocidad, setVelocidad } = usePreferencias()

@@ -25,7 +25,8 @@ const btnTop =
 export function Main({ game }: { game: Ovni }) {
   // En pantallas bajas se quita el abanico decorativo y se compacta el título para que
   // la elección de rivales y avatar quepa sin scroll (R-UI-PLAT-1).
-  const compacta = useEscala(ALTO_REF_PANTALLA).h < 760
+  const { h: altoInicio, w: anchoInicio } = useEscala(ALTO_REF_PANTALLA)
+  const compacta = altoInicio < 760
   const [verReglas, setVerReglas] = useState(false)
   // Hasta que se abran las reglas una vez, el botón se destaca (para quien juega por primera vez).
   const [reglasVistas, setReglasVistas] = useState(() => {
@@ -130,11 +131,11 @@ export function Main({ game }: { game: Ovni }) {
           style={
             reglasVistas
               ? css(btnTop)
-              : { ...css(btnTop), width: 'auto', padding: '0 14px 0 10px', gap: 6, background: '#FFD23F', color: '#1A1A1A', border: '3px solid #1A1A1A', fontFamily: 'inherit', fontSize: 20, fontWeight: 700 }
+              : { ...css(btnTop), width: anchoInicio >= 360 ? 'auto' : 52, padding: anchoInicio >= 360 ? '0 14px 0 10px' : 0, gap: 6, flexShrink: 0, background: '#FFD23F', color: '#1A1A1A', border: '3px solid #1A1A1A', fontFamily: 'inherit', fontSize: 20, fontWeight: 700 }
           }
         >
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M9.2 9.3 a3 3 0 0 1 5.6 1.2 c0 2 -2.8 2.4 -2.8 4"></path><path d="M12 17.6 V17.8"></path></svg>`} />
-          {!reglasVistas && <span>Reglas</span>}
+          {!reglasVistas && anchoInicio >= 360 && <span>Reglas</span>}
         </button>
       </div>
 
