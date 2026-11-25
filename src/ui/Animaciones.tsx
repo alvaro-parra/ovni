@@ -189,8 +189,10 @@ export function CartelAviso({
   const panel = useRef<HTMLDivElement>(null)
   // Centrado sobre la pila de descarte: así no tapa la mano cuando te toca jugar.
   useLayoutEffect(() => {
-    const r = raiz.current
     const el = panel.current
+    // Si el aviso aparece a la vez que la mesa (inicio de ronda), la ref de la raíz aún no
+    // está enganchada: se busca la mesa desde el propio panel.
+    const r = raiz.current ?? el?.closest<HTMLElement>('[data-testid="mesa"]') ?? null
     if (!r || !el) return
     const pila = caja(r, 'pila')
     const alto = r.offsetHeight
@@ -281,6 +283,19 @@ export function CartelAviso({
         <span>
           Ahora: <span style={{ color: SUIT_COLOR[aviso.suit] }}>{SUIT_NAME[aviso.suit]}</span>
         </span>
+      </>
+    )
+  } else if (aviso.tipo === 'ronda') {
+    const e = cfg(aviso.empiezaId)
+    const yo = esYo(aviso.empiezaId)
+    etiqueta = `Ronda ${aviso.numero}. ${yo ? '¡Empiezas tú!' : `Empieza ${nombre(aviso.empiezaId)}`}`
+    contenido = (
+      <>
+        <span style={{ fontSize: 34 }}>Ronda {aviso.numero}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {e && <Avatar quien={e.avatar} w={64} />}
+          <span>{yo ? '¡Empiezas tú!' : `Empieza ${nombre(aviso.empiezaId)}`}</span>
+        </div>
       </>
     )
   } else {

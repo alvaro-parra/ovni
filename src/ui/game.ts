@@ -47,6 +47,8 @@ export type Aviso =
   | { id: number; tipo: 'repite'; actorId: string }
   | { id: number; tipo: 'palo'; actorId: string; suit: Suit }
   | { id: number; tipo: 'fin'; ganadorId: string | null }
+  /** Empieza una ronda: cuál y quién abre el juego (la mano rota cada ronda, R-CFG-4/6). */
+  | { id: number; tipo: 'ronda'; numero: number; empiezaId: string }
 
 type SinId<T> = T extends unknown ? Omit<T, 'id'> : never
 
@@ -322,6 +324,23 @@ export function useOvni(): Ovni {
   const avatarOf = (id: string) =>
     playersRef.current.find((p) => p.id === id)?.avatar ?? 'robi'
 
+  /**
+   * Al empezar una ronda: si la carta inicial tiene efecto (R-INI-1) se avisa de eso; si no,
+   * de qué ronda es y quién empieza.
+   */
+  const avisarInicioRonda = useCallback(
+    (r: RoundState, m: MatchState, numero: number) => {
+      const ini = avisoInicial(r, m.players[m.dealerIndex].id)
+      if (ini) {
+        if (ini.tipo === 'roba2') marcarRobo(ini.victimaId, 2)
+        mostrarAviso(ini)
+      } else {
+        mostrarAviso({ tipo: 'ronda', numero, empiezaId: r.players[r.currentPlayerIndex].id })
+      }
+    },
+    [mostrarAviso, marcarRobo],
+  )
+
   // --- arranque -----------------------------------------------------------
   const startGame = useCallback(() => {
     const bots: PlayerCfg[] = BOT_IDS.slice(0, nRivals).map((id) => ({
@@ -350,12 +369,8 @@ export function useOvni(): Ovni {
     const r = buildRound(m)
     setRound(r)
     setScreen('mesa')
-    const ini = avisoInicial(r, m.players[m.dealerIndex].id)
-    if (ini) {
-      if (ini.tipo === 'roba2') marcarRobo(ini.victimaId, 2)
-      mostrarAviso(ini)
-    }
-  }, [nRivals, humanAvatar, rng, buildRound, cancelarTodo, mostrarAviso, marcarRobo])
+    avisarInicioRonda(r, m, 1)
+  }, [nRivals, humanAvatar, rng, buildRound, cancelarTodo, avisarInicioRonda])
 
   /** Aplica una jugada ya resuelta y lanza el aviso de su efecto especial, si lo tiene. */
   const aplicarJugada = useCallback(
@@ -560,12 +575,8 @@ export function useOvni(): Ovni {
     const r = buildRound(m)
     setRound(r)
     setScreen('mesa')
-    const ini = avisoInicial(r, m.players[m.dealerIndex].id)
-    if (ini) {
-      if (ini.tipo === 'roba2') marcarRobo(ini.victimaId, 2)
-      mostrarAviso(ini)
-    }
-  }, [roundNumber, buildRound, simulateToEnd, cancelarTodo, mostrarAviso, marcarRobo])
+    avisarInicioRonda(r, m, rn)
+  }, [roundNumber, buildRound, simulateToEnd, cancelarTodo, avisarInicioRonda])
 
   const restart = useCallback(() => {
     cancelarTodo()
