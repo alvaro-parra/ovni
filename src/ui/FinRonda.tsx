@@ -1,4 +1,5 @@
 // Pantalla 7 · Fin de ronda (portado de FinRonda.dc.html): recuento y barra hacia 101.
+import { useEffect, useState } from 'react'
 import { HUMAN_ID, type Ovni } from './game'
 import { Avatar } from './Avatar'
 import { CartaDe } from './Carta'
@@ -10,6 +11,13 @@ export function FinRonda({ game }: { game: Ovni }) {
   const round = game.round!
   const result = game.lastResult!
   const yoEliminado = match.players.find((p) => p.id === HUMAN_ID)?.eliminated ?? false
+  // La parte nueva de la barra crece justo después de aparecer la pantalla.
+  const animar = game.dur.animar
+  const [crecida, setCrecida] = useState(!animar)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setCrecida(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
 
   const rows = match.players.map((p) => {
     const inRound = round.players.find((rp) => rp.id === p.id)
@@ -31,6 +39,8 @@ export function FinRonda({ game }: { game: Ovni }) {
       color,
       sumaColor: suma === 0 ? '#8FE3A6' : '#FFF8E7',
       pct: Math.min(100, Math.round((total / 101) * 100)),
+      // Lo que ya llevaba antes de esta ronda (la barra muestra ese tramo atenuado).
+      pctAntes: Math.min(100, Math.round(((total - suma) / 101) * 100)),
     }
   })
 
@@ -115,7 +125,7 @@ export function FinRonda({ game }: { game: Ovni }) {
                   </span>
                 )}
                 {p.cards.map((c, k) => (
-                  <CartaDe key={k} card={c} w={30} />
+                  <CartaDe key={k} card={c} w={36} />
                 ))}
               </div>
             </div>
@@ -128,8 +138,10 @@ export function FinRonda({ game }: { game: Ovni }) {
               )}
               <span>{p.total}</span>
             </span>
-            <div style={{ flex: 1, height: 14, borderRadius: 8, background: 'var(--pista)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${p.pct}%`, background: p.color, borderRadius: 8 }} />
+            {/* Barra hacia 101: lo que ya llevaba (atenuado) + lo que suma esta ronda, que crece. */}
+            <div data-testid="barra-101" style={{ position: 'relative', flex: 1, height: 14, borderRadius: 8, background: 'var(--pista)', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', inset: 0, width: `${crecida ? p.pct : p.pctAntes}%`, background: p.color, borderRadius: 8, transition: animar ? 'width 900ms ease-out 250ms' : 'none' }} />
+              <div style={{ position: 'absolute', inset: 0, width: `${p.pctAntes}%`, background: 'rgba(0,0,0,0.35)', borderRadius: '8px 0 0 8px' }} />
             </div>
             <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 17, fontWeight: 700, color: '#FFD0D0' }}>
               <Svg markup={`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFD0D0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 V4"></path><path d="M5 4 H18 L15.5 8 L18 12 H5"></path></svg>`} />
