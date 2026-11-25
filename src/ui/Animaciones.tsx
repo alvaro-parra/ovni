@@ -318,25 +318,29 @@ export function CartelAviso({
     <div
       data-testid="aviso"
       data-value={aviso.tipo}
-      onClick={onClose}
       style={{
         position: 'absolute',
         inset: 0,
         zIndex: 5,
+        // El fondo deja pasar los toques: si ya es tu turno, tocar una carta la juega a la
+        // primera (y cierra el aviso) en vez de gastar el toque en cerrarlo.
+        pointerEvents: 'none',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'flex-start',
         background: 'rgba(6,20,12,0.3)',
         padding: '0 20px',
-        cursor: aviso.tipo === 'fin' ? 'default' : 'pointer',
       }}
     >
       <div
         ref={panel}
         role="alert"
         aria-label={etiqueta}
+        onClick={onClose}
         style={{
+          pointerEvents: 'auto',
+          cursor: aviso.tipo === 'fin' ? 'default' : 'pointer',
           maxWidth: 340,
           width: '100%',
           boxSizing: 'border-box',
