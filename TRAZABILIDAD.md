@@ -54,3 +54,4 @@ test (o se renombra), la suite falla.
 | CL-2 | `tests/engine.test.ts` | ganar jugando un 2 (siguiente roba 2 antes de contar) |
 | CL-3 | `tests/engine.test.ts` | as inicial con 2 jugadores: empieza la mano |
 | CL-4 | `tests/engine.test.ts` | robo forzoso hasta encontrar jugable |
+| CL-5 | `tests/mazo-cl5.test.ts` | 4 jugadores: el primero roba las 19 del mazo sin jugada; la ronda acaba sin ganador (R-MAZO-3) |

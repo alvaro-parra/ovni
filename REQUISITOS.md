@@ -156,6 +156,7 @@ más puntos elimina** al jugador. Gana el último que sobreviva.
   inmediato**: **ningún jugador gana la ronda** y **todos** suman a su marcador
   los puntos de las cartas que tengan en mano. A continuación se aplican las
   reglas de eliminación y victoria (§5).
+  Esto incluye el caso en que la rebaraja no aporta ninguna carta (CL-5).
 
 ---
 
@@ -201,3 +202,8 @@ más puntos elimina** al jugador. Gana el último que sobreviva.
   del siguiente jugador (ver R-INI-1b).
 - **CL-4.** Robo forzoso cuando no hay jugada: el jugador acumula cartas hasta
   encontrar una jugable (impacta en su puntuación si la ronda acaba por R-MAZO-3).
+- **CL-5.** **Mazo agotado con solo la carta activa en el descarte.** Si al agotarse
+  el mazo la pila de descarte solo contiene la carta activa, la rebaraja produce un
+  mazo vacío y cuenta como la única permitida; si el jugador en turno no puede
+  jugar, la ronda termina según R-MAZO-3. Puede ocurrir, por ejemplo, con 4
+  jugadores si el primero no tiene jugada y roba todo el mazo sin encontrarla.
