@@ -26,15 +26,29 @@ const btnTop =
 export function Main({ game }: { game: Ovni }) {
   // En pantallas bajas se quita el abanico decorativo y se compacta el título para que
   // la elección de rivales y avatar quepa sin scroll (R-UI-PLAT-1).
-  const { h: altoInicio, w: anchoInicio } = useEscala(ALTO_REF_PANTALLA)
-  // Compacta (sin abanico de cartas) si no cabría todo sin scroll: el contador de partidas
-  // ocupa ~50 px más, así que con él hace falta más alto.
+  const { h: altoInicio, w: anchoInicio, apaisada } = useEscala(ALTO_REF_PANTALLA, true)
+  // Compacta (sin abanico de cartas) si no cabría todo sin scroll.
   const conEstadisticas = leerEstadisticas().jugadas > 0
   // Contenido completo ≈ 700 px de diseño (+50 con el contador); pie y márgenes ≈ 140.
-  const compacta = altoInicio < (conEstadisticas ? 900 : 850)
-  const muyCompacta = compacta && conEstadisticas && altoInicio < 720
+  // Apaisado: siempre compacta (sin abanico) y el título en su columna (no en fila).
+  const compacta = apaisada || altoInicio < 830
+  const abanicoConContador = !compacta && conEstadisticas
+  const muyCompacta = !apaisada && compacta && conEstadisticas && altoInicio < 720
+  // Apaisado estrecho (p. ej. 667×375): no caben 3 columnas; el título pasa a la cabecera.
+  const sinColumnaTitulo = apaisada && anchoInicio < 760
   const [verReglas, setVerReglas] = useState(false)
   const [estadisticas] = useState(leerEstadisticas)
+  const pastillaGanadas = estadisticas.jugadas > 0 && (
+    <div
+      data-testid="ganadas"
+      aria-label={`Has ganado ${estadisticas.ganadas} de ${estadisticas.jugadas} partidas`}
+      style={{ display: 'flex', alignItems: 'center', gap: 6, height: 40, boxSizing: 'border-box', background: 'var(--panel)', border: '2px solid var(--borde)', borderRadius: 999, padding: '0 12px 0 8px', marginTop: 4, fontWeight: 700 }}
+    >
+      <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24"><path d="M7.5 3.5 H16.5 V10 a4.5 4.5 0 0 1 -9 0 Z" fill="#FFD23F" stroke="#1A1A1A" stroke-width="1.2"></path><path d="M7.5 5.5 H4 a3.5 3.5 0 0 0 4 4.5 M16.5 5.5 H20 a3.5 3.5 0 0 1 -4 4.5" fill="none" stroke="#FFD23F" stroke-width="1.6"></path><path d="M12 14.5 V18" stroke="#FFD23F" stroke-width="1.8"></path><path d="M7.5 21 H16.5 L15.5 18 H8.5 Z" fill="#FFD23F" stroke="#1A1A1A" stroke-width="1.2"></path></svg>`} />
+      <span aria-hidden="true" style={{ fontSize: 24 }}>{estadisticas.ganadas}</span>
+      <span aria-hidden="true" style={{ fontSize: 17, color: 'var(--texto-2)' }}>de {estadisticas.jugadas}</span>
+    </div>
+  )
   // Hasta que se abran las reglas una vez, el botón se destaca (para quien juega por primera vez).
   const [reglasVistas, setReglasVistas] = useState(() => {
     try {
@@ -64,7 +78,7 @@ export function Main({ game }: { game: Ovni }) {
               data-testid="continuar"
               onClick={game.continuarPartida}
               style={{
-                height: 80,
+                height: apaisada ? 60 : 80,
                 flexShrink: 0,
                 borderRadius: 24,
                 background: '#FFD23F',
@@ -90,7 +104,7 @@ export function Main({ game }: { game: Ovni }) {
             data-testid="jugar"
             onClick={game.startGame}
             style={{
-              height: guardada ? 60 : 80,
+              height: guardada || apaisada ? 60 : 80,
               flexShrink: 0,
               borderRadius: 24,
               background: guardada ? 'var(--panel)' : '#FFD23F',
@@ -129,7 +143,11 @@ export function Main({ game }: { game: Ovni }) {
       {/* paddingTop: deja sitio a la marca ✓ del interruptor activo (si no, la recorta el scroll). */}
       <div style={{ display: 'flex', gap: 10, flex: 'none', paddingTop: 8 }}>
         <InterruptoresVista />
-        <span style={{ flex: 1 }} />
+        {sinColumnaTitulo ? (
+          <span style={{ flex: 1, alignSelf: 'center', textAlign: 'center', fontSize: 30, fontWeight: 700, letterSpacing: 4, color: '#FFF8E7' }}>OVNI</span>
+        ) : (
+          <span style={{ flex: 1 }} />
+        )}
         <button
           data-testid="abrir-reglas"
           data-destacado={!reglasVistas}
@@ -146,6 +164,10 @@ export function Main({ game }: { game: Ovni }) {
         </button>
       </div>
 
+      {/* Apaisado (móvil girado): dos columnas — título a la izquierda, elecciones a la derecha.
+          En vertical estas dos cajas son transparentes (display: contents). */}
+      <div style={apaisada ? { display: 'flex', gap: 16, alignItems: 'stretch', flex: 1, minHeight: 0 } : { display: 'contents' }}>
+      <div style={sinColumnaTitulo ? { display: 'none' } : apaisada ? { flex: '0 0 26%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 12 } : { display: 'contents' }}>
       {/* Muy justo de alto (pantalla baja y con contador de partidas): título en una fila. */}
       <div style={{ display: 'flex', flexDirection: muyCompacta ? 'row' : 'column', alignItems: 'center', justifyContent: 'center', gap: muyCompacta ? 12 : 2 }}>
         <div
@@ -175,6 +197,7 @@ export function Main({ game }: { game: Ovni }) {
         aria-hidden="true"
         style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', height: 104, flex: 'none' }}
       >
+        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
         <div style={{ transform: 'rotate(-12deg) translateY(8px)', marginRight: -14 }}>
           <Carta rank="sota" suit="oros" w={64} />
         </div>
@@ -184,24 +207,19 @@ export function Main({ game }: { game: Ovni }) {
         <div style={{ transform: 'rotate(12deg) translateY(8px)', marginLeft: -14 }}>
           <Carta rank="2" suit="espadas" w={64} />
         </div>
+        </div>
+        {/* Con abanico, el contador va a su lado: no añade alto. */}
+        {abanicoConContador && <div style={{ marginLeft: 18, alignSelf: 'center' }}>{pastillaGanadas}</div>}
       </div>
       )}
 
-      {/* Partidas ganadas en este dispositivo. */}
+      {/* Partidas ganadas en este dispositivo (sin abanico: debajo del título). */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: compacta ? -6 : 0 }}>
-        {estadisticas.jugadas > 0 && (
-          <div
-            data-testid="ganadas"
-            aria-label={`Has ganado ${estadisticas.ganadas} de ${estadisticas.jugadas} partidas`}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, height: 40, boxSizing: 'border-box', background: 'var(--panel)', border: '2px solid var(--borde)', borderRadius: 999, padding: '0 12px 0 8px', marginTop: 4, fontWeight: 700 }}
-          >
-            <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24"><path d="M7.5 3.5 H16.5 V10 a4.5 4.5 0 0 1 -9 0 Z" fill="#FFD23F" stroke="#1A1A1A" stroke-width="1.2"></path><path d="M7.5 5.5 H4 a3.5 3.5 0 0 0 4 4.5 M16.5 5.5 H20 a3.5 3.5 0 0 1 -4 4.5" fill="none" stroke="#FFD23F" stroke-width="1.6"></path><path d="M12 14.5 V18" stroke="#FFD23F" stroke-width="1.8"></path><path d="M7.5 21 H16.5 L15.5 18 H8.5 Z" fill="#FFD23F" stroke="#1A1A1A" stroke-width="1.2"></path></svg>`} />
-            <span aria-hidden="true" style={{ fontSize: 24 }}>{estadisticas.ganadas}</span>
-            <span aria-hidden="true" style={{ fontSize: 17, color: 'var(--texto-2)' }}>de {estadisticas.jugadas}</span>
-          </div>
-        )}
+        {!abanicoConContador && pastillaGanadas}
       </div>
 
+      </div>
+      <div style={apaisada ? { flex: '1 1 0', minWidth: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'center', gap: 12 } : { display: 'contents' }}>
       <section
         aria-label="Número de rivales"
         style={{ background: 'var(--panel)', borderRadius: 22, padding: '14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
@@ -222,7 +240,7 @@ export function Main({ game }: { game: Ovni }) {
                 onClick={() => game.setNRivals(n)}
                 style={{
                   position: 'relative',
-                  height: 104,
+                  height: apaisada ? 96 : 104,
                   borderRadius: 18,
                   border: `4px solid ${sel ? '#FFD23F' : 'var(--borde)'}`,
                   background: sel ? '#FFF8E7' : 'var(--tapete)',
@@ -258,7 +276,7 @@ export function Main({ game }: { game: Ovni }) {
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21 C4 16 8 14 12 14 C16 14 20 16 20 21"></path></svg>`} />
           <span>Tú</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${apaisada ? 2 : 4}, minmax(0, 1fr))`, gap: apaisada ? 8 : 10 }}>
           {AVATARES.map((a) => {
             const sel = a.q === game.humanAvatar
             return (
@@ -270,7 +288,7 @@ export function Main({ game }: { game: Ovni }) {
                 onClick={() => game.setHumanAvatar(a.q)}
                 style={{
                   position: 'relative',
-                  height: 76,
+                  height: apaisada ? 56 : 76,
                   borderRadius: 18,
                   border: `4px solid ${sel ? '#FFD23F' : 'var(--borde)'}`,
                   background: sel ? '#FFF8E7' : 'var(--tapete)',
@@ -288,6 +306,8 @@ export function Main({ game }: { game: Ovni }) {
           })}
         </div>
       </section>
+      </div>
+      </div>
 
       {/* Absoluto respecto al tablero: no se desplaza con el scroll del contenido. */}
       {verReglas && <Reglas onClose={() => setVerReglas(false)} />}
@@ -320,7 +340,7 @@ function Marca() {
 /** Tablero de la pantalla de inicio: ocupa todo el marco y hace scroll si no cabe. */
 export function Marco({ children, pie, compacta = false }: { children: ReactNode; pie?: ReactNode; compacta?: boolean }) {
   return (
-    <Tablero padding={compacta ? '6px 18px 14px' : '12px 18px 24px'} gap={compacta ? 12 : 16} pie={pie}>
+    <Tablero padding={compacta ? '6px 18px 14px' : '12px 18px 24px'} gap={compacta ? 12 : 14} pie={pie}>
       {children}
     </Tablero>
   )
