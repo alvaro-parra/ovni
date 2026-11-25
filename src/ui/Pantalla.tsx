@@ -28,6 +28,16 @@ const ANCHO_MAX = 560
 /** Ancho de diseño mínimo con el modo grande activo. */
 const ANCHO_MIN_GRANDE = 320
 
+/**
+ * Mesa apaisada (tableta u ordenador en horizontal, móvil girado): dos columnas, a la
+ * izquierda la mesa y a la derecha tu mano. Diseño de referencia 780×480.
+ */
+const PROPORCION_APAISADA = 1.25
+const ANCHO_REF_APAISADO = 780
+const ALTO_REF_APAISADO = 480
+const ANCHO_MAX_APAISADO = 1000
+const ANCHO_MIN_GRANDE_APAISADO = 640
+
 export interface Escala {
   /** Factor de escala aplicado (≥ 1). */
   s: number
@@ -36,16 +46,28 @@ export interface Escala {
   h: number
   /** Desplazamiento horizontal en px reales para centrar el marco. */
   left: number
+  /** La pantalla es apaisada y quien la usa admite el diseño en dos columnas (la mesa). */
+  apaisada: boolean
 }
 
-export function calcularEscala(vw: number, vh: number, altoRef: number, factor = 1): Escala {
-  const base = Math.min(ESCALA_MAX, Math.max(ESCALA_MIN, Math.min(vw / ANCHO_REF, vh / altoRef)))
-  // El modo grande amplía hasta `factor`, pero sin dejar el ancho de diseño por debajo de
-  // ANCHO_MIN_GRANDE: más estrecho, la mesa no cabe y la mano se sale de la pantalla.
-  const s = factor > 1 ? Math.max(base, Math.min(base * factor, vw / ANCHO_MIN_GRANDE)) : base
-  const w = Math.min(ANCHO_MAX, vw / s)
+export function calcularEscala(
+  vw: number,
+  vh: number,
+  altoRef: number,
+  factor = 1,
+  admiteApaisada = false,
+): Escala {
+  const apaisada = admiteApaisada && vw / vh > PROPORCION_APAISADA
+  const anchoRef = apaisada ? ANCHO_REF_APAISADO : ANCHO_REF
+  const alto = apaisada ? ALTO_REF_APAISADO : altoRef
+  const anchoMin = apaisada ? ANCHO_MIN_GRANDE_APAISADO : ANCHO_MIN_GRANDE
+  const base = Math.min(ESCALA_MAX, Math.max(ESCALA_MIN, Math.min(vw / anchoRef, vh / alto)))
+  // El modo grande amplía hasta `factor`, pero sin dejar el ancho de diseño por debajo del
+  // mínimo: más estrecho, la mesa no cabe y la mano se sale de la pantalla.
+  const s = factor > 1 ? Math.max(base, Math.min(base * factor, vw / anchoMin)) : base
+  const w = Math.min(apaisada ? ANCHO_MAX_APAISADO : ANCHO_MAX, vw / s)
   const h = vh / s
-  return { s, w, h, left: (vw - w * s) / 2 }
+  return { s, w, h, left: (vw - w * s) / 2, apaisada }
 }
 
 /**
@@ -74,7 +96,7 @@ function medirViewport() {
 
 /** Escala para el viewport actual. Se calcula en el render: cambiar de pantalla
  *  (y por tanto de `altoRef`) aplica la escala nueva sin un fotograma intermedio. */
-export function useEscala(altoRef: number): Escala {
+export function useEscala(altoRef: number, admiteApaisada = false): Escala {
   const { grande } = usePreferencias()
   const [vp, setVp] = useState(medirViewport)
   useEffect(() => {
@@ -90,12 +112,20 @@ export function useEscala(altoRef: number): Escala {
       window.visualViewport?.removeEventListener('resize', on)
     }
   }, [])
-  return calcularEscala(vp.vw, vp.vh, altoRef, grande ? FACTOR_GRANDE : 1)
+  return calcularEscala(vp.vw, vp.vh, altoRef, grande ? FACTOR_GRANDE : 1, admiteApaisada)
 }
 
 /** Ocupa el viewport y coloca dentro el marco escalado. */
-export function Pantalla({ children, altoRef }: { children: ReactNode; altoRef: number }) {
-  const { s, w, h, left } = useEscala(altoRef)
+export function Pantalla({
+  children,
+  altoRef,
+  admiteApaisada = false,
+}: {
+  children: ReactNode
+  altoRef: number
+  admiteApaisada?: boolean
+}) {
+  const { s, w, h, left } = useEscala(altoRef, admiteApaisada)
   const { grande, contraste } = usePreferencias()
   return (
     <div

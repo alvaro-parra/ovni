@@ -170,15 +170,21 @@ export function Mesa({ game }: { game: Ovni }) {
 
   // R-UI-PLAT-1: en pantallas bajas (< 700 px de diseño) la zona central encoge un poco
   // para dejar sitio a la mano; las cartas de la mano se ajustan al hueco que queda.
-  const { h: altoPantalla, w: anchoPantalla } = useEscala(ALTO_REF_MESA)
+  const { h: altoPantalla, w: anchoTotal, apaisada } = useEscala(ALTO_REF_MESA, true)
+  // Apaisada (tableta/ordenador en horizontal, móvil girado): dos columnas, mesa a la
+  // izquierda y tu mano a la derecha. `anchoPantalla` es el ancho de la columna de la mesa.
+  const anchoPantalla = apaisada ? (anchoTotal - 32 - 14) / 2 : anchoTotal
   // Ancho de diseño estrecho (móvil pequeño, o modo grande): cabecera y rivales más compactos.
   const estrecho = anchoPantalla < 340
-  const muyBaja = altoPantalla < 560
-  // Por debajo de ~800 px de alto la zona central cede sitio a la mano (las cartas que
-  // juegas importan más): 142 px en 844, ~109 en 667, mínimo 100.
-  const altoCentro = Math.round(Math.max(100, Math.min(142, 142 - (800 - altoPantalla) * 0.25)))
+  // En vertical y muy bajo, la mesa hace scroll; en apaisado la mano tiene su columna.
+  const muyBaja = !apaisada && altoPantalla < 560
+  // Vertical: por debajo de ~800 px de alto la zona central cede sitio a la mano (142 px en
+  // 844, ~109 en 667, mínimo 100). Apaisada: la columna de la mesa es solo para ella.
+  const altoCentro = apaisada
+    ? Math.round(Math.max(100, Math.min(170, altoPantalla - 290)))
+    : Math.round(Math.max(100, Math.min(142, 142 - (800 - altoPantalla) * 0.25)))
   const bajo = altoPantalla < 760
-  const wActiva = Math.min(88, Math.floor((altoCentro - 6) / PROPORCION_CARTA))
+  const wActiva = Math.min(apaisada ? 110 : 88, Math.floor((altoCentro - 6) / PROPORCION_CARTA))
   const wMazo = Math.round(wActiva * 0.75)
   const [refMano, mano] = useMedida<HTMLDivElement>()
   const huecoMano = { ancho: mano.ancho, alto: mano.alto, gapX: 8, gapY: 20, margenSup: 18 }
@@ -202,7 +208,14 @@ export function Mesa({ game }: { game: Ovni }) {
           mano no cabría; en el resto la mano se adapta al hueco (R-UI-PLAT-1). */}
       <div
         data-testid="mesa-contenido"
-        style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 10, padding: '16px 16px 14px', overflowY: muyBaja ? 'auto' : 'hidden' }}
+        data-apaisada={apaisada}
+        style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: apaisada ? 'row' : 'column', gap: apaisada ? 14 : 10, padding: '16px 16px 14px', overflowY: muyBaja ? 'auto' : 'hidden' }}
+      >
+      {/* Columna de la mesa: en vertical es transparente (display: contents) y todo va en
+          una sola columna; en apaisado agrupa cabecera, rivales, centro y banner. */}
+      <div
+        data-testid="mesa-izquierda"
+        style={apaisada ? { flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 } : { display: 'contents' }}
       >
       {/* Cabecera */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -455,11 +468,13 @@ export function Mesa({ game }: { game: Ovni }) {
       ) : (
       <Banner estado={estado} animar={game.dur.animar} letra={anchoPantalla < 380 ? 20 : 22} curPlayer={curPlayer} roba={game.jugada?.tipo === 'roba' && game.jugada.actorId === curId ? game.jugada.n : 0} />
       )}
+      </div>
 
       {/* Panel del jugador */}
       <div
         style={{
-          flex: 1,
+          flex: apaisada ? '1 1 0' : 1,
+          minWidth: 0,
           minHeight: muyBaja ? 280 : 0,
           background: 'var(--panel-mano)',
           borderRadius: 24,
@@ -611,12 +626,12 @@ export function Mesa({ game }: { game: Ovni }) {
 
       {/* Overlays */}
       {game.overlay?.kind === 'palo' && (
-        <SelectorPalo sota={game.overlay.card} mano={human.hand} onPick={game.chooseSuit} onCancel={game.cancelarSota} />
+        <SelectorPalo sota={game.overlay.card} mano={human.hand} onPick={game.chooseSuit} onCancel={game.cancelarSota} unaFila={apaisada} />
       )}
       {game.overlay?.kind === 'vista' && <PanelVista onClose={game.closeOverlay} />}
       {game.overlay?.kind === 'salir' && <ConfirmarSalir onSeguir={game.closeOverlay} onSalir={game.restart} />}
       {game.overlay?.kind === 'roba2' && (
-        <AvisoRoba2 datos={game.overlay} onOk={game.dismissRoba2} />
+        <AvisoRoba2 datos={game.overlay} onOk={game.dismissRoba2} compacto={altoPantalla < 520} />
       )}
       {game.overlay?.kind === 'verMano' && (
         <VerMano hand={hand} humanTurn={humanTurn} onPlay={game.playHuman} onClose={game.closeOverlay} />
@@ -739,7 +754,20 @@ function CartaBtn({
  * Elegir palo al jugar una Sota. Muestra tus cartas (sin la Sota que juegas) y cuántas
  * tienes de cada palo, para decidir sin tener que recordar la mano que queda detrás.
  */
-function SelectorPalo({ sota, mano, onPick, onCancel }: { sota: Card; mano: Card[]; onPick: (s: Suit) => void; onCancel: () => void }) {
+function SelectorPalo({
+  sota,
+  mano,
+  onPick,
+  onCancel,
+  unaFila = false,
+}: {
+  sota: Card
+  mano: Card[]
+  onPick: (s: Suit) => void
+  onCancel: () => void
+  /** Apaisado: los 4 palos en una fila, más bajos, para que todo quepa sin scroll. */
+  unaFila?: boolean
+}) {
   const ref = useFocoDialogo<HTMLDivElement>(onCancel)
   let quitada = false
   const resto = mano.filter((c) => {
@@ -777,14 +805,14 @@ function SelectorPalo({ sota, mano, onPick, onCancel }: { sota: Card; mano: Card
             </div>
           </div>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${unaFila ? 4 : 2}, minmax(0, 1fr))`, gap: 12 }}>
           {SUITS.map((s) => (
             <button
               key={s}
               data-testid={`palo-${s}`}
               aria-label={`Elegir ${SUIT_NAME[s]}: tienes ${cuantas(s)}`}
               onClick={() => onPick(s)}
-              style={{ position: 'relative', height: 122, boxSizing: 'border-box', borderRadius: 22, border: `4px solid ${SUIT_COLOR[s]}`, background: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: SUIT_COLOR[s], padding: 0, fontFamily: 'inherit' }}
+              style={{ position: 'relative', height: unaFila ? 100 : 122, boxSizing: 'border-box', borderRadius: 22, border: `4px solid ${SUIT_COLOR[s]}`, background: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: SUIT_COLOR[s], padding: 0, fontFamily: 'inherit' }}
             >
               <Palo palo={s} w={62} />
               <span style={{ fontSize: 22, fontWeight: 700 }}>{SUIT_NAME[s]}</span>

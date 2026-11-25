@@ -25,10 +25,10 @@ const ICONO_TURNO = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none"
 const ICONO_BARAJA = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7 H8 C11 7 13 17 16 17 H21"></path><path d="M3 17 H8 C11 17 13 7 16 7 H21"></path><path d="M18 4 L21 7 L18 10"></path><path d="M18 14 L21 17 L18 20"></path></svg>`
 const ICONO_FIN = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 V4"></path><path d="M5 4 H18 L15.5 8 L18 12 H5"></path></svg>`
 
-function Linea({ icono, texto, testid }: { icono: string; texto: string; testid: string }) {
+function Linea({ icono, texto, testid, compacto }: { icono: string; texto: string; testid: string; compacto: boolean }) {
   return (
-    <div data-testid={testid} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 22, fontWeight: 700, lineHeight: 1.2 }}>
-      <span style={{ width: 44, height: 44, flex: 'none', borderRadius: '50%', background: '#FFF8E7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div data-testid={testid} style={{ display: 'flex', alignItems: 'center', gap: compacto ? 10 : 12, fontSize: compacto ? 19 : 22, fontWeight: 700, lineHeight: 1.2 }}>
+      <span style={{ width: compacto ? 36 : 44, height: compacto ? 36 : 44, flex: 'none', borderRadius: '50%', background: '#FFF8E7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Svg markup={icono} />
       </span>
       <span>{texto}</span>
@@ -36,7 +36,9 @@ function Linea({ icono, texto, testid }: { icono: string; texto: string; testid:
   )
 }
 
-export function AvisoRoba2({ datos, onOk }: { datos: DatosAvisoRoba2; onOk: () => void }) {
+/** `compacto`: pantallas bajas (p. ej. móvil girado) — todo más pequeño para que «Vale» se vea sin scroll. */
+export function AvisoRoba2({ datos, onOk, compacto = false }: { datos: DatosAvisoRoba2; onOk: () => void; compacto?: boolean }) {
+  const wCarta = compacto ? 60 : 96
   const ref = useFocoDialogo<HTMLDivElement>(onOk)
   const n = datos.cartas.length
   const t = textosRoba2({ n, rebarajado: datos.rebarajado, finRonda: datos.finRonda }, null, datos.byName)
@@ -47,7 +49,7 @@ export function AvisoRoba2({ datos, onOk }: { datos: DatosAvisoRoba2; onOk: () =
       aria-label={t.resumen}
       data-testid="aviso-roba2"
       data-robadas={n}
-      style={{ position: 'absolute', inset: 0, zIndex: 6, background: 'rgba(6,20,12,0.88)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, padding: '20px 22px', boxSizing: 'border-box', overflowY: 'auto', color: '#FFF8E7' }}
+      style={{ position: 'absolute', inset: 0, zIndex: 6, background: 'rgba(6,20,12,0.88)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: compacto ? 10 : 18, padding: compacto ? '10px 22px' : '20px 22px', boxSizing: 'border-box', overflowY: 'auto', color: '#FFF8E7' }}
     >
       <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--panel)', border: '2px solid var(--borde)', padding: '8px 16px 8px 8px', borderRadius: 999, fontSize: 20, fontWeight: 700 }}>
         <Avatar quien={datos.byAvatar} w={40} />
@@ -56,37 +58,37 @@ export function AvisoRoba2({ datos, onOk }: { datos: DatosAvisoRoba2; onOk: () =
       </div>
 
       {/* Las cartas robadas, boca arriba (o un hueco vacío si no quedaba ninguna). */}
-      <div data-testid="cartas-robadas" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, minHeight: 160, padding: '0 40px' }}>
+      <div data-testid="cartas-robadas" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, minHeight: compacto ? 100 : 160, padding: '0 40px' }}>
         {n === 0 ? (
-          <div aria-hidden="true" style={{ width: 96, height: 148, boxSizing: 'border-box', borderRadius: 10, border: '4px dashed #CFE8D8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 700, color: '#CFE8D8' }}>
+          <div aria-hidden="true" style={{ width: wCarta, height: Math.round(wCarta * 1.542), boxSizing: 'border-box', borderRadius: 10, border: '4px dashed #CFE8D8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 700, color: '#CFE8D8' }}>
             0
           </div>
         ) : (
           datos.cartas.map((c, i) => (
             <div key={i} style={{ lineHeight: 0, transform: n > 1 ? `rotate(${i === 0 ? -6 : 6}deg)` : undefined }}>
-              <CartaDe card={c} w={96} />
+              <CartaDe card={c} w={wCarta} />
             </div>
           ))
         )}
         <div
           aria-hidden="true"
-          style={{ position: 'absolute', right: -4, bottom: -18, width: 84, height: 84, boxSizing: 'border-box', borderRadius: '50%', background: '#FFD23F', color: '#1A1A1A', border: '5px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 700, lineHeight: 1 }}
+          style={{ position: 'absolute', right: -4, bottom: compacto ? -8 : -18, width: compacto ? 58 : 84, height: compacto ? 58 : 84, boxSizing: 'border-box', borderRadius: '50%', background: '#FFD23F', color: '#1A1A1A', border: `${compacto ? 4 : 5}px solid #1A1A1A`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: compacto ? 28 : 40, fontWeight: 700, lineHeight: 1 }}
         >
           +{n}
         </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, maxWidth: 340 }}>
-        <Linea testid="roba2-robo" icono={ICONO_ROBO} texto={t.robo} />
-        {t.rebaraje && <Linea testid="roba2-rebaraje" icono={ICONO_BARAJA} texto={t.rebaraje} />}
-        <Linea testid="roba2-consecuencia" icono={datos.finRonda ? ICONO_FIN : ICONO_TURNO} texto={t.consecuencia} />
+        <Linea compacto={compacto} testid="roba2-robo" icono={ICONO_ROBO} texto={t.robo} />
+        {t.rebaraje && <Linea compacto={compacto} testid="roba2-rebaraje" icono={ICONO_BARAJA} texto={t.rebaraje} />}
+        <Linea compacto={compacto} testid="roba2-consecuencia" icono={datos.finRonda ? ICONO_FIN : ICONO_TURNO} texto={t.consecuencia} />
       </div>
 
       <button
         data-testid="roba2-ok"
         data-autofoco
         onClick={onOk}
-        style={{ marginBottom: 'auto', flex: 'none', width: 240, height: 68, borderRadius: 22, background: '#FFD23F', color: '#1A1A1A', border: '4px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontFamily: 'inherit', fontSize: 28, fontWeight: 700, cursor: 'pointer' }}
+        style={{ marginBottom: 'auto', flex: 'none', width: 240, height: compacto ? 56 : 68, borderRadius: 22, background: '#FFD23F', color: '#1A1A1A', border: '4px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontFamily: 'inherit', fontSize: 28, fontWeight: 700, cursor: 'pointer' }}
       >
         <Svg markup={`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 7"></path></svg>`} />
         <span>Vale</span>

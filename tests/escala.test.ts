@@ -4,7 +4,7 @@ import { ALTO_REF_MESA, ALTO_REF_PANTALLA, calcularEscala } from '../src/ui/Pant
 // UI responsive (R-UI-PLAT-1). No son reglas del juego: no entran en TRAZABILIDAD.
 describe('calcularEscala (R-UI-PLAT-1)', () => {
   it('en móvil no reduce nunca: escala 1 y el marco mide lo que la pantalla', () => {
-    expect(calcularEscala(320, 568, ALTO_REF_MESA)).toEqual({ s: 1, w: 320, h: 568, left: 0 })
+    expect(calcularEscala(320, 568, ALTO_REF_MESA)).toEqual({ s: 1, w: 320, h: 568, left: 0, apaisada: false })
   })
 
   it('en tablet y escritorio amplía y el marco llena el alto', () => {
@@ -40,5 +40,17 @@ describe('calcularEscala (R-UI-PLAT-1)', () => {
     // En escritorio el ×1,25 completo.
     const esc = calcularEscala(1440, 900, ALTO_REF_MESA, 1.25)
     expect(esc.s).toBeCloseTo(Math.min(1.8, (900 / 700) * 1.25))
+  })
+
+  it('mesa apaisada: dos columnas solo si quien la usa lo admite y la pantalla es ancha', () => {
+    expect(calcularEscala(1024, 768, ALTO_REF_MESA).apaisada).toBe(false) // no admite
+    expect(calcularEscala(768, 1024, ALTO_REF_MESA, 1, true).apaisada).toBe(false) // vertical
+    const tableta = calcularEscala(1024, 768, ALTO_REF_MESA, 1, true)
+    expect(tableta.apaisada).toBe(true)
+    expect(tableta.s).toBeCloseTo(1024 / 780)
+    expect(tableta.w).toBeCloseTo(780)
+    const movil = calcularEscala(844, 390, ALTO_REF_MESA, 1, true)
+    expect(movil).toMatchObject({ apaisada: true, s: 1, w: 844, h: 390 })
+    expect(calcularEscala(2560, 1080, ALTO_REF_MESA, 1, true).w).toBeLessThanOrEqual(1000)
   })
 })
