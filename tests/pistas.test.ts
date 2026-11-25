@@ -12,6 +12,10 @@ describe('textoPista', () => {
     expect(textoPista({ tipo: 'no-vale', palo: 'bastos', numero: 'sota' })).toBe('Esa no vale: necesitas Bastos o una Sota')
   })
 
+  it('tocar el mazo teniendo jugada: hay que jugar (R-JUEGO-4)', () => {
+    expect(textoPista({ tipo: 'tienes-jugada' })).toBe('Tienes jugada: echa una carta con ✓')
+  })
+
   it('fuera de tu turno: a quién le toca', () => {
     expect(textoPista({ tipo: 'espera', quien: 'Robi' })).toBe('Espera: ahora juega Robi')
   })

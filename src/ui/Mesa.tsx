@@ -140,17 +140,20 @@ export function Mesa({ game }: { game: Ovni }) {
   const [pista, setPista] = useState<{ texto: string; palo: Suit | null; id: number } | null>(null)
   const pistaTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => () => { if (pistaTimer.current) clearTimeout(pistaTimer.current) }, [])
-  const mostrarPista = (item: HandItem, el: HTMLElement) => {
+  const mostrarPista = (item: HandItem, el: HTMLElement) =>
+    pistaPor(
+      item.est === 'espera'
+        ? { tipo: 'espera', quien: curPlayer?.name ?? '' }
+        : { tipo: 'no-vale', palo: round.activeSuit, numero: round.activeRank },
+      el,
+    )
+  const pistaPor = (motivo: MotivoPista, el: HTMLElement) => {
     if (game.dur.animar) {
       el.animate(
         [{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }],
         { duration: 320, easing: 'ease-in-out' },
       )
     }
-    const motivo: MotivoPista =
-      item.est === 'espera'
-        ? { tipo: 'espera', quien: curPlayer?.name ?? '' }
-        : { tipo: 'no-vale', palo: round.activeSuit, numero: round.activeRank }
     setPista({ texto: textoPista(motivo), palo: motivo.tipo === 'no-vale' ? motivo.palo : null, id: Date.now() })
     if (pistaTimer.current) clearTimeout(pistaTimer.current)
     pistaTimer.current = setTimeout(() => setPista(null), 2500)
@@ -342,8 +345,15 @@ export function Mesa({ game }: { game: Ovni }) {
           data-testid="robar"
           data-vuelo="mazo"
           aria-label={`Mazo de robo, ${round.drawPile.length} cartas`}
-          onClick={game.drawHuman}
-          disabled={estado !== 'robar'}
+          // Sin `disabled`: si no toca robar, el mazo responde con una pista (R-JUEGO-4).
+          onClick={(e) =>
+            estado === 'robar'
+              ? game.drawHuman()
+              : estado === 'tu'
+                ? pistaPor({ tipo: 'tienes-jugada' }, e.currentTarget)
+                : estado === 'ia' && pistaPor({ tipo: 'espera', quien: curPlayer?.name ?? '' }, e.currentTarget)
+          }
+          aria-disabled={estado !== 'robar'}
           style={{
             position: 'relative',
             padding: 0,
