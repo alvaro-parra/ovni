@@ -154,19 +154,24 @@ Tomadas durante las sesiones de pulido de UI/UX; revisables. Cada una indica a q
 requisito responde.
 
 - **Responsive (R-UI-PLAT-1).** El diseño de 390 px se adapta al alto del móvil y se
-  amplía en tableta/escritorio (nunca se reduce). En pantallas **apaisadas** la mesa pasa
-  a **dos columnas** (mesa a la izquierda, tu mano a la derecha); inicio, recuento y
-  victoria siguen en una columna. La acción principal de cada pantalla está siempre a la
-  vista (botón fijo abajo).
+  amplía en tableta/escritorio (nunca se reduce). En pantallas **apaisadas** (tableta en
+  horizontal, móvil girado) todas las pantallas se reparten en **columnas**: la mesa (mesa |
+  tu mano), el inicio (título | rivales | avatar), el recuento (jugadores de dos en dos) y
+  la final (resultado | clasificación). La acción principal de cada pantalla está siempre a
+  la vista (botón fijo abajo).
 - **Ver mejor (R-UI-A11Y-4).** Interruptores de **letra grande** (×1,25, sin dejar la mesa
-  por debajo de 320 px de ancho) y **contraste reforzado** (además, se activa solo si el
-  sistema lo pide), en el inicio y en la mesa (botón del ojo).
+  por debajo de 320 px de ancho; las cartas de tu mano nunca salen más pequeñas que en el
+  modo normal) y **contraste reforzado** (además, se activa solo si el sistema lo pide), en
+  el inicio y en la mesa (botón del ojo).
 - **Ritmo y avisos (R-UI-A11Y-7, R-UI-A11Y-9, R-UI-COMP-5).** Cada jugada de un bot se ve
   en fases: piensa (puntos animados) → su carta vuela a la mesa → aviso grande si hay
   efecto (+2, cambio de sentido, vuelve a jugar, palo elegido, carta inicial, fin de
   ronda). Las cartas que te llegan vuelan del mazo a su sitio. **Velocidad** Despacio /
   Normal / Rápido (inicio y «Ver mejor»). Con «reducir movimiento» del sistema no hay
-  vuelos, pero sí pausas. Flechas entre rivales indican el **sentido de juego**.
+  vuelos, pero sí pausas. Flechas entre rivales indican el **sentido de juego**. Al empezar
+  cada ronda, aviso «Ronda N · Empieza X». En el turno de otro, tu mano se atenúa un poco
+  (salvo en modo contraste). Los avisos no bloquean: si ya es tu turno, tocar una carta la
+  juega a la primera.
 - **+2 con casos límite (R-DOS-1, R-DOS-4, R-MAZO-2).** El aviso muestra las cartas
   robadas de verdad (puede ser 1 o ninguna si no quedan) y avisa si se rebarajó la mesa o
   si el 2 terminó la ronda.
@@ -176,8 +181,11 @@ requisito responde.
 - **Evitar pérdidas.** Salir de la partida pide confirmación; la Sota se puede cancelar
   («Volver»); la partida se **guarda en el dispositivo** y se puede continuar si el móvil
   recarga la página.
-- **Reglas resumidas** con un dibujo por regla (botón «?», destacado hasta la primera vez).
-- **Instalable** en la pantalla de inicio del móvil (pantalla completa, icono propio) y
-  sin dependencias externas en tiempo de ejecución (tipografía servida con la app).
+- **Primeras partidas.** Reglas resumidas con un dibujo por regla (botón «? Reglas»,
+  destacado hasta la primera vez) y, en tus 3 primeros turnos, una **manita** que señala qué
+  tocar. El inicio muestra cuántas partidas has ganado en el dispositivo.
+- **Instalable** en la pantalla de inicio del móvil (pantalla completa, icono propio),
+  **funciona sin conexión** tras la primera visita y sin dependencias externas en tiempo de
+  ejecución (tipografía servida con la app). Respeta la muesca y la barra de inicio.
 - **Teclado y lectores de pantalla.** Foco visible; los diálogos retienen el foco y se
-  cierran con Escape cuando tiene sentido.
+  cierran con Escape cuando tiene sentido; se anuncia qué se juega y qué se roba.
