@@ -245,6 +245,14 @@ test.describe('OVNI · happy paths', () => {
     const mesa = await page.locator('[data-vuelo="pila"]').getAttribute('aria-label')
 
     await sota.first().click()
+    // Nada de la mesa asoma por encima del selector (las flechas de sentido lo hacían).
+    const asoman = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-testid="flecha-sentido"]')].filter((f) => {
+        const r = f.getBoundingClientRect()
+        return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest('[data-testid="flecha-sentido"]')
+      }).length,
+    )
+    expect(asoman).toBe(0)
     await page.getByTestId('palo-volver').click()
     await expect(page.getByTestId('palo-oros')).toHaveCount(0)
     await expect(page.getByTestId('mis-cartas')).toHaveText(cartas)

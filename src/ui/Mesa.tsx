@@ -893,7 +893,7 @@ function SelectorPalo({
   return (
     <div
       onClick={(e) => e.target === e.currentTarget && onCancel()}
-      style={{ position: 'absolute', inset: 0, background: 'rgba(6,20,12,0.6)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
+      style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'rgba(6,20,12,0.6)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
     >
       <div ref={ref} role="dialog" data-claro aria-label="Elige el palo" style={{ background: '#FFF8E7', color: '#1A1A1A', borderRadius: '28px 28px 0 0', borderTop: '6px solid #5A3A1E', padding: '18px 16px 20px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
