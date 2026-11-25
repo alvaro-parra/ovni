@@ -238,7 +238,10 @@ export function Mesa({ game }: { game: Ovni }) {
   const [refMano, mano] = useMedida<HTMLDivElement>()
   // Con «Más grande», separación entre cartas menor: con todo ampliado, cada píxel cuenta
   // para que las cartas de la mano sean de verdad más grandes que en el modo normal.
-  const huecoMano = { ancho: mano.ancho, alto: mano.alto, gapX: grande ? 6 : 8, gapY: grande ? 12 : 20, margenSup: grande ? 14 : 18 }
+  // Con poco alto (móvil pequeño) también se aprietan las filas: si no, con 6 cartas sale
+  // una sola fila de cartas diminutas.
+  const apretado = grande || mano.alto < 260
+  const huecoMano = { ancho: mano.ancho, alto: mano.alto, gapX: apretado ? 6 : 8, gapY: apretado ? 10 : 20, margenSup: apretado ? 14 : 18 }
   const topeCarta = grande ? 150 : 120
   const rGrande = ajustarRejilla(n, huecoMano, topeCarta)
   // En modo dividido, debajo va la tira de cartas no jugables (~88 px).
@@ -597,7 +600,7 @@ export function Mesa({ game }: { game: Ovni }) {
 
         <div ref={refMano} data-testid="zona-mano" data-vuelo="jugador-yo" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {modo === 'grande' && (
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rGrande.cols}, minmax(0, 1fr))`, gap: '20px 8px', justifyItems: 'center', alignContent: 'center', flex: 1, paddingTop: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rGrande.cols}, minmax(0, 1fr))`, gap: `${huecoMano.gapY}px ${huecoMano.gapX}px`, justifyItems: 'center', alignContent: 'center', flex: 1, paddingTop: huecoMano.margenSup }}>
             {hand.map((i, k) => (
               <CartaBtn key={k} item={i} w={rGrande.w} onPlay={game.playHuman} vuelo={vueloVisible} oculta={llegando} onNoJugable={mostrarPista} />
             ))}
@@ -610,11 +613,11 @@ export function Mesa({ game }: { game: Ovni }) {
               style={{
                 display: 'grid',
                 gridTemplateColumns: `repeat(${rDividido.cols}, minmax(0, 1fr))`,
-                gap: '20px 8px',
+                gap: `${huecoMano.gapY}px ${huecoMano.gapX}px`,
                 justifyItems: 'center',
                 alignContent: 'center',
                 flex: 1,
-                paddingTop: 18,
+                paddingTop: huecoMano.margenSup,
               }}
             >
               {jugables.map((i, k) => (
