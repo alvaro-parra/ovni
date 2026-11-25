@@ -22,3 +22,5 @@ Todas usan un solo navegador y una página a la vez (el sandbox tiene 2 GB de RA
   modos de la mano (grande, dividido, rejilla, «+N») sin tener que llegar a ellos jugando.
 - `banco-victoria.mjs <baseUrl> <salida.png> [WxH]` — con `vite dev`, la pantalla final en sus 5
   variantes (ganas, ganas por menos puntos, empate, eliminado, eliminado por más puntos).
+- `inicio.mjs <url> <salida.png> <WxH,...> [vistaJSON] [estadoJSON]` — la pantalla de inicio a
+  varios tamaños (sin jugar); `estadoJSON` fija claves de localStorage (p. ej. reglas vistas).

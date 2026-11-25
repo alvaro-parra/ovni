@@ -6,7 +6,7 @@ import { Palo } from './Palo'
 import { Carta } from './Carta'
 import { Svg, css } from './dc'
 import { ALTO_REF_PANTALLA, Tablero, useEscala } from './Pantalla'
-import { InterruptoresVista } from './Vista'
+import { ConRotulo, InterruptoresVista } from './Vista'
 import { Reglas } from './Reglas'
 import { leerEstadisticas } from './estadisticas'
 
@@ -149,20 +149,26 @@ export function Main({ game }: { game: Ovni }) {
         ) : (
           <span style={{ flex: 1 }} />
         )}
-        <button
-          data-testid="abrir-reglas"
-          data-destacado={!reglasVistas}
-          aria-label="Cómo se juega"
-          onClick={abrirReglas}
-          style={
-            reglasVistas
-              ? css(btnTop)
-              : { ...css(btnTop), width: anchoInicio >= 360 ? 'auto' : 52, padding: anchoInicio >= 360 ? '0 14px 0 10px' : 0, gap: 6, flexShrink: 0, background: '#FFD23F', color: '#1A1A1A', border: '3px solid #1A1A1A', fontFamily: 'inherit', fontSize: 20, fontWeight: 700 }
-          }
-        >
-          <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M9.2 9.3 a3 3 0 0 1 5.6 1.2 c0 2 -2.8 2.4 -2.8 4"></path><path d="M12 17.6 V17.8"></path></svg>`} />
-          {!reglasVistas && anchoInicio >= 360 && <span>Reglas</span>}
-        </button>
+        {/* Con rótulo debajo cuando el botón es solo el icono (como los de la izquierda). */}
+        {(() => {
+          const boton = (
+          <button
+            data-testid="abrir-reglas"
+            data-destacado={!reglasVistas}
+            aria-label="Cómo se juega"
+            onClick={abrirReglas}
+            style={
+              reglasVistas
+                ? css(btnTop)
+                : { ...css(btnTop), width: anchoInicio >= 360 ? 'auto' : 52, padding: anchoInicio >= 360 ? '0 14px 0 10px' : 0, gap: 6, flexShrink: 0, background: '#FFD23F', color: '#1A1A1A', border: '3px solid #1A1A1A', fontFamily: 'inherit', fontSize: 20, fontWeight: 700 }
+            }
+          >
+            <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M9.2 9.3 a3 3 0 0 1 5.6 1.2 c0 2 -2.8 2.4 -2.8 4"></path><path d="M12 17.6 V17.8"></path></svg>`} />
+            {!reglasVistas && anchoInicio >= 360 && <span>Reglas</span>}
+          </button>
+          )
+          return reglasVistas || anchoInicio < 360 ? <ConRotulo texto="Reglas">{boton}</ConRotulo> : boton
+        })()}
       </div>
 
       {/* Apaisado (móvil girado): dos columnas — título a la izquierda, elecciones a la derecha.

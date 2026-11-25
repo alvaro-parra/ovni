@@ -1,6 +1,6 @@
 // Interruptores de visualización (R-UI-A11Y-4): letra/elementos grandes y contraste reforzado.
 // Se reconocen por el icono; el estado activo se ve por color Y por una marca ✓ (R-UI-A11Y-3).
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { Svg } from './dc'
 import { usePreferencias, type Velocidad } from './preferencias'
 import { useFocoDialogo } from './foco'
@@ -60,7 +60,19 @@ const VELOCIDADES: { v: Velocidad; icono: string; texto: string }[] = [
   { v: 'rapida', icono: '🐇', texto: 'Rápido' },
 ]
 
-/** Botones cuadrados (solo icono) para la cabecera de la pantalla de inicio: letra grande,
+/** Rótulo corto bajo un botón de icono: el icono solo no basta (¿qué es el muñeco que anda?). */
+export function ConRotulo({ texto, children }: { texto: string; children: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+      {children}
+      <span aria-hidden="true" style={{ fontSize: 13, fontWeight: 700, lineHeight: 1, color: 'var(--texto-2)', whiteSpace: 'nowrap' }}>
+        {texto}
+      </span>
+    </div>
+  )
+}
+
+/** Botones cuadrados (icono + rótulo) para la cabecera de la pantalla de inicio: letra grande,
  *  contraste y velocidad (este último pasa a la siguiente con cada toque). */
 export function InterruptoresVista() {
   const { grande, contraste, setGrande, setContraste, velocidad, setVelocidad } = usePreferencias()
@@ -69,35 +81,41 @@ export function InterruptoresVista() {
   const siguiente = VELOCIDADES[(iVel + 1) % VELOCIDADES.length]
   return (
     <>
-      <button
-        data-testid="vista-grande"
-        aria-label="Letra y botones más grandes"
-        aria-pressed={grande}
-        onClick={() => setGrande(!grande)}
-        style={estiloBoton(grande, { width: 52, height: 52 })}
-      >
-        <Svg markup={ICONO_GRANDE(grande ? '#1A1A1A' : '#FFF8E7', 32)} />
-        {grande && <Check />}
-      </button>
-      <button
-        data-testid="vista-contraste"
-        aria-label="Más contraste"
-        aria-pressed={contraste}
-        onClick={() => setContraste(!contraste)}
-        style={estiloBoton(contraste, { width: 52, height: 52 })}
-      >
-        <Svg markup={ICONO_CONTRASTE(contraste ? '#1A1A1A' : '#FFF8E7', 28)} />
-        {contraste && <Check />}
-      </button>
-      <button
-        data-testid="vista-velocidad"
-        data-value={velocidad}
-        aria-label={`Velocidad: ${vel.texto}. Toca para ${siguiente.texto.toLowerCase()}`}
-        onClick={() => setVelocidad(siguiente.v)}
-        style={estiloBoton(velocidad !== 'normal', { width: 52, height: 52 })}
-      >
-        <span aria-hidden="true" style={{ fontSize: 28, lineHeight: 1 }}>{vel.icono}</span>
-      </button>
+      <ConRotulo texto="Letra">
+        <button
+          data-testid="vista-grande"
+          aria-label="Letra y botones más grandes"
+          aria-pressed={grande}
+          onClick={() => setGrande(!grande)}
+          style={estiloBoton(grande, { width: 52, height: 52 })}
+        >
+          <Svg markup={ICONO_GRANDE(grande ? '#1A1A1A' : '#FFF8E7', 32)} />
+          {grande && <Check />}
+        </button>
+      </ConRotulo>
+      <ConRotulo texto="Contraste">
+        <button
+          data-testid="vista-contraste"
+          aria-label="Más contraste"
+          aria-pressed={contraste}
+          onClick={() => setContraste(!contraste)}
+          style={estiloBoton(contraste, { width: 52, height: 52 })}
+        >
+          <Svg markup={ICONO_CONTRASTE(contraste ? '#1A1A1A' : '#FFF8E7', 28)} />
+          {contraste && <Check />}
+        </button>
+      </ConRotulo>
+      <ConRotulo texto={vel.texto}>
+        <button
+          data-testid="vista-velocidad"
+          data-value={velocidad}
+          aria-label={`Velocidad: ${vel.texto}. Toca para ${siguiente.texto.toLowerCase()}`}
+          onClick={() => setVelocidad(siguiente.v)}
+          style={estiloBoton(velocidad !== 'normal', { width: 52, height: 52 })}
+        >
+          <span aria-hidden="true" style={{ fontSize: 28, lineHeight: 1 }}>{vel.icono}</span>
+        </button>
+      </ConRotulo>
     </>
   )
 }
