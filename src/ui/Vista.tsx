@@ -129,7 +129,7 @@ export function BotonVista({ onClick }: { onClick: () => void }) {
   return (
     <button
       data-testid="abrir-vista"
-      aria-label="Ver mejor: letra grande y contraste"
+      aria-label="Ver mejor: letra, contraste, velocidad y reglas"
       onClick={onClick}
       style={estiloBoton(false, { width: 52, height: 52, flexShrink: 0 })}
     >
