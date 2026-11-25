@@ -283,15 +283,29 @@ export function useOvni(): Ovni {
   const seq = useRef(0)
   const avisoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Si el aviso caduca con la pestaña oculta, se queda hasta que vuelvas y entonces dura
+  // su tiempo completo (si no, al volver te lo habrías perdido).
+  const avisoCaducado = useRef<number | null>(null)
   const mostrarAviso = useCallback(
     (a: SinId<Aviso>) => {
       if (dur.aviso === 0) return
       if (avisoTimer.current) clearTimeout(avisoTimer.current)
-      setAviso({ ...a, id: ++seq.current } as Aviso)
-      avisoTimer.current = programar(() => setAviso(null), dur.aviso)
+      const id = ++seq.current
+      avisoCaducado.current = null
+      setAviso({ ...a, id } as Aviso)
+      avisoTimer.current = programar(() => {
+        if (document.visibilityState === 'hidden') avisoCaducado.current = id
+        else setAviso((x) => (x?.id === id ? null : x))
+      }, dur.aviso)
     },
     [dur.aviso, programar],
   )
+  useEffect(() => {
+    const id = avisoCaducado.current
+    if (oculta || id === null) return
+    avisoCaducado.current = null
+    avisoTimer.current = programar(() => setAviso((x) => (x?.id === id ? null : x)), dur.aviso)
+  }, [oculta, dur.aviso, programar])
 
   const cerrarAviso = useCallback(() => {
     if (avisoTimer.current) clearTimeout(avisoTimer.current)

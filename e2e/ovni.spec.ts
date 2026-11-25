@@ -324,6 +324,18 @@ test.describe('OVNI · happy paths', () => {
     await expect(page.locator('[data-vuelo="pila"]')).toHaveAttribute('aria-label', mesa!)
     await ocultar(false)
     await expect(page.getByTestId('estado')).toHaveAttribute('data-value', 'tu')
+
+    // A ritmo real: un aviso que caduca con la pestaña oculta espera a que vuelvas.
+    await page.addInitScript(() => localStorage.setItem('ovni.vista', JSON.stringify({ velocidad: 'rapida' })))
+    await page.goto('/?seed=33')
+    await page.getByTestId('rivales-3').click()
+    await page.getByTestId('jugar').click()
+    await expect(page.getByTestId('aviso')).toHaveAttribute('data-value', 'ronda')
+    await ocultar(true)
+    await page.waitForTimeout(2500) // más que el aviso (≈0,9 s en «Rápido»)
+    await expect(page.getByTestId('aviso')).toHaveAttribute('data-value', 'ronda')
+    await ocultar(false)
+    await expect(page.getByTestId('aviso')).toHaveCount(0)
   })
 
   // Aviso del +2 en los casos límite del mazo (banco de pruebas: e2e/banco/roba2.html).
