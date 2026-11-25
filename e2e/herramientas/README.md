@@ -15,3 +15,5 @@ Todas usan un solo navegador y una página a la vez (el sandbox tiene 2 GB de RA
   mano y de la mesa en tu primer turno, a varios tamaños (para comparar antes/después).
 - `tira.mjs <url> <salida.png> <WxH> <seed> <rivales> <ms> <paso> [desde] [hasta]` — tira de
   fotogramas a ritmo real (sin `?fast`) para revisar animaciones, avisos y ritmo.
+- `sin-conexion.mjs <url-del-build>` — abre la app, corta la red y comprueba que sigue
+  funcionando (service worker; solo en el build, no en `vite dev`).

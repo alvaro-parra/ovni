@@ -39,6 +39,8 @@ OVNI se puede añadir a la pantalla de inicio («Añadir a pantalla de inicio» 
 navegador): se abre a pantalla completa, sin la barra del navegador, con su icono
 (`public/manifest.webmanifest`, `public/iconos/`). La partida en curso se guarda en el
 dispositivo y se puede continuar si el móvil recarga la página.
+Tras la primera visita funciona **sin conexión** (`public/sw.js`: la página se pide siempre
+a la red primero, así que las versiones nuevas llegan en cuanto hay conexión).
 
 ## CI
 

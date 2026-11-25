@@ -10,3 +10,13 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </PreferenciasProvider>,
 )
+
+// Sin conexión (app instalada): service worker solo en producción. En desarrollo y en los
+// e2e (vite dev) no se registra, para no servir copias antiguas mientras se trabaja.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {
+      // Sin service worker la app funciona igual, solo que no sin conexión.
+    })
+  })
+}
