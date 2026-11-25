@@ -5,7 +5,8 @@ verifica. Esta correspondencia se **comprueba automáticamente** en
 [`tests/coverage.test.ts`](./tests/coverage.test.ts): si se añade un requisito sin
 test (o se renombra), la suite falla.
 
-**Estado:** 77 tests · 4 ficheros · todos los IDs cubiertos.
+**Estado (25-nov-2026):** todos los IDs cubiertos. Suite unitaria: 138 tests en 15 ficheros
+(motor y lógica pura de la UI); además, 25 pruebas e2e de la interfaz (`e2e/`, Playwright).
 
 | Requisito | Verificado en | Test |
 |---|---|---|
