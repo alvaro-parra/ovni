@@ -223,6 +223,7 @@ export function Mesa({ game }: { game: Ovni }) {
   const anchoPantalla = apaisada ? (anchoTotal - 32 - 14) / 2 : anchoTotal
   // Ancho de diseño estrecho (móvil pequeño, o modo grande): cabecera y rivales más compactos.
   const estrecho = anchoPantalla < 340
+  const conNombre = rivales.length === 1 || (rivales.length === 2 && !estrecho)
   // En vertical y muy bajo, la mesa hace scroll; en apaisado la mano tiene su columna.
   const muyBaja = !apaisada && altoPantalla < 560
   // Vertical: por debajo de ~800 px de alto la zona central cede sitio a la mano (142 px en
@@ -416,6 +417,12 @@ export function Mesa({ game }: { game: Ovni }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: estrecho ? 2 : 4, fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
                   <Svg markup={`<svg width="${estrecho ? 12 : 16}" height="${estrecho ? 12 : 16}" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="7" width="11" height="14" rx="2" fill="#FFF8E7"></rect><path d="M8 4 H19 a2 2 0 0 1 2 2 V16"></path></svg>`} />
                   <span>{rp.hand.length}</span>
+                  {/* Con 1 o 2 rivales sobra sitio: su nombre, para no depender solo del avatar. */}
+                  {conNombre && (
+                    <span style={{ marginLeft: 'auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 18, color: 'var(--texto-2)' }}>
+                      {cfg.name}
+                    </span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 16, fontWeight: 700, lineHeight: 1, color }}>
                   {pts >= 70 && (
