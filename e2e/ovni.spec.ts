@@ -247,6 +247,14 @@ test.describe('OVNI · happy paths', () => {
     await expect(page.getByTestId('mis-cartas')).toHaveText(mano) // no se ha jugado nada
   })
 
+  test('Historia 14 · Tras una partida, el inicio cuenta las ganadas', async ({ page }) => {
+    test.setTimeout(120_000)
+    await empezarPartida(page, 1)
+    await playToVictory(page)
+    await page.getByTestId('inicio').click()
+    await expect(page.getByTestId('ganadas')).toHaveAttribute('aria-label', /Has ganado [01] de 1 partidas/)
+  })
+
   // Aviso del +2 en los casos límite del mazo (banco de pruebas: e2e/banco/roba2.html).
   for (const [caso, robadas, robo, consecuencia] of [
     ['normal', 2, 'Robas estas 2 cartas', 'Pierdes el turno'],
