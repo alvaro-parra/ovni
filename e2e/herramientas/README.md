@@ -24,3 +24,5 @@ Todas usan un solo navegador y una página a la vez (el sandbox tiene 2 GB de RA
   variantes (ganas, ganas por menos puntos, empate, eliminado, eliminado por más puntos).
 - `inicio.mjs <url> <salida.png> <WxH,...> [vistaJSON] [estadoJSON]` — la pantalla de inicio a
   varios tamaños (sin jugar); `estadoJSON` fija claves de localStorage (p. ej. reglas vistas).
+- `mono.mjs <url> <segundos> <semilla> [dirCapturas]` — toques aleatorios a ritmo real (incluye
+  Escape, Tab y cambios de tamaño de pantalla); informa de errores de la página y de atascos.
