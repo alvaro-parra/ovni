@@ -59,6 +59,20 @@ export function FinRonda({ game }: { game: Ovni }) {
         </div>
       </div>
 
+      {/* R-MAZO-3: la ronda terminó porque no quedaban cartas, no porque alguien ganara. */}
+      {result.winnerId === null && (
+        <div
+          data-testid="fin-mazo"
+          role="note"
+          style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#FFF8E7', color: '#1A1A1A', border: '3px solid #1A1A1A', borderRadius: 18, padding: '10px 14px', fontSize: 19, fontWeight: 700, lineHeight: 1.25 }}
+        >
+          <span aria-hidden="true" style={{ position: 'relative', flex: 'none', width: 44, height: 56, boxSizing: 'border-box', borderRadius: 6, border: '3px dashed #6B6455', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: '#6B6455' }}>
+            0
+          </span>
+          <span>Se acabó el mazo: nadie gana la ronda y todos suman sus cartas</span>
+        </div>
+      )}
+
       {rows.map((p, idx) => (
         <div
           key={idx}
