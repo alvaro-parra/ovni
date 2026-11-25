@@ -383,6 +383,7 @@ export function Pensando({ animar }: { animar: boolean }) {
     <span
       ref={ref}
       data-testid="pensando"
+      role="img"
       aria-label="Pensando"
       style={{
         position: 'absolute',

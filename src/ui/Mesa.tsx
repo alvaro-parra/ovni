@@ -286,6 +286,7 @@ export function Mesa({ game }: { game: Ovni }) {
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 L12 3.5 L21 11"></path><path d="M5.5 9.5 V20.5 H18.5 V9.5"></path><path d="M10 20.5 V15 H14 V20.5"></path></svg>`} />
         </button>
         <div
+          role="img"
           aria-label={`Ronda ${game.roundNumber}. Sentido de juego: ${invertido ? 'horario' : 'antihorario'}`}
           style={{
             display: 'flex',
@@ -331,6 +332,7 @@ export function Mesa({ game }: { game: Ovni }) {
             <div
               key={rp.id}
               data-vuelo={`jugador-${rp.id}`}
+              role="group"
               aria-label={`${cfg.name}: ${rp.hand.length} cartas, ${pts} puntos${activo ? ', está jugando' : ''}`}
               style={{
                 position: 'relative',
@@ -379,6 +381,7 @@ export function Mesa({ game }: { game: Ovni }) {
               {game.robosRecientes[rp.id] && (
                 <span
                   data-testid={`robo-${rp.id}`}
+                  role="img"
                   aria-label={`Ha robado ${game.robosRecientes[rp.id]}`}
                   style={{
                     position: 'absolute',
@@ -497,12 +500,13 @@ export function Mesa({ game }: { game: Ovni }) {
           )}
         </button>
 
-        <div data-vuelo="pila" aria-label={`Carta en la mesa: ${cardLabel(top)}`} style={{ lineHeight: 0 }}>
+        <div data-vuelo="pila" role="img" aria-label={`Carta en la mesa: ${cardLabel(top)}`} style={{ lineHeight: 0 }}>
           <CartaDe card={top} estado="normal" w={wActiva} />
         </div>
 
         {forzado && (
           <div
+            role="img"
             aria-label={`Palo obligatorio: ${SUIT_NAME[round.activeSuit]}`}
             style={{
               width: 104,
@@ -650,7 +654,7 @@ export function Mesa({ game }: { game: Ovni }) {
                 cursor: 'pointer',
               }}
             >
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', overflow: 'hidden', opacity: 0.6, filter: 'saturate(0.5)' }}>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', overflow: 'hidden', opacity: 0.85, filter: 'saturate(0.6)' }}>
                 {hand.filter((i) => i.est !== 'jugable').map((i, k) => (
                   <span key={k} style={{ marginLeft: k === 0 ? 0 : -solapeTira, lineHeight: 0, flex: 'none' }}>
                     <CartaDe card={i.card} estado="espera" w={wTira} />
@@ -898,7 +902,7 @@ function SelectorPalo({
           </div>
         </div>
         {ordenadas.length > 0 && (
-          <div data-testid="palo-mano" aria-label="Tus cartas" style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#1D5A3A', borderRadius: 16, padding: '8px 10px' }}>
+          <div data-testid="palo-mano" role="group" aria-label="Tus cartas" style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#1D5A3A', borderRadius: 16, padding: '8px 10px' }}>
             <span style={{ color: '#FFF8E7', fontSize: 17, fontWeight: 700, flex: 'none' }}>Tú</span>
             <div style={{ display: 'flex', flexWrap: 'nowrap', minWidth: 0 }}>
               {ordenadas.map((c, k) => (

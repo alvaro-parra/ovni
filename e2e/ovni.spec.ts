@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
 
 // Historias e2e centradas en happy paths. La URL usa ?fast para acelerar los bots
 // y ?seed para una partida reproducible.
@@ -267,6 +268,22 @@ test.describe('OVNI · happy paths', () => {
     await playToVictory(page)
     await page.getByTestId('inicio').click()
     await expect(page.getByTestId('ganadas')).toHaveAttribute('aria-label', /Has ganado [01] de 1 partidas/)
+  })
+
+  test('Historia 15 · Sin problemas de accesibilidad (axe: WCAG 2 A/AA) en inicio, reglas y mesa', async ({ page }) => {
+    const auditar = async () => {
+      const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
+      expect(r.violations.map((v) => `${v.id}: ${v.nodes[0]?.html.slice(0, 80)}`)).toEqual([])
+    }
+    await page.goto('/?seed=7&fast=1')
+    await auditar()
+    await page.getByTestId('abrir-reglas').click()
+    await auditar()
+    await page.getByTestId('reglas-ok').click()
+    await page.getByTestId('rivales-3').click()
+    await page.getByTestId('jugar').click()
+    await expect(page.getByTestId('estado')).toHaveAttribute('data-value', 'tu')
+    await auditar()
   })
 
   // Aviso del +2 en los casos límite del mazo (banco de pruebas: e2e/banco/roba2.html).

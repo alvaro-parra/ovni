@@ -145,6 +145,7 @@ export function Pantalla({
     >
       <div
         data-testid="pantalla"
+        role="main"
         data-escala={s.toFixed(3)}
         style={{
           position: 'absolute',
@@ -205,6 +206,8 @@ export function Tablero({
     <div {...rest} style={estiloTablero({ padding, gap: 12, overflowY: 'hidden' })}>
       <div
         data-testid="tablero-scroll"
+        // Enfocable: así también se puede desplazar con el teclado (flechas) si no cabe.
+        tabIndex={0}
         // padding + margin negativo: deja sitio al anillo de foco (si no, el scroll lo recorta).
         style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap, alignItems, padding: 7, margin: -7 }}
       >

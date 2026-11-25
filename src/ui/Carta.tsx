@@ -70,11 +70,13 @@ export function Carta({
         position: 'relative',
         flex: 'none',
         borderRadius: rad,
-        background: '#FFFFFF',
+        // No jugable: fondo gris (el dibujo se atenúa sobre él); el número sigue opaco.
+        background: apagada ? 'var(--apagada-fondo)' : '#FFFFFF',
         border: `${bw}px solid ${borde}`,
         boxShadow: sombra,
         transform: `translateY(${lift}px)`,
-        opacity: op,
+        // La opacidad va en el dibujo (abajo), no aquí: el número grande de la esquina
+        // debe leerse siempre bien, también en las cartas que no se pueden jugar.
         color: '#1A1A1A',
         transition: 'transform 120ms ease',
       }}
@@ -86,6 +88,7 @@ export function Carta({
             inset: 0,
             borderRadius: radIn,
             overflow: 'hidden',
+            opacity: op,
           }}
         >
           <img
@@ -107,6 +110,7 @@ export function Carta({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            opacity: op,
           }}
         >
           <Palo palo={suit} w={Math.round(w * 0.5)} />

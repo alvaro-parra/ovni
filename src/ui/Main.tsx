@@ -41,6 +41,7 @@ export function Main({ game }: { game: Ovni }) {
   const pastillaGanadas = estadisticas.jugadas > 0 && (
     <div
       data-testid="ganadas"
+      role="img"
       aria-label={`Has ganado ${estadisticas.ganadas} de ${estadisticas.jugadas} partidas`}
       style={{ display: 'flex', alignItems: 'center', gap: 6, height: 40, boxSizing: 'border-box', background: 'var(--panel)', border: '2px solid var(--borde)', borderRadius: 999, padding: '0 12px 0 8px', marginTop: 4, fontWeight: 700 }}
     >

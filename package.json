@@ -16,6 +16,7 @@
     "e2e": "playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@playwright/test": "^1.65.1",
     "@types/node": "^22.9.0",
     "@types/react": "^19.3.0",

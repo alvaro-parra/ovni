@@ -115,6 +115,7 @@ const TEMA_NORMAL = {
   '--texto-3': '#E8DFC8',
   '--texto-apagado': '#BFD3C6',
   '--apagada-opacidad': '0.45',
+  '--apagada-fondo': '#9DA9A2',
   '--apagada-patron': 'none',
 }
 
@@ -132,6 +133,7 @@ const TEMA_CONTRASTE: typeof TEMA_NORMAL = {
   '--texto-apagado': '#FFFFFF',
   // Sin transparencia: la carta no jugable se marca con un rayado oscuro.
   '--apagada-opacidad': '1',
+  '--apagada-fondo': '#FFFFFF',
   '--apagada-patron':
     'repeating-linear-gradient(135deg, rgba(0,0,0,0.55) 0 6px, rgba(0,0,0,0.15) 6px 12px)',
 }

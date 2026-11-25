@@ -53,7 +53,7 @@ export function Reglas({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
-      <ol style={{ listStyle: 'none', margin: 0, padding: '4px 18px 12px', display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', flex: 1, minHeight: 0 }}>
+      <ol tabIndex={0} aria-label="Reglas" style={{ listStyle: 'none', margin: 0, padding: '4px 18px 12px', display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', flex: 1, minHeight: 0 }}>
         <Regla
           n={1}
           dibujo={
