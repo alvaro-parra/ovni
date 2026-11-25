@@ -237,6 +237,9 @@ export function Mesa({ game }: { game: Ovni }) {
   const bajo = altoPantalla < 760
   const wActiva = Math.min(apaisada ? 130 : 88, Math.floor((altoCentro - 6) / PROPORCION_CARTA))
   const wMazo = Math.round(wActiva * 0.75)
+  const asomaPrevia = Math.round(wActiva * 0.3)
+  const anchoCentro = wMazo + 14 + 18 + asomaPrevia + wActiva + (forzado ? 14 + 104 : 0) + 24
+  const previa = round.discardPile.length > 1 && anchoCentro <= anchoPantalla - 32 ? round.discardPile[round.discardPile.length - 2] : null
   const [refMano, mano] = useMedida<HTMLDivElement>()
   // Con «Más grande», separación entre cartas menor: con todo ampliado, cada píxel cuenta
   // para que las cartas de la mano sean de verdad más grandes que en el modo normal.
@@ -527,8 +530,17 @@ export function Mesa({ game }: { game: Ovni }) {
           )}
         </button>
 
-        <div data-vuelo="pila" role="img" aria-label={`Carta en la mesa: ${cardLabel(top)}`} style={{ lineHeight: 0 }}>
-          <CartaDe card={top} estado="normal" w={wActiva} />
+        {/* La carta anterior asoma por la izquierda (con su número): así se ve qué se iba
+            jugando, como en una pila de verdad. Solo si cabe a lo ancho. */}
+        <div style={{ position: 'relative', lineHeight: 0, paddingLeft: previa ? asomaPrevia : 0, marginLeft: previa ? 18 : 0 }}>
+          {previa && (
+            <div aria-hidden="true" data-testid="pila-previa" style={{ position: 'absolute', left: 0, top: 0, transform: 'rotate(-7deg)', transformOrigin: 'bottom right', opacity: 0.9 }}>
+              <CartaDe card={previa} estado="normal" w={wActiva} />
+            </div>
+          )}
+          <div data-vuelo="pila" role="img" aria-label={`Carta en la mesa: ${cardLabel(top)}`} style={{ position: 'relative', lineHeight: 0 }}>
+            <CartaDe card={top} estado="normal" w={wActiva} />
+          </div>
         </div>
 
         {forzado && (
