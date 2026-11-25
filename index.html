@@ -41,6 +41,12 @@
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
       }
+      /* Sin «arrastrar para recargar» ni rebote: un gesto hacia abajo en mitad de la partida
+         no debe recargar la página (la partida se guardaría, pero corta el juego). */
+      html,
+      body {
+        overscroll-behavior: none;
+      }
       #root {
         -webkit-user-select: none;
         user-select: none;
