@@ -205,3 +205,12 @@ requisito responde.
   sustituye al de inicio de ronda; con 2 jugadores y As inicial dice «¡Empieza X!».
 - **Fin de ronda y de partida.** Nota con quién queda fuera en esa ronda (puede haber varios,
   CL-1). Tus puntos en la mesa llevan «pts». La pantalla final dice «Partidas ganadas: N de M».
+- **Si cambias de app.** Con la pestaña oculta los bots esperan, y un aviso que caduca entonces
+  se queda hasta que vuelves. En el móvil no hay «arrastrar para recargar» ni inflado
+  automático del texto (para agrandar está «Más grande»).
+- **Lenguaje neutro y exacto.** «Quedas fuera» (no «Eliminado»), «Solo tú quedas por debajo
+  de 101», «llegar a 101» (con 101 justos también se queda fuera).
+- **Pequeñas celebraciones.** Confeti al ganar una ronda (no con movimiento reducido).
+- **Lectores de pantalla.** Se anuncia «Le queda 1 carta» (equivale a la pastilla «¡1!»).
+  Las zonas con scroll son enfocables con teclado cuando desbordan (axe sin incidencias en
+  todas las pantallas, con y sin contraste/letra grande).
