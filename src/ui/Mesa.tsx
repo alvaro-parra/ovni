@@ -216,7 +216,7 @@ export function Mesa({ game }: { game: Ovni }) {
   // R-UI-PLAT-1: en pantallas bajas (< 700 px de diseño) la zona central encoge un poco
   // para dejar sitio a la mano; las cartas de la mano se ajustan al hueco que queda.
   const { h: altoPantalla, w: anchoTotal, apaisada } = useEscala(ALTO_REF_MESA, true)
-  const { grande } = usePreferencias()
+  const { grande, contraste } = usePreferencias()
   // Apaisada (tableta/ordenador en horizontal, móvil girado): dos columnas, mesa a la
   // izquierda y tu mano a la derecha. `anchoPantalla` es el ancho de la columna de la mesa.
   const anchoPantalla = apaisada ? (anchoTotal - 32 - 14) / 2 : anchoTotal
@@ -556,8 +556,9 @@ export function Mesa({ game }: { game: Ovni }) {
           padding: grande ? '6px 6px 8px' : '10px 10px 12px',
           // Turno de otro: la mano se atenúa un poco (sigue legible), para que se vea de un
           // vistazo que ahora no te toca. Al pasar a tu turno vuelve a plena intensidad.
-          opacity: estado === 'ia' ? 0.72 : 1,
-          filter: estado === 'ia' ? 'saturate(0.7)' : 'none',
+          // (En modo contraste no: restar contraste iría en contra de lo que se ha pedido.)
+          opacity: estado === 'ia' && !contraste ? 0.72 : 1,
+          filter: estado === 'ia' && !contraste ? 'saturate(0.7)' : 'none',
           transition: game.dur.animar ? 'opacity 300ms, filter 300ms' : 'none',
           display: 'flex',
           flexDirection: 'column',
