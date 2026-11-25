@@ -148,7 +148,10 @@ export function Mesa({ game }: { game: Ovni }) {
   // Ancho de diseño estrecho (móvil pequeño, o modo grande): cabecera y rivales más compactos.
   const estrecho = anchoPantalla < 340
   const muyBaja = altoPantalla < 560
-  const altoCentro = Math.round(Math.max(100, Math.min(142, 142 - (700 - altoPantalla) * 0.3)))
+  // Por debajo de ~800 px de alto la zona central cede sitio a la mano (las cartas que
+  // juegas importan más): 142 px en 844, ~109 en 667, mínimo 100.
+  const altoCentro = Math.round(Math.max(100, Math.min(142, 142 - (800 - altoPantalla) * 0.25)))
+  const bajo = altoPantalla < 760
   const wActiva = Math.min(88, Math.floor((altoCentro - 6) / PROPORCION_CARTA))
   const wMazo = Math.round(wActiva * 0.75)
   const [refMano, mano] = useMedida<HTMLDivElement>()
@@ -230,7 +233,7 @@ export function Mesa({ game }: { game: Ovni }) {
               style={{
                 position: 'relative',
                 boxSizing: 'border-box',
-                height: 66,
+                height: bajo ? 56 : 66,
                 background: 'var(--panel)',
                 border: `${activo ? 4 : 2}px solid ${activo ? '#FFD23F' : 'var(--borde-suave)'}`,
                 borderRadius: 16,
