@@ -6,11 +6,16 @@ import { CartaDe } from './Carta'
 import { Svg } from './dc'
 import { Tablero } from './Pantalla'
 
+const ICONO_BANDERA = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 V4"></path><path d="M5 4 H18 L15.5 8 L18 12 H5"></path></svg>`
+const ICONO_TROFEO = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 3.5 H16.5 V10 a4.5 4.5 0 0 1 -9 0 Z" fill="#1A1A1A"></path><path d="M7.5 5.5 H4 a3.5 3.5 0 0 0 4 4.5 M16.5 5.5 H20 a3.5 3.5 0 0 1 -4 4.5"></path><path d="M12 14.5 V18"></path><path d="M8 21 H16 L15 18 H9 Z" fill="#1A1A1A"></path></svg>`
+
 export function FinRonda({ game }: { game: Ovni }) {
   const match = game.match!
   const round = game.round!
   const result = game.lastResult!
   const yoEliminado = match.players.find((p) => p.id === HUMAN_ID)?.eliminated ?? false
+  const ganoYo = result.winnerId === HUMAN_ID
+  const ganador = result.winnerId ? game.players.find((c) => c.id === result.winnerId) : undefined
   // La parte nueva de la barra crece justo después de aparecer la pantalla.
   const animar = game.dur.animar
   const [crecida, setCrecida] = useState(!animar)
@@ -63,11 +68,16 @@ export function FinRonda({ game }: { game: Ovni }) {
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ width: 52, height: 52, borderRadius: 16, background: '#FFD23F', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
-          <Svg markup={`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 V4"></path><path d="M5 4 H18 L15.5 8 L18 12 H5"></path></svg>`} />
+          <Svg markup={ganoYo ? ICONO_TROFEO : ICONO_BANDERA} />
         </span>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.05, fontWeight: 700 }}>Fin de ronda</h1>
-          <span style={{ fontSize: 19, color: 'var(--texto-2)' }}>Ronda {game.roundNumber} · puntos que suma cada uno</span>
+          <h1 data-testid="titulo-fin-ronda" style={{ margin: 0, fontSize: 32, lineHeight: 1.05, fontWeight: 700 }}>
+            {ganoYo ? '¡Ganas la ronda!' : 'Fin de ronda'}
+          </h1>
+          <span style={{ fontSize: 19, color: 'var(--texto-2)' }}>
+            Ronda {game.roundNumber}
+            {ganador && !ganoYo ? ` · gana ${ganador.name}` : ' · puntos que suma cada uno'}
+          </span>
         </div>
       </div>
 
