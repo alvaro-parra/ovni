@@ -198,3 +198,10 @@ requisito responde.
   cartas jugables); la píldora de ronda ya no se pone amarilla al cambiar el sentido.
 - **Botones de icono con rótulo** en el inicio (Letra, Contraste, Despacio/Normal/Rápido,
   Reglas): el icono solo no bastaba.
+- **Seguir la partida.** La carta anterior asoma bajo la de la mesa (con su número). Cuando
+  a un rival le queda una carta, su ficha muestra «¡1!» en rojo. Al empezar cada ronda tus
+  cartas llegan volando del mazo (reparto). Con 1 o 2 rivales, su ficha lleva el nombre.
+- **Carta inicial con efecto (R-INI-1).** Su aviso incluye «Ronda N · Empieza X», porque
+  sustituye al de inicio de ronda; con 2 jugadores y As inicial dice «¡Empieza X!».
+- **Fin de ronda y de partida.** Nota con quién queda fuera en esa ronda (puede haber varios,
+  CL-1). Tus puntos en la mesa llevan «pts». La pantalla final dice «Partidas ganadas: N de M».
