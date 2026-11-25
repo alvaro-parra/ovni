@@ -49,6 +49,8 @@ export type Aviso =
   | { id: number; tipo: 'repite'; actorId: string; carta: Card; inicial?: boolean }
   | { id: number; tipo: 'palo'; actorId: string; suit: Suit }
   | { id: number; tipo: 'fin'; ganadorId: string | null }
+  /** Se acabó el mazo al robar y se rebarajó la mesa (R-MAZO-2): la próxima vez acaba la ronda. */
+  | { id: number; tipo: 'rebaraje'; actorId: string }
   /** Empieza una ronda: cuál y quién abre el juego (la mano rota cada ronda, R-CFG-4/6). */
   | { id: number; tipo: 'ronda'; numero: number; empiezaId: string }
 
@@ -73,6 +75,15 @@ export function avisoInicial(r: RoundState, dealerId: string): SinId<Aviso> | nu
       : { tipo: 'sentido', actorId: dealerId, carta: top, inicial: true }
   }
   return null
+}
+
+/**
+ * Aviso de rebaraje tras robar (R-MAZO-2), o null. Solo si la rebaraja ocurrió en este robo y la
+ * ronda sigue: si el mazo se agota sin nada que rebarajar, la ronda termina (R-MAZO-3, CL-5) y
+ * ya lo cuenta el aviso de fin.
+ */
+export function avisoRebaraje(antes: RoundState, despues: RoundState, actorId: string): SinId<Aviso> | null {
+  return !antes.reshuffleUsed && despues.reshuffleUsed && despues.phase === 'playing' ? { tipo: 'rebaraje', actorId } : null
 }
 
 export const HUMAN_ID = 'yo'
@@ -444,7 +455,11 @@ export function useOvni(): Ovni {
           return
         }
         marcarRobo(cur.id, n)
-        animarYAplicar({ tipo: 'roba', actorId: cur.id, n }, duracionRobo(dur, n), () => setRound(r))
+        const reb = avisoRebaraje(round, r, cur.id)
+        animarYAplicar({ tipo: 'roba', actorId: cur.id, n }, duracionRobo(dur, n), () => {
+          setRound(r)
+          if (reb) mostrarAviso(reb)
+        })
         return
       }
       const card = botChoose(getPlayableCards(round))
@@ -455,7 +470,7 @@ export function useOvni(): Ovni {
       )
     }, dur.pensar)
     return () => clearTimeout(timer)
-  }, [round, screen, overlay, aviso, jugada, shuffle, dur, animarYAplicar, aplicarJugada, marcarRobo])
+  }, [round, screen, overlay, aviso, jugada, shuffle, dur, animarYAplicar, aplicarJugada, marcarRobo, mostrarAviso])
 
   // --- fin de ronda -------------------------------------------------------
   // Aviso «sin cartas» (o «mazo agotado») y, después, el recuento. Espera a que se cierre
@@ -520,8 +535,11 @@ export function useOvni(): Ovni {
     cerrarAviso()
     // Se aplica al momento: la mesa hace volar la carta robada, boca arriba, del mazo a su
     // sitio en la mano (así se ve qué carta ha llegado y dónde).
-    setRound(drawCard(round, shuffle))
-  }, [round, jugada, shuffle, cerrarAviso])
+    const next = drawCard(round, shuffle)
+    setRound(next)
+    const reb = avisoRebaraje(round, next, HUMAN_ID)
+    if (reb) mostrarAviso(reb)
+  }, [round, jugada, shuffle, cerrarAviso, mostrarAviso])
 
   const dismissRoba2 = useCallback(() => setOverlay(null), [])
   const cancelarSota = useCallback(() => {

@@ -171,6 +171,7 @@ export function CapaVuelo({
 
 const ICONO_SENTIDO = `<svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11 A8 8 0 0 0 5.6 6.2"></path><path d="M5 2.5 V6.6 H9.1"></path><path d="M4 13 A8 8 0 0 0 18.4 17.8"></path><path d="M19 21.5 V17.4 H14.9"></path></svg>`
 const ICONO_REPITE = `<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12 a7.5 7.5 0 1 1 -2.2 -5.3"></path><path d="M19.5 3.5 V7.5 H15.5"></path></svg>`
+const ICONO_BARAJAR = `<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7 H7 L16 17 H21"></path><path d="M3 17 H7 L16 7 H21"></path><path d="M18 4 L21 7 L18 10"></path><path d="M18 14 L21 17 L18 20"></path></svg>`
 const ICONO_SALTA = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8E0F18" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M5.6 5.6 L18.4 18.4"></path></svg>`
 
 export function CartelAviso({
@@ -301,6 +302,20 @@ export function CartelAviso({
         <span>
           {esYo(aviso.actorId) ? 'Eliges' : `${nombre(aviso.actorId)} elige`}{' '}
           <span style={{ color: SUIT_COLOR[aviso.suit] }}>{SUIT_NAME[aviso.suit]}</span>
+        </span>
+      </>
+    )
+  } else if (aviso.tipo === 'rebaraje') {
+    etiqueta = 'Se acabó el mazo. Las cartas de la mesa se barajan y forman un mazo nuevo. Si se vuelve a acabar, termina la ronda'
+    contenido = (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ lineHeight: 0 }}><Carta estado="dorso" w={48} /></span>
+          <Svg markup={ICONO_BARAJAR} />
+        </div>
+        <span>Se acabó el mazo</span>
+        <span style={{ fontSize: 18, fontWeight: 400 }}>
+          Las cartas de la mesa se barajan y forman un mazo nuevo. Si se vuelve a acabar, termina la ronda.
         </span>
       </>
     )
