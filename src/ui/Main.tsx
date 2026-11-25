@@ -25,35 +25,64 @@ export function Main({ game }: { game: Ovni }) {
   // la elección de rivales y avatar quepa sin scroll (R-UI-PLAT-1).
   const compacta = useEscala(ALTO_REF_PANTALLA).h < 760
   const [verReglas, setVerReglas] = useState(false)
+  const guardada = game.partidaGuardada
   return (
     <Marco
       compacta={compacta}
       pie={
         <>
+          {/* Partida a medias (p. ej. el navegador recargó la página): se ofrece seguirla. */}
+          {guardada && (
+            <button
+              data-testid="continuar"
+              onClick={game.continuarPartida}
+              style={{
+                height: 80,
+                flexShrink: 0,
+                borderRadius: 24,
+                background: '#FFD23F',
+                color: '#1A1A1A',
+                border: '4px solid #1A1A1A',
+                boxSizing: 'border-box',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 12,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              <Svg markup={`<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5 V19"></path><path d="M10 5 L20 12 L10 19 Z" fill="#1A1A1A"></path></svg>`} />
+              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.05 }}>
+                <span style={{ fontSize: 30, fontWeight: 700 }}>Continuar</span>
+                <span style={{ fontSize: 17, fontWeight: 700 }}>Ronda {guardada.ronda}</span>
+              </span>
+            </button>
+          )}
           <button
             data-testid="jugar"
             onClick={game.startGame}
             style={{
-              height: 80,
+              height: guardada ? 60 : 80,
               flexShrink: 0,
               borderRadius: 24,
-              background: '#FFD23F',
-              color: '#1A1A1A',
-              border: '4px solid #1A1A1A',
+              background: guardada ? 'var(--panel)' : '#FFD23F',
+              color: guardada ? '#FFF8E7' : '#1A1A1A',
+              border: guardada ? '3px solid var(--borde)' : '4px solid #1A1A1A',
               boxSizing: 'border-box',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 14,
-              fontSize: 34,
+              fontSize: guardada ? 24 : 34,
               fontWeight: 700,
-              letterSpacing: 2,
+              letterSpacing: guardada ? 0 : 2,
               cursor: 'pointer',
               fontFamily: 'inherit',
             }}
           >
-            <Svg markup={`<svg width="36" height="36" viewBox="0 0 24 24"><path d="M7 4.5 L19.5 12 L7 19.5 Z" fill="#1A1A1A"></path></svg>`} />
-            <span>JUGAR</span>
+            <Svg markup={`<svg width="${guardada ? 28 : 36}" height="${guardada ? 28 : 36}" viewBox="0 0 24 24"><path d="M7 4.5 L19.5 12 L7 19.5 Z" fill="${guardada ? '#FFF8E7' : '#1A1A1A'}"></path></svg>`} />
+            <span>{guardada ? 'Nueva partida' : 'JUGAR'}</span>
           </button>
 
           {/* Crédito exigido por la licencia CC BY-SA 3.0 de las imágenes (ver LICENCIA-CARTAS.md). */}

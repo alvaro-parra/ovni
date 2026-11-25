@@ -184,6 +184,25 @@ test.describe('OVNI · happy paths', () => {
     await expect(page.getByTestId('jugar')).toBeVisible()
   })
 
+  test('Historia 11 · Si la página se recarga, se puede continuar la partida', async ({ page }) => {
+    await empezarPartida(page, 2)
+    // Estado estable: te toca a ti (con ?fast los bots juegan al instante).
+    await expect(page.getByTestId('estado')).toHaveAttribute('data-value', /tu|robar/)
+    const cartas = await page.getByTestId('mis-cartas').innerText()
+    const mesa = await page.locator('[data-vuelo="pila"]').getAttribute('aria-label')
+
+    await page.reload()
+    await page.getByTestId('continuar').click()
+    await expect(page.getByTestId('mesa')).toBeVisible()
+    await expect(page.getByTestId('mis-cartas')).toHaveText(cartas)
+    await expect(page.locator('[data-vuelo="pila"]')).toHaveAttribute('aria-label', mesa!)
+
+    // Salir (confirmando) descarta la partida guardada.
+    await page.getByTestId('salir').click()
+    await page.getByTestId('confirmar-salir').click()
+    await expect(page.getByTestId('continuar')).toHaveCount(0)
+  })
+
   // Aviso del +2 en los casos límite del mazo (banco de pruebas: e2e/banco/roba2.html).
   for (const [caso, robadas, robo, consecuencia] of [
     ['normal', 2, 'Robas estas 2 cartas', 'Pierdes el turno'],

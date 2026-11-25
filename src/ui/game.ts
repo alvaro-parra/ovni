@@ -16,6 +16,7 @@ import type { AvatarKind } from './Avatar'
 import { makeShuffle, mulberry32, shuffledDeck } from './deck'
 import { usePreferencias } from './preferencias'
 import { duraciones, duracionRobo, type Duraciones } from './ritmo'
+import { borrarPartida, guardarPartida, leerPartida, type PartidaGuardada } from './guardado'
 
 export type Screen = 'inicio' | 'mesa' | 'finRonda' | 'victoria'
 
@@ -171,6 +172,9 @@ export interface Ovni {
   closeOverlay: () => void
   nextRound: () => void
   restart: () => void
+  /** Partida a medias guardada en el dispositivo (para «Continuar»), o null. */
+  partidaGuardada: { rivales: number; ronda: number } | null
+  continuarPartida: () => void
 }
 
 export function useOvni(): Ovni {
@@ -217,6 +221,7 @@ export function useOvni(): Ovni {
   const [lastResult, setLastResult] = useState<RoundState['result']>(null)
   const [nRivals, setNRivals] = useState(3)
   const [humanAvatar, setHumanAvatar] = useState<AvatarKind>('sol')
+  const [guardada, setGuardada] = useState<PartidaGuardada | null>(() => leerPartida())
 
   const matchRef = useRef<MatchState | null>(null)
   matchRef.current = match
@@ -331,6 +336,8 @@ export function useOvni(): Ovni {
     const firstDealer = Math.floor(rng() * ids.length)
     const m = createMatch(ids, firstDealer)
     cancelarTodo()
+    borrarPartida()
+    setGuardada(null)
     playersRef.current = next
     matchRef.current = m
     setPlayers(next)
@@ -556,13 +563,49 @@ export function useOvni(): Ovni {
 
   const restart = useCallback(() => {
     cancelarTodo()
+    // Desde la mesa se sale tras confirmar «Se perderá la partida»; desde la victoria ya
+    // había terminado. En ambos casos no queda nada que continuar.
+    borrarPartida()
+    setGuardada(null)
     setScreen('inicio')
     setRound(null)
     setMatch(null)
     setOverlay(null)
   }, [cancelarTodo])
 
+  // --- partida guardada en el dispositivo ---------------------------------
+  // Se guarda en cada cambio de la mesa o del recuento; se borra al acabar la partida.
+  useEffect(() => {
+    if ((screen === 'mesa' || screen === 'finRonda') && match && round) {
+      guardarPartida({ players, match, round, roundNumber, screen, lastResult })
+    } else if (screen === 'victoria') {
+      borrarPartida()
+    }
+  }, [screen, players, match, round, roundNumber, lastResult])
+
+  const continuarPartida = useCallback(() => {
+    const g = guardada
+    if (!g) return
+    cancelarTodo()
+    finProgramado.current = null
+    playersRef.current = g.players
+    matchRef.current = g.match
+    setPlayers(g.players)
+    setMatch(g.match)
+    setRound(g.round)
+    setRoundNumber(g.roundNumber)
+    setLastResult(g.lastResult)
+    setNRivals(g.players.length - 1)
+    const yo = g.players.find((p) => p.id === HUMAN_ID)
+    if (yo) setHumanAvatar(yo.avatar)
+    setOverlay(null)
+    setGuardada(null)
+    setScreen(g.screen)
+  }, [guardada, cancelarTodo])
+
   return {
+    partidaGuardada: guardada ? { rivales: guardada.players.length - 1, ronda: guardada.roundNumber } : null,
+    continuarPartida,
     screen,
     players,
     match,
