@@ -17,6 +17,8 @@ const AVATARES: { q: AvatarKind; nombre: string }[] = [
   { q: 'flor', nombre: 'Flor' },
 ]
 
+const CLAVE_REGLAS = 'ovni.reglasVistas'
+
 const btnTop =
   'width: 52px; height: 52px; border-radius: 16px; border: 2px solid var(--borde); background: var(--panel); color: #FFF8E7; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer'
 
@@ -25,6 +27,23 @@ export function Main({ game }: { game: Ovni }) {
   // la elección de rivales y avatar quepa sin scroll (R-UI-PLAT-1).
   const compacta = useEscala(ALTO_REF_PANTALLA).h < 760
   const [verReglas, setVerReglas] = useState(false)
+  // Hasta que se abran las reglas una vez, el botón se destaca (para quien juega por primera vez).
+  const [reglasVistas, setReglasVistas] = useState(() => {
+    try {
+      return localStorage.getItem(CLAVE_REGLAS) === '1'
+    } catch {
+      return true
+    }
+  })
+  const abrirReglas = () => {
+    setVerReglas(true)
+    setReglasVistas(true)
+    try {
+      localStorage.setItem(CLAVE_REGLAS, '1')
+    } catch {
+      // sin almacenamiento: se seguirá destacando, no pasa nada
+    }
+  }
   const guardada = game.partidaGuardada
   return (
     <Marco
@@ -103,8 +122,19 @@ export function Main({ game }: { game: Ovni }) {
       <div style={{ display: 'flex', gap: 10, flex: 'none', paddingTop: 8 }}>
         <InterruptoresVista />
         <span style={{ flex: 1 }} />
-        <button data-testid="abrir-reglas" aria-label="Cómo se juega" onClick={() => setVerReglas(true)} style={css(btnTop)}>
+        <button
+          data-testid="abrir-reglas"
+          data-destacado={!reglasVistas}
+          aria-label="Cómo se juega"
+          onClick={abrirReglas}
+          style={
+            reglasVistas
+              ? css(btnTop)
+              : { ...css(btnTop), width: 'auto', padding: '0 14px 0 10px', gap: 6, background: '#FFD23F', color: '#1A1A1A', border: '3px solid #1A1A1A', fontFamily: 'inherit', fontSize: 20, fontWeight: 700 }
+          }
+        >
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M9.2 9.3 a3 3 0 0 1 5.6 1.2 c0 2 -2.8 2.4 -2.8 4"></path><path d="M12 17.6 V17.8"></path></svg>`} />
+          {!reglasVistas && <span>Reglas</span>}
         </button>
       </div>
 
