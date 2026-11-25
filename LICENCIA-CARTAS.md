@@ -13,6 +13,9 @@ y una estrella (Sota) para baja visión.
 
 La vista previa de toda la baraja está en `docs/vista-previa-baraja.png` (no se publica).
 
+Los iconos de la app (`public/iconos/`) están compuestos con tres de estas cartas sobre un
+fondo verde, así que también se distribuyen bajo **CC BY-SA 3.0**.
+
 Crédito sugerido para mostrar en la app (p. ej. en «Acerca de»):
 
 > Cartas: baraja española de Basquetteur (Wikimedia Commons), CC BY-SA 3.0.

@@ -48,9 +48,28 @@ export function calcularEscala(vw: number, vh: number, altoRef: number, factor =
   return { s, w, h, left: (vw - w * s) / 2 }
 }
 
+/**
+ * Zonas seguras del dispositivo (muesca, barra de inicio del iPhone…), en px. Se leen con
+ * un elemento de prueba porque `env()` solo se puede consultar desde CSS. Sin muesca: 0.
+ */
+function zonasSeguras() {
+  if (typeof document === 'undefined' || !document.body) return { t: 0, r: 0, b: 0, l: 0 }
+  const d = document.createElement('div')
+  d.style.cssText =
+    'position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)'
+  document.body.appendChild(d)
+  const cs = getComputedStyle(d)
+  const px = (v: string) => parseFloat(v) || 0
+  const z = { t: px(cs.paddingTop), r: px(cs.paddingRight), b: px(cs.paddingBottom), l: px(cs.paddingLeft) }
+  d.remove()
+  return z
+}
+
+/** Espacio útil: la ventana menos las zonas seguras (ahí no se dibuja nada importante). */
 function medirViewport() {
   if (typeof window === 'undefined') return { vw: ANCHO_REF, vh: 844 }
-  return { vw: window.innerWidth, vh: window.innerHeight }
+  const z = zonasSeguras()
+  return { vw: window.innerWidth - z.l - z.r, vh: window.innerHeight - z.t - z.b }
 }
 
 /** Escala para el viewport actual. Se calcula en el render: cambiar de pantalla
@@ -82,7 +101,17 @@ export function Pantalla({ children, altoRef }: { children: ReactNode; altoRef: 
     <div
       data-grande={grande}
       data-contraste={contraste}
-      style={{ ...variablesTema(contraste), position: 'fixed', inset: 0, overflow: 'hidden', background: 'var(--fondo)' }}
+      style={{
+        ...variablesTema(contraste),
+        position: 'fixed',
+        // Respeta muesca y barra de inicio: el fondo del body (mismo verde) rellena esas zonas.
+        top: 'env(safe-area-inset-top, 0px)',
+        right: 'env(safe-area-inset-right, 0px)',
+        bottom: 'env(safe-area-inset-bottom, 0px)',
+        left: 'env(safe-area-inset-left, 0px)',
+        overflow: 'hidden',
+        background: 'var(--fondo)',
+      }}
     >
       <div
         data-testid="pantalla"

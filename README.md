@@ -33,6 +33,13 @@ npm run demo       # simula una partida completa por terminal (CLI)
 
 Parámetros de URL útiles para pruebas: `?seed=N` (partida reproducible), `?fast` (bots sin espera).
 
+## Instalar en el móvil
+
+OVNI se puede añadir a la pantalla de inicio («Añadir a pantalla de inicio» en el menú del
+navegador): se abre a pantalla completa, sin la barra del navegador, con su icono
+(`public/manifest.webmanifest`, `public/iconos/`). La partida en curso se guarda en el
+dispositivo y se puede continuar si el móvil recarga la página.
+
 ## CI
 
 [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) ejecuta typecheck, tests unitarios y e2e en
