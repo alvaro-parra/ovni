@@ -41,7 +41,7 @@ describe('ritmo de la partida', () => {
 describe('avisoInicial: efectos de la carta volteada (R-INI-1)', () => {
   it('2 inicial: aviso de +2 para el primer jugador', () => {
     const r = createRound({ playerIds: ['p0', 'p1', 'p2'], deck: deckFor(3, C('2', 'oros')), dealerIndex: 0 })
-    expect(avisoInicial(r, 'p0')).toEqual({ tipo: 'roba2', actorId: 'p0', victimaId: 'p1' })
+    expect(avisoInicial(r, 'p0')).toEqual({ tipo: 'roba2', actorId: 'p0', victimaId: 'p1', n: 2, rebarajado: false, finRonda: false })
   })
 
   it('as inicial: cambio de sentido con 3+, vuelve a jugar la mano con 2', () => {

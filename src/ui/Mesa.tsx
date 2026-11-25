@@ -4,13 +4,14 @@ import type { Card, Suit } from '../cards'
 import { isPlayable, type RoundState } from '../engine'
 import type { MatchState } from '../match'
 import { HUMAN_ID, type Jugada, type Ovni, type PlayerCfg } from './game'
-import { Avatar, type AvatarKind } from './Avatar'
+import { Avatar } from './Avatar'
 import { Palo } from './Palo'
 import { Carta, CartaDe } from './Carta'
 import { Svg } from './dc'
 import { ALTO_REF_MESA, estiloTablero, useEscala } from './Pantalla'
 import { ajustarRejilla, PROPORCION_CARTA } from './ajuste'
 import { BotonVista, PanelVista } from './Vista'
+import { AvisoRoba2 } from './Roba2'
 import { animarLlegada, CapaVuelo, CartelAviso, claveCarta, Pensando, useLatido } from './Animaciones'
 import {
   cardLabel,
@@ -563,7 +564,7 @@ export function Mesa({ game }: { game: Ovni }) {
       )}
       {game.overlay?.kind === 'vista' && <PanelVista onClose={game.closeOverlay} />}
       {game.overlay?.kind === 'roba2' && (
-        <Roba2 overlay={game.overlay} onOk={game.dismissRoba2} />
+        <AvisoRoba2 datos={game.overlay} onOk={game.dismissRoba2} />
       )}
       {game.overlay?.kind === 'verMano' && (
         <VerMano hand={hand} humanTurn={humanTurn} onPlay={game.playHuman} onClose={game.closeOverlay} />
@@ -733,55 +734,6 @@ function SelectorPalo({ sota, mano, onPick }: { sota: Card; mano: Card[]; onPick
           ))}
         </div>
       </div>
-    </div>
-  )
-}
-
-function Roba2({
-  overlay,
-  onOk,
-}: {
-  overlay: { byName: string; byAvatar: AvatarKind; card: Card }
-  onOk: () => void
-}) {
-  return (
-    <div role="alertdialog" aria-label="Robas 2 cartas y pierdes el turno" style={{ position: 'absolute', inset: 0, background: 'rgba(6,20,12,0.86)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 22, padding: 24, boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--panel)', border: '2px solid var(--borde)', padding: '8px 16px 8px 8px', borderRadius: 999, fontSize: 20, fontWeight: 700, color: '#FFF8E7' }}>
-        <Avatar quien={overlay.byAvatar} w={40} />
-        <span>{overlay.byName} ha jugado</span>
-        <CartaDe card={overlay.card} w={36} />
-      </div>
-      <div aria-hidden="true" style={{ position: 'relative', width: 250, height: 220 }}>
-        <div style={{ position: 'absolute', left: 30, top: 30, transform: 'rotate(-12deg)' }}>
-          <Carta estado="dorso" w={104} />
-        </div>
-        <div style={{ position: 'absolute', left: 92, top: 14, transform: 'rotate(9deg)' }}>
-          <Carta estado="dorso" w={104} />
-        </div>
-        <div style={{ position: 'absolute', right: -8, bottom: -14, width: 118, height: 118, boxSizing: 'border-box', borderRadius: '50%', background: '#FFD23F', color: '#1A1A1A', border: '6px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60, fontWeight: 700, lineHeight: 1 }}>+2</div>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12, color: '#FFF8E7' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 28, fontWeight: 700 }}>
-          <span style={{ width: 48, height: 48, borderRadius: '50%', background: '#FFF8E7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Svg markup={`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 V19"></path><path d="M6 13 L12 19 L18 13"></path></svg>`} />
-          </span>
-          <span>Robas 2 cartas</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 28, fontWeight: 700 }}>
-          <span style={{ width: 48, height: 48, borderRadius: '50%', background: '#FFF8E7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Svg markup={`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#B8202A" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M6 6 L18 18"></path></svg>`} />
-          </span>
-          <span>Pierdes el turno</span>
-        </div>
-      </div>
-      <button
-        data-testid="roba2-ok"
-        onClick={onOk}
-        style={{ width: 240, height: 68, borderRadius: 22, background: '#FFD23F', color: '#1A1A1A', border: '4px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontFamily: 'inherit', fontSize: 28, fontWeight: 700, cursor: 'pointer' }}
-      >
-        <Svg markup={`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 7"></path></svg>`} />
-        <span>Vale</span>
-      </button>
     </div>
   )
 }

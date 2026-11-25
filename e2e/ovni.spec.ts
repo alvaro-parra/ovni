@@ -163,6 +163,28 @@ test.describe('OVNI · happy paths', () => {
     expect(JSON.parse(guardado!).velocidad).toBe('lenta')
   })
 
+  // Aviso del +2 en los casos límite del mazo (banco de pruebas: e2e/banco/roba2.html).
+  for (const [caso, robadas, robo, consecuencia] of [
+    ['normal', 2, 'Robas estas 2 cartas', 'Pierdes el turno'],
+    ['rebaraje', 2, 'Robas estas 2 cartas', 'Pierdes el turno'],
+    ['una', 1, 'Robas 1 carta: no quedaban más', 'Pierdes el turno'],
+    ['ninguna', 0, 'No quedan cartas: no robas', 'Pierdes el turno'],
+    ['ultima-carta', 2, 'Robas estas 2 cartas', 'fin de la ronda'],
+  ] as const) {
+    test(`Historia 8 · Aviso +2 «${caso}»: enseña las ${robadas} cartas robadas (R-DOS-1, R-DOS-4, R-MAZO-2)`, async ({
+      page,
+    }) => {
+      await page.goto(`/e2e/banco/roba2.html?caso=${caso}`)
+      const aviso = page.getByTestId('aviso-roba2')
+      await expect(aviso).toHaveAttribute('data-robadas', String(robadas))
+      await expect(page.getByTestId('cartas-robadas').locator('[aria-hidden="true"] img, img')).toHaveCount(robadas)
+      await expect(page.getByTestId('roba2-robo')).toContainText(robo)
+      await expect(page.getByTestId('roba2-consecuencia')).toContainText(consecuencia)
+      await expect(page.getByTestId('roba2-rebaraje')).toHaveCount(caso === 'rebaraje' ? 1 : 0)
+      await expect(page.getByTestId('roba2-ok')).toBeInViewport()
+    })
+  }
+
   for (const vp of [
     { width: 320, height: 568 },
     { width: 375, height: 667 },

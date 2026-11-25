@@ -29,7 +29,7 @@ export interface PlayerCfg {
 export type Overlay =
   | null
   | { kind: 'palo'; card: Card }
-  | { kind: 'roba2'; byName: string; byAvatar: AvatarKind; card: Card }
+  | ({ kind: 'roba2'; byName: string; byAvatar: AvatarKind; card: Card } & Omit<Roba2Info, 'victimaId'>)
   | { kind: 'verMano' }
   | { kind: 'vista' } // ajustes de letra grande / contraste (R-UI-A11Y-4)
 
@@ -40,7 +40,7 @@ export type Jugada =
 
 /** Aviso grande de lo que acaba de pasar (R-UI-A11Y-9, R-UI-COMP-5). */
 export type Aviso =
-  | { id: number; tipo: 'roba2'; actorId: string; victimaId: string }
+  | ({ id: number; tipo: 'roba2'; actorId: string; n: number } & Omit<Roba2Info, 'cartas'>)
   | { id: number; tipo: 'sentido'; actorId: string }
   | { id: number; tipo: 'repite'; actorId: string }
   | { id: number; tipo: 'palo'; actorId: string; suit: Suit }
@@ -56,8 +56,10 @@ export function avisoInicial(r: RoundState, dealerId: string): SinId<Aviso> | nu
   const top = r.discardPile[r.discardPile.length - 1]
   if (!top) return null
   if (top.rank === '2') {
-    const victima = r.players.find((p) => p.hand.length === 7)
-    return victima ? { tipo: 'roba2', actorId: dealerId, victimaId: victima.id } : null
+    const victima = r.players.find((p) => p.hand.length > 5)
+    return victima
+      ? { tipo: 'roba2', actorId: dealerId, victimaId: victima.id, n: victima.hand.length - 5, rebarajado: false, finRonda: false }
+      : null
   }
   if (top.rank === 'as') {
     return r.players.length === 2
@@ -87,15 +89,30 @@ function botChooseSuit(round: RoundState): Suit {
   return suits.sort((a, b) => counts[b] - counts[a])[0]
 }
 
-interface PlayOutcome {
+/**
+ * Lo que pasó realmente con un «roba 2» (R-DOS-1). Puede robar menos de 2 si no quedan
+ * cartas (R-MAZO-2: una sola rebaraja por ronda) y, si el 2 era la última carta de quien
+ * lo jugó, la ronda termina después de robar (R-DOS-4).
+ */
+export interface Roba2Info {
+  victimaId: string
+  /** Cartas robadas de verdad (0, 1 o 2), en orden. */
+  cartas: Card[]
+  /** Hubo que rebarajar la pila de la mesa para poder robar. */
+  rebarajado: boolean
+  /** Quien jugó el 2 se quedó sin cartas: la ronda acaba tras el robo. */
+  finRonda: boolean
+}
+
+export interface PlayOutcome {
   next: RoundState
   reversed: boolean
-  roba2VictimId: string | null
+  roba2: Roba2Info | null
   actorId: string
 }
 
 /** Juega una carta y describe los efectos relevantes para la UI (sentido, +2). */
-function describeAndPlay(
+export function describeAndPlay(
   round: RoundState,
   card: Card,
   suit: Suit | undefined,
@@ -105,12 +122,19 @@ function describeAndPlay(
   const n = round.players.length
   const next = playCard(round, card, suit, shuffle)
   const reversed = card.rank === 'as' && n >= 3
-  let roba2VictimId: string | null = null
+  let roba2: Roba2Info | null = null
   if (card.rank === '2') {
     const victimIdx = (actorIdx + round.direction + n) % n
-    roba2VictimId = round.players[victimIdx].id
+    const antes = round.players[victimIdx].hand.length
+    roba2 = {
+      victimaId: round.players[victimIdx].id,
+      // forceDraw añade las robadas al final de la mano.
+      cartas: next.players[victimIdx].hand.slice(antes),
+      rebarajado: !round.reshuffleUsed && next.reshuffleUsed,
+      finRonda: next.phase === 'over',
+    }
   }
-  return { next, reversed, roba2VictimId, actorId: round.players[actorIdx].id }
+  return { next, reversed, roba2, actorId: round.players[actorIdx].id }
 }
 
 export interface Ovni {
@@ -326,18 +350,32 @@ export function useOvni(): Ovni {
   const aplicarJugada = useCallback(
     (prev: RoundState, res: PlayOutcome, card: Card, porHumano: boolean) => {
       setRound(res.next)
-      if (res.next.phase === 'over') return // el aviso de fin de ronda lo pone su efecto
       const n = prev.players.length
-      if (res.roba2VictimId === HUMAN_ID) {
+      // El +2 se muestra también si acaba la ronda (R-DOS-4): el fin de ronda espera a que
+      // se haya visto (ver su efecto más abajo).
+      const r2 = res.roba2
+      if (r2?.victimaId === HUMAN_ID) {
         setOverlay({
           kind: 'roba2',
           byName: nameOf(res.actorId),
           byAvatar: avatarOf(res.actorId),
           card,
+          cartas: r2.cartas,
+          rebarajado: r2.rebarajado,
+          finRonda: r2.finRonda,
         })
-      } else if (res.roba2VictimId) {
-        marcarRobo(res.roba2VictimId, 2)
-        mostrarAviso({ tipo: 'roba2', actorId: res.actorId, victimaId: res.roba2VictimId })
+      } else if (r2) {
+        if (r2.cartas.length > 0) marcarRobo(r2.victimaId, r2.cartas.length)
+        mostrarAviso({
+          tipo: 'roba2',
+          actorId: res.actorId,
+          victimaId: r2.victimaId,
+          n: r2.cartas.length,
+          rebarajado: r2.rebarajado,
+          finRonda: r2.finRonda,
+        })
+      } else if (res.next.phase === 'over') {
+        return // el aviso de fin de ronda lo pone su efecto
       } else if (res.reversed) {
         mostrarAviso({ tipo: 'sentido', actorId: res.actorId })
       } else if (card.rank === 'as' && n === 2) {
@@ -391,20 +429,24 @@ export function useOvni(): Ovni {
   }, [round, screen, overlay, aviso, jugada, shuffle, dur, animarYAplicar, aplicarJugada, marcarRobo])
 
   // --- fin de ronda -------------------------------------------------------
-  // Aviso «sin cartas» (o «mazo agotado») y, después, el recuento.
+  // Aviso «sin cartas» (o «mazo agotado») y, después, el recuento. Espera a que se cierre
+  // lo que haya delante (p. ej. el +2 de un 2 jugado como última carta, R-DOS-4).
+  const finProgramado = useRef<RoundState | null>(null)
   useEffect(() => {
     if (screen !== 'mesa' || !round || round.phase !== 'over' || jugada) return
+    if (overlay || (aviso && aviso.tipo !== 'fin')) return
+    if (finProgramado.current === round) return // ya programado para esta ronda
+    finProgramado.current = round
     const result = round.result!
     if (dur.finRonda > 0) setAviso({ tipo: 'fin', ganadorId: result.winnerId, id: ++seq.current })
-    const timer = setTimeout(() => {
+    programar(() => {
       setAviso(null)
       const m = applyRoundResult(matchRef.current!, result)
       setMatch(m)
       setLastResult(result)
       setScreen('finRonda')
     }, dur.finRonda)
-    return () => clearTimeout(timer)
-  }, [round, screen, jugada, dur.finRonda])
+  }, [round, screen, jugada, overlay, aviso, dur.finRonda, programar])
 
   // --- acciones del humano ------------------------------------------------
   const esTurnoHumano = (r: RoundState | null): r is RoundState =>

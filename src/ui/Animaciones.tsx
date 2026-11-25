@@ -13,6 +13,7 @@ import { HUMAN_ID, type Aviso, type Jugada, type PlayerCfg } from './game'
 import { SUIT_COLOR, SUIT_NAME } from './deck'
 import { PROPORCION_CARTA } from './ajuste'
 import type { Duraciones } from './ritmo'
+import { textosRoba2 } from './textosRoba2'
 
 export const claveCarta = (c: Card) => `carta-${c.suit}-${c.rank}`
 
@@ -220,22 +221,30 @@ export function CartelAviso({
 
   if (aviso.tipo === 'roba2') {
     const v = cfg(aviso.victimaId)
-    etiqueta = esYo(aviso.victimaId)
-      ? 'Robas 2 y pierdes el turno'
-      : `${nombre(aviso.victimaId)} roba 2 y pierde el turno`
+    const t = textosRoba2(
+      { n: aviso.n, rebarajado: aviso.rebarajado, finRonda: aviso.finRonda },
+      esYo(aviso.victimaId) ? null : nombre(aviso.victimaId),
+      esYo(aviso.actorId) ? 'Tú' : nombre(aviso.actorId),
+    )
+    etiqueta = t.resumen
     contenido = (
       <>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           {v && <Avatar quien={v.avatar} w={76} />}
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ transform: 'rotate(-10deg)', lineHeight: 0 }}><Carta estado="dorso" w={44} /></span>
-            <span style={{ transform: 'rotate(8deg)', marginLeft: -18, lineHeight: 0 }}><Carta estado="dorso" w={44} /></span>
+            {Array.from({ length: aviso.n }, (_, i) => (
+              <span key={i} style={{ transform: `rotate(${i === 0 ? -10 : 8}deg)`, marginLeft: i === 0 ? 0 : -18, lineHeight: 0 }}>
+                <Carta estado="dorso" w={44} />
+              </span>
+            ))}
           </div>
-          <span style={{ fontSize: 56, fontWeight: 700, lineHeight: 1 }}>+2</span>
+          <span style={{ fontSize: 56, fontWeight: 700, lineHeight: 1 }}>+{aviso.n}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Svg markup={ICONO_SALTA} />
-          <span>{etiqueta}</span>
+        <span style={{ fontSize: 22 }}>{t.robo}</span>
+        {t.rebaraje && <span style={{ fontSize: 18, fontWeight: 400 }}>{t.rebaraje}</span>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 22 }}>
+          {!aviso.finRonda && <Svg markup={ICONO_SALTA} />}
+          <span>{t.consecuencia}</span>
         </div>
       </>
     )
