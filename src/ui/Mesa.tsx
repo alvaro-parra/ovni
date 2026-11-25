@@ -244,6 +244,14 @@ export function Mesa({ game }: { game: Ovni }) {
   // En modo dividido, debajo va la tira de cartas no jugables (~88 px).
   // Tira de no jugables: encoge si la mano tiene poco alto.
   const wTira = mano.alto < 240 ? 30 : 44
+  // Solape de la tira: el justo para que quepan todas en el ancho (menos el número de la
+  // derecha y márgenes, ~56 px); como mínimo el 40 % de la carta y como máximo el 80 %.
+  const nTira = n - jugables.length
+  const anchoTira = Math.max(0, mano.ancho - 56)
+  const solapeTira =
+    nTira <= 1
+      ? 0
+      : Math.round(Math.min(wTira * 0.8, Math.max(wTira * 0.4, wTira - (anchoTira - wTira) / (nTira - 1))))
   const altoTira = Math.round(wTira * PROPORCION_CARTA) + 12 + 8
   const rDividido = ajustarRejilla(jugables.length, { ...huecoMano, alto: mano.alto - altoTira }, topeCarta)
   const nRejilla = Math.min(n, 12)
@@ -638,9 +646,9 @@ export function Mesa({ game }: { game: Ovni }) {
                 cursor: 'pointer',
               }}
             >
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', opacity: 0.6, filter: 'saturate(0.5)' }}>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', overflow: 'hidden', opacity: 0.6, filter: 'saturate(0.5)' }}>
                 {hand.filter((i) => i.est !== 'jugable').map((i, k) => (
-                  <span key={k} style={{ marginLeft: k === 0 ? 0 : -Math.round(wTira * 0.4), lineHeight: 0 }}>
+                  <span key={k} style={{ marginLeft: k === 0 ? 0 : -solapeTira, lineHeight: 0, flex: 'none' }}>
                     <CartaDe card={i.card} estado="espera" w={wTira} />
                   </span>
                 ))}

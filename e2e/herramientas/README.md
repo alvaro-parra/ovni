@@ -17,3 +17,6 @@ Todas usan un solo navegador y una página a la vez (el sandbox tiene 2 GB de RA
   fotogramas a ritmo real (sin `?fast`) para revisar animaciones, avisos y ritmo.
 - `sin-conexion.mjs <url-del-build>` — abre la app, corta la red y comprueba que sigue
   funcionando (service worker; solo en el build, no en `vite dev`).
+- `banco-mesa.mjs <baseUrl> <salida.png> <WxH> <cartas:jugables,...>` — con `vite dev`, pinta
+  la mesa real (banco `e2e/banco/mesa.html`) con manos de cualquier tamaño, para revisar los
+  modos de la mano (grande, dividido, rejilla, «+N») sin tener que llegar a ellos jugando.
