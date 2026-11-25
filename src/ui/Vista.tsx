@@ -61,13 +61,17 @@ const VELOCIDADES: { v: Velocidad; icono: string; texto: string }[] = [
 ]
 
 /** Rótulo corto bajo un botón de icono: el icono solo no basta (¿qué es el muñeco que anda?). */
-export function ConRotulo({ texto, children }: { texto: string; children: ReactNode }) {
+export function ConRotulo({ texto, children }: { texto: string | null; children: ReactNode }) {
+  // El envoltorio está siempre (aunque no haya texto): si cambiara la estructura, React
+  // recrearía el botón y el foco no podría volver a él al cerrar un diálogo.
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
       {children}
-      <span aria-hidden="true" style={{ fontSize: 13, fontWeight: 700, lineHeight: 1, color: 'var(--texto-2)', whiteSpace: 'nowrap' }}>
-        {texto}
-      </span>
+      {texto && (
+        <span aria-hidden="true" style={{ fontSize: 13, fontWeight: 700, lineHeight: 1, color: 'var(--texto-2)', whiteSpace: 'nowrap' }}>
+          {texto}
+        </span>
+      )}
     </div>
   )
 }

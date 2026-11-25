@@ -180,12 +180,15 @@ test.describe('OVNI · happy paths', () => {
 
   test('Historia 9 · «¿Cómo se juega?» abre las reglas resumidas (en el inicio y en la mesa)', async ({ page }) => {
     await page.goto('/?seed=7&fast=1')
-    await page.getByTestId('abrir-reglas').click()
+    // Con teclado: la primera vez el botón cambia de aspecto, pero el foco vuelve a él al cerrar.
+    await page.getByTestId('abrir-reglas').focus()
+    await page.keyboard.press('Enter')
     await expect(page.getByTestId('reglas')).toBeVisible()
     await expect(page.locator('[data-testid^="regla-"]')).toHaveCount(7)
     await expect(page.getByTestId('reglas-ok')).toBeInViewport()
     await page.getByTestId('reglas-ok').click()
     await expect(page.getByTestId('reglas')).toHaveCount(0)
+    await expect(page.getByTestId('abrir-reglas')).toBeFocused()
     await expect(page.getByTestId('jugar')).toBeVisible()
 
     // También a mitad de partida, sin salir: desde «Ver mejor».

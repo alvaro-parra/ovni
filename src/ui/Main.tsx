@@ -153,8 +153,7 @@ export function Main({ game }: { game: Ovni }) {
           <span style={{ flex: 1 }} />
         )}
         {/* Con rótulo debajo cuando el botón es solo el icono (como los de la izquierda). */}
-        {(() => {
-          const boton = (
+        <ConRotulo texto={reglasVistas || anchoInicio < 360 ? 'Reglas' : null}>
           <button
             data-testid="abrir-reglas"
             data-destacado={!reglasVistas}
@@ -169,9 +168,7 @@ export function Main({ game }: { game: Ovni }) {
             <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M9.2 9.3 a3 3 0 0 1 5.6 1.2 c0 2 -2.8 2.4 -2.8 4"></path><path d="M12 17.6 V17.8"></path></svg>`} />
             {!reglasVistas && anchoInicio >= 360 && <span>Reglas</span>}
           </button>
-          )
-          return reglasVistas || anchoInicio < 360 ? <ConRotulo texto="Reglas">{boton}</ConRotulo> : boton
-        })()}
+        </ConRotulo>
       </div>
 
       {/* Apaisado (móvil girado): dos columnas — título a la izquierda, elecciones a la derecha.
