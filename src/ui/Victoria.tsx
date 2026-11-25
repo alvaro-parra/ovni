@@ -1,4 +1,5 @@
 // Pantalla 8/9 · Final de partida (portado de Victoria.dc.html): gana / empate / eliminado.
+import { useEffect, useRef } from 'react'
 import type { Ovni } from './game'
 import { HUMAN_ID } from './game'
 import { Avatar } from './Avatar'
@@ -27,6 +28,23 @@ export function Victoria({ game }: { game: Ovni }) {
         fuera: p.eliminated && !winners.includes(p.id),
       }
     })
+
+  // Al ganar, el confeti cae un par de veces (quieto si se pide reducir movimiento).
+  const refConfeti = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = refConfeti.current
+    if (!el || !game.dur.animar) return
+    const anims = [...el.children].map((c, i) =>
+      (c as HTMLElement).animate(
+        [
+          { transform: `translateY(-80px) rotate(0deg)`, opacity: 1 },
+          { transform: `translateY(260px) rotate(${360 + i * 40}deg)`, opacity: 0 },
+        ],
+        { duration: 2200 + (i % 5) * 300, delay: (i % 7) * 180, iterations: 2, easing: 'ease-in' },
+      ),
+    )
+    return () => anims.forEach((a) => a.cancel())
+  }, [game.dur.animar])
 
   const confeti = Array.from({ length: 22 }, (_, i) => ({
     x: ((i * 53) % 370) + 6,
@@ -68,9 +86,9 @@ export function Victoria({ game }: { game: Ovni }) {
       }
     >
       {fiesta && (
-        <div aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, right: 0, height: 300 }}>
+        <div ref={refConfeti} aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, right: 0, height: 320, overflow: 'hidden', pointerEvents: 'none' }}>
           {confeti.map((k, i) => (
-            <div key={i} style={{ position: 'absolute', left: k.x, top: k.y, width: k.w, height: k.h, background: k.c, transform: `rotate(${k.r}deg)`, borderRadius: 2 }} />
+            <div key={i} style={{ position: 'absolute', left: `${((i * 37) % 94) + 3}%`, top: k.y, width: k.w, height: k.h, background: k.c, transform: `rotate(${k.r}deg)`, borderRadius: 2 }} />
           ))}
         </div>
       )}
