@@ -199,6 +199,21 @@ export function CartelAviso({
     const h = el.offsetHeight
     const centro = pila ? pila.y + pila.h / 2 : alto / 2
     el.style.marginTop = `${Math.max(8, Math.min(alto - h - 8, centro - h / 2))}px`
+    // Apaisada (mesa a la izquierda, tu mano a la derecha): centrado sobre la columna de la
+    // mesa, no sobre la pantalla entera, para no tapar tu mano cuando te toca.
+    const izq = r.querySelector<HTMLElement>('[data-apaisada="true"] [data-testid="mesa-izquierda"]')
+    if (izq) {
+      const R = r.getBoundingClientRect()
+      const s = R.width / r.offsetWidth || 1
+      const c = izq.getBoundingClientRect()
+      const ancho = r.offsetWidth
+      const w = el.offsetWidth
+      const cx = (c.left - R.left + c.width / 2) / s
+      const x = Math.max(8 + w / 2, Math.min(ancho - 8 - w / 2, cx))
+      el.style.left = `${x - ancho / 2}px`
+    } else {
+      el.style.left = ''
+    }
   }, [aviso.id, raiz])
   useLayoutEffect(() => {
     if (!dur.animar || !panel.current) return
@@ -342,6 +357,7 @@ export function CartelAviso({
         aria-label={etiqueta}
         onClick={onClose}
         style={{
+          position: 'relative', // `left` lo fija el efecto de arriba en apaisada
           pointerEvents: 'auto',
           cursor: aviso.tipo === 'fin' ? 'default' : 'pointer',
           maxWidth: 340,
