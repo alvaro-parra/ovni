@@ -15,7 +15,7 @@ pre-lectores.
 
 - `src/cards.ts`, `src/engine.ts`, `src/match.ts` — **motor de juego** (lógica pura, sin UI).
 - `src/ui/` — **web app** (React + Vite) cableada al motor.
-- `tests/` — tests unitarios del motor (Vitest).
+- `tests/` — tests unitarios del motor y de la lógica pura de la UI (Vitest).
 - `e2e/` — tests end-to-end de la UI (Playwright), happy paths.
 - `public/cartas/` — imágenes de la baraja.
 

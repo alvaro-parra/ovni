@@ -110,6 +110,8 @@ test.describe('OVNI · happy paths', () => {
     await expect(page.getByTestId('victoria')).toBeVisible()
     const estado = await page.getByTestId('victoria').getAttribute('data-value')
     expect(['gana', 'empate', 'eliminado']).toContain(estado)
+    // La partida queda anotada en el recuento del dispositivo (primera partida: «de 1»).
+    await expect(page.getByTestId('cuenta-partidas')).toContainText(estado === 'eliminado' ? '0 de 1' : '1 de 1')
   })
 
   test('Historia 4 · Ver mi mano en grande y volver (R-UI accesibilidad)', async ({ page }) => {

@@ -1,12 +1,12 @@
 // Pantalla 8/9 · Final de partida (portado de Victoria.dc.html): gana / empate / eliminado.
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Ovni } from './game'
 import { HUMAN_ID } from './game'
 import { Avatar } from './Avatar'
 import { Svg } from './dc'
 import { ALTO_REF_PANTALLA, Tablero, useEscala } from './Pantalla'
 import { estaFuera, ordenClasificacion, resumenFinal } from './resultado'
-import { anotarPartida } from './estadisticas'
+import { anotarPartida, leerEstadisticas, type Estadisticas } from './estadisticas'
 
 // Partidas ya anotadas (por si la pantalla se vuelve a montar): cada una cuenta una vez.
 const anotadas = new WeakSet<object>()
@@ -20,10 +20,15 @@ export function Victoria({ game }: { game: Ovni }) {
   // El motivo distingue R-OBJ-4 (único por debajo de 101) de R-OBJ-5 (todos pasan de 101
   // en la misma ronda y gana quien tiene menos puntos): cada caso lleva su propio mensaje.
   const { estado, motivo } = resumenFinal(match, HUMAN_ID)
+  // Recuento del dispositivo (como en el inicio), ya con esta partida sumada.
+  const [cuenta, setCuenta] = useState<Estadisticas | null>(null)
   useEffect(() => {
-    if (anotadas.has(match)) return
+    if (anotadas.has(match)) {
+      setCuenta(leerEstadisticas())
+      return
+    }
     anotadas.add(match)
-    anotarPartida(estado !== 'eliminado')
+    setCuenta(anotarPartida(estado !== 'eliminado'))
   }, [match, estado])
   const fiesta = estado !== 'eliminado'
 
@@ -108,8 +113,8 @@ export function Victoria({ game }: { game: Ovni }) {
       <div style={apaisada ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'center', width: '100%', flex: 1 } : { display: 'contents' }}>
       <div style={apaisada ? { display: 'flex', flexDirection: 'column', alignItems: 'center' } : { display: 'contents' }}>
       {estado === 'gana' && (
-        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: apaisada ? 4 : 10, marginTop: apaisada ? 0 : 18 }}>
-          <Corona w={apaisada ? 72 : 120} />
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: apaisada ? 4 : 10, marginTop: apaisada ? 0 : 6 }}>
+          <Corona w={apaisada ? 72 : 96} />
           <div style={{ position: 'relative' }}>
             <Avatar quien={game.humanAvatar} w={apaisada ? 72 : 104} />
           </div>
@@ -149,6 +154,7 @@ export function Victoria({ game }: { game: Ovni }) {
       )}
 
       </div>
+      <div style={apaisada ? { display: 'flex', flexDirection: 'column', gap: 8 } : { display: 'contents' }}>
       <section aria-label="Clasificación final" style={{ position: 'relative', width: '100%', background: 'var(--panel)', borderRadius: 20, padding: 12, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
         {tabla.map((f, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 52, padding: '4px 8px', borderRadius: 14, background: f.corona ? '#FFD23F' : 'transparent', color: f.corona ? '#1A1A1A' : f.fuera ? 'var(--texto-apagado)' : '#FFF8E7' }}>
@@ -160,6 +166,12 @@ export function Victoria({ game }: { game: Ovni }) {
           </div>
         ))}
       </section>
+      {cuenta && cuenta.jugadas > 0 && (
+        <p data-testid="cuenta-partidas" style={{ margin: 0, fontSize: 17, fontWeight: 700, lineHeight: 1.2, color: 'var(--texto-2)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+          Partidas ganadas: {cuenta.ganadas} de {cuenta.jugadas}
+        </p>
+      )}
+      </div>
       </div>
 
     </Tablero>
