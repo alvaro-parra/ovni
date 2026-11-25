@@ -9,6 +9,13 @@ describe('anuncios', () => {
     expect(anuncioJuega(null, C('sota', 'oros'))).toBe('Juegas la Sota de Oros')
   })
 
+  it('jugada que deja a alguien con 1 carta: se avisa', () => {
+    expect(anuncioJuega('Toby', C('3', 'espadas'), 1)).toBe('Toby juega el 3 de Espadas. Le queda 1 carta')
+    expect(anuncioJuega(null, C('4', 'oros'), 1)).toBe('Juegas el 4 de Oros. Te queda 1 carta')
+    expect(anuncioJuega('Toby', C('3', 'espadas'), 2)).toBe('Toby juega el 3 de Espadas')
+    expect(anuncioJuega('Toby', C('3', 'espadas'), 0)).toBe('Toby juega el 3 de Espadas')
+  })
+
   it('robos: de un bot solo cuántas; tuyos, cuáles', () => {
     expect(anuncioRoba('Pixel', 3)).toBe('Pixel roba 3 cartas')
     expect(anuncioRoba('Pixel', 1)).toBe('Pixel roba 1 carta')

@@ -153,7 +153,11 @@ export function Mesa({ game }: { game: Ovni }) {
     const j = game.jugada
     if (!j) return
     const nombre = j.actorId === HUMAN_ID ? null : (players.find((p) => p.id === j.actorId)?.name ?? '')
-    if (j.tipo === 'juega') setAnuncio(anuncioJuega(nombre, j.card))
+    if (j.tipo === 'juega') {
+      // Con la carta aún en la mano: si le quedan 2, tras jugar le queda 1 (está a punto de ganar).
+      const quedan = (round.players.find((p) => p.id === j.actorId)?.hand.length ?? 0) - 1
+      setAnuncio(anuncioJuega(nombre, j.card, quedan))
+    }
     else if (nombre !== null) setAnuncio(anuncioRoba(nombre, j.n))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.jugada?.id])
