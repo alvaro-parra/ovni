@@ -146,16 +146,17 @@ test.describe('OVNI · happy paths', () => {
   })
 
   test('Historia 5b · «Más grande» no hace más pequeñas las cartas de tu mano (R-UI-A11Y-4)', async ({ page }) => {
-    const anchoCarta = async (vista: string) => {
+    const anchoCarta = async (vista: string, hayGuardada: boolean) => {
       await page.addInitScript((v) => localStorage.setItem('ovni.vista', v), vista)
       await page.goto('/?seed=7&fast=1')
       await page.getByTestId('rivales-3').click()
       await page.getByTestId('jugar').click()
+      if (hayGuardada) await page.getByTestId('confirmar-nueva').click() // la de la primera medida
       await expect(page.getByTestId('estado')).toHaveAttribute('data-value', 'tu')
       return (await page.locator('[data-testid="zona-mano"] [data-vuelo^="carta-"]').first().boundingBox())!.width
     }
-    const normal = await anchoCarta('{}')
-    const grande = await anchoCarta('{"grande":true}')
+    const normal = await anchoCarta('{}', false)
+    const grande = await anchoCarta('{"grande":true}', true)
     expect(grande).toBeGreaterThanOrEqual(normal)
   })
 
@@ -344,6 +345,7 @@ test.describe('OVNI · happy paths', () => {
     await page.goto('/?seed=33')
     await page.getByTestId('rivales-3').click()
     await page.getByTestId('jugar').click()
+    await page.getByTestId('confirmar-nueva').click() // queda guardada la de la primera parte
     await expect(page.getByTestId('aviso')).toHaveAttribute('data-value', 'ronda')
     await ocultar(true)
     await page.waitForTimeout(2500) // más que el aviso (≈0,9 s en «Rápido»)
