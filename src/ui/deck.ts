@@ -114,3 +114,17 @@ export function makeShuffle(rng: () => number) {
 export function shuffledDeck(rng: () => number): Card[] {
   return makeShuffle(rng)(createDeck())
 }
+
+/**
+ * Descarga en segundo plano todas las imágenes de la baraja (~0,8 MB) para que ninguna
+ * carta aparezca en blanco a mitad de partida mientras se carga su imagen.
+ */
+export function precargarCartas(): void {
+  if (typeof Image === 'undefined') return
+  const urls = [dorsoImg(), ...createDeck().map((c) => cardImg(c.suit, c.rank))]
+  for (const url of urls) {
+    const img = new Image()
+    img.decoding = 'async'
+    img.src = url
+  }
+}

@@ -1,4 +1,4 @@
-# Licencia de las imágenes de las cartas (`cartas/`)
+# Licencia de las imágenes de las cartas (`public/cartas/`)
 
 Ilustraciones de la baraja española por **Basquetteur** (Wikimedia Commons),
 licencia **Creative Commons Atribución-CompartirIgual 3.0 (CC BY-SA 3.0)**:
@@ -7,8 +7,11 @@ https://creativecommons.org/licenses/by-sa/3.0/
 Obtenidas en versión SVG de: https://github.com/gjenkins20/spanish-playing-cards-svg
 
 **Cambios realizados:** convertidas de SVG a PNG de 260 × 401 px, fondo transparente
-sustituido por blanco y renombradas en español. En la interfaz se superpone un número grande
+sustituido por blanco, renombradas en español y reducidas a una paleta de colores
+(cuantizado PNG) para que pesen menos. En la interfaz se superpone un número grande
 y una estrella (Sota) para baja visión.
+
+La vista previa de toda la baraja está en `docs/vista-previa-baraja.png` (no se publica).
 
 Crédito sugerido para mostrar en la app (p. ej. en «Acerca de»):
 

@@ -752,7 +752,7 @@ function VerMano({
   onClose: () => void
 }) {
   return (
-    <div style={{ position: 'absolute', inset: 0, background: 'rgba(6,20,12,0.92)', display: 'flex', flexDirection: 'column', padding: 16, boxSizing: 'border-box', color: '#FFF8E7' }}>
+    <div data-testid="ver-mano-panel" style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'var(--fondo)', boxShadow: 'inset 0 0 0 8px #5A3A1E', display: 'flex', flexDirection: 'column', padding: 16, boxSizing: 'border-box', color: '#FFF8E7' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <h2 style={{ margin: 0, fontSize: 26, fontWeight: 700 }}>Tus cartas</h2>
         <button
