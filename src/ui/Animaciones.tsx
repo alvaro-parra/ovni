@@ -270,12 +270,15 @@ export function CartelAviso({
     // Quién jugó el As (o si es la carta inicial) y la carta misma: el cartel tapa la pila,
     // así que la carta que provoca el efecto se enseña aquí.
     const a = cfg(aviso.actorId)
+    // Con 2 jugadores, un As inicial hace empezar a quien reparte (R-INI-1b): nadie «vuelve».
     const titulo =
       aviso.tipo === 'sentido'
         ? '¡Cambio de sentido!'
-        : esYo(aviso.actorId) ? '¡Vuelves a jugar!' : `¡${nombre(aviso.actorId)} vuelve a jugar!`
+        : aviso.inicial
+          ? esYo(aviso.actorId) ? '¡Empiezas tú!' : `¡Empieza ${nombre(aviso.actorId)}!`
+          : esYo(aviso.actorId) ? '¡Vuelves a jugar!' : `¡${nombre(aviso.actorId)} vuelve a jugar!`
     const causa = aviso.inicial
-      ? 'La carta inicial es un As'
+      ? aviso.tipo === 'repite' ? 'La carta inicial es un As: empieza quien reparte' : 'La carta inicial es un As'
       : esYo(aviso.actorId) ? 'Has jugado un As' : `${nombre(aviso.actorId)} ha jugado un As`
     etiqueta = `${causa}. ${titulo}`
     contenido = (
@@ -343,6 +346,21 @@ export function CartelAviso({
       <>
         {g ? <Avatar quien={g.avatar} w={96} /> : <Carta estado="dorso" w={60} />}
         <span>{etiqueta}</span>
+      </>
+    )
+  }
+
+  // Carta inicial con efecto: el aviso va en lugar del de «Ronda N · Empieza X» y lo incluye
+  // arriba (en el As de 2 jugadores el título ya dice quién empieza).
+  const inicio = 'inicio' in aviso ? aviso.inicio : undefined
+  if (inicio) {
+    const empieza = aviso.tipo === 'repite' ? '' : esYo(inicio.empiezaId) ? ' · Empiezas tú' : ` · Empieza ${nombre(inicio.empiezaId)}`
+    const linea = `Ronda ${inicio.numero}${empieza}`
+    etiqueta = `${linea}. ${etiqueta}`
+    contenido = (
+      <>
+        <span data-testid="aviso-inicio" style={{ fontSize: 20, color: '#3A3A3A' }}>{linea}</span>
+        {contenido}
       </>
     )
   }

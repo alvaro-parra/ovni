@@ -42,11 +42,17 @@ export type Jugada =
   | { id: number; tipo: 'roba'; actorId: string; n: number }
 
 /** Aviso grande de lo que acaba de pasar (R-UI-A11Y-9, R-UI-COMP-5). */
+/** Avisos de la carta inicial: sustituyen al de «Ronda N · Empieza X», así que lo llevan. */
+export interface InicioRonda {
+  numero: number
+  empiezaId: string
+}
+
 export type Aviso =
-  | ({ id: number; tipo: 'roba2'; actorId: string; n: number } & Omit<Roba2Info, 'cartas'>)
+  | ({ id: number; tipo: 'roba2'; actorId: string; n: number; inicio?: InicioRonda } & Omit<Roba2Info, 'cartas'>)
   /** `inicial`: el As es la carta volteada al empezar la ronda, no una jugada de `actorId`. */
-  | { id: number; tipo: 'sentido'; actorId: string; carta: Card; inicial?: boolean }
-  | { id: number; tipo: 'repite'; actorId: string; carta: Card; inicial?: boolean }
+  | { id: number; tipo: 'sentido'; actorId: string; carta: Card; inicial?: boolean; inicio?: InicioRonda }
+  | { id: number; tipo: 'repite'; actorId: string; carta: Card; inicial?: boolean; inicio?: InicioRonda }
   | { id: number; tipo: 'palo'; actorId: string; suit: Suit }
   | { id: number; tipo: 'fin'; ganadorId: string | null }
   /** Se acabó el mazo al robar y se rebarajó la mesa (R-MAZO-2): la próxima vez acaba la ronda. */
@@ -347,7 +353,7 @@ export function useOvni(): Ovni {
       const ini = avisoInicial(r, m.players[m.dealerIndex].id)
       if (ini) {
         if (ini.tipo === 'roba2') marcarRobo(ini.victimaId, 2)
-        mostrarAviso(ini)
+        mostrarAviso({ ...ini, inicio: { numero, empiezaId: r.players[r.currentPlayerIndex].id } } as SinId<Aviso>)
       } else {
         mostrarAviso({ tipo: 'ronda', numero, empiezaId: r.players[r.currentPlayerIndex].id })
       }
