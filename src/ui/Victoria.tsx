@@ -30,6 +30,8 @@ export function Victoria({ game }: { game: Ovni }) {
     setCuenta(anotarPartida(estado !== 'eliminado'))
   }, [match, estado])
   const fiesta = estado !== 'eliminado'
+  // Con 4 jugadores la clasificación es más larga: cabecera algo más compacta para que quepa.
+  const cuatro = match.players.length >= 4
 
   const human = match.players.find((p) => p.id === HUMAN_ID)!
   const tabla = ordenClasificacion(match.players, winners)
@@ -84,9 +86,9 @@ export function Victoria({ game }: { game: Ovni }) {
       <div style={apaisada ? { display: 'flex', flexDirection: 'column', alignItems: 'center' } : { display: 'contents' }}>
       {estado === 'gana' && (
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: apaisada ? 4 : 10, marginTop: apaisada ? 0 : 6 }}>
-          <Corona w={apaisada ? 72 : 96} />
+          <Corona w={apaisada || cuatro ? 72 : 96} />
           <div style={{ position: 'relative' }}>
-            <Avatar quien={game.humanAvatar} w={apaisada ? 72 : 104} />
+            <Avatar quien={game.humanAvatar} w={apaisada ? 72 : cuatro ? 84 : 104} />
           </div>
           <h1 style={{ margin: '4px 0 0', fontSize: apaisada ? 34 : 46, lineHeight: 1.05, fontWeight: 700, textAlign: 'center' }}>¡Has ganado!</h1>
           <p style={{ margin: 0, fontSize: apaisada ? 17 : 20, color: 'var(--texto-2)', textAlign: 'center' }}>
@@ -96,8 +98,8 @@ export function Victoria({ game }: { game: Ovni }) {
       )}
 
       {estado === 'empate' && (
-        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: apaisada ? 0 : 40 }}>
-          <Avatar quien={game.humanAvatar} w={apaisada ? 72 : 96} />
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: apaisada ? 0 : cuatro ? 12 : 40 }}>
+          <Avatar quien={game.humanAvatar} w={apaisada ? 72 : cuatro ? 80 : 96} />
           <h1 style={{ margin: '6px 0 0', fontSize: apaisada ? 34 : 46, lineHeight: 1.05, fontWeight: 700 }}>¡Empate!</h1>
           <p style={{ margin: 0, fontSize: apaisada ? 17 : 20, color: 'var(--texto-2)', textAlign: 'center' }}>
             Tú {otrosGanadores.length ? `y ${otrosGanadores.join(', ')} ` : ''}tenéis los puntos más bajos: ganáis
@@ -106,9 +108,9 @@ export function Victoria({ game }: { game: Ovni }) {
       )}
 
       {estado === 'eliminado' && (
-        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: apaisada ? 6 : 12, marginTop: apaisada ? 0 : 50 }}>
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: apaisada ? 6 : 12, marginTop: apaisada ? 0 : cuatro ? 8 : 50 }}>
           <div style={{ position: 'relative' }}>
-            <Avatar quien={game.humanAvatar} w={apaisada ? 80 : 120} apagado />
+            <Avatar quien={game.humanAvatar} w={apaisada ? 80 : cuatro ? 88 : 120} apagado />
             <span style={{ position: 'absolute', right: -10, bottom: -6, width: 52, height: 52, borderRadius: '50%', background: '#FFE1E1', border: '4px solid #8E0F18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8E0F18" stroke-width="3.6" stroke-linecap="round"><path d="M6 6 L18 18"></path><path d="M18 6 L6 18"></path></svg>`} />
             </span>
