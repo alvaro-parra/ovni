@@ -20,5 +20,5 @@ Todas usan un solo navegador y una página a la vez (el sandbox tiene 2 GB de RA
 - `banco-mesa.mjs <baseUrl> <salida.png> <WxH> <cartas:jugables,...>` — con `vite dev`, pinta
   la mesa real (banco `e2e/banco/mesa.html`) con manos de cualquier tamaño, para revisar los
   modos de la mano (grande, dividido, rejilla, «+N») sin tener que llegar a ellos jugando.
-- `banco-victoria.mjs <baseUrl> <salida.png>` — con `vite dev`, la pantalla final en sus 5
+- `banco-victoria.mjs <baseUrl> <salida.png> [WxH]` — con `vite dev`, la pantalla final en sus 5
   variantes (ganas, ganas por menos puntos, empate, eliminado, eliminado por más puntos).

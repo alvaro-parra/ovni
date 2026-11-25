@@ -192,10 +192,13 @@ export function Tablero({
   padding,
   gap,
   alignItems,
+  pieEnFila = false,
   ...rest
 }: {
   children: ReactNode
   pie?: ReactNode
+  /** Botones del pie uno al lado del otro (pantallas apaisadas, donde falta alto). */
+  pieEnFila?: boolean
   padding: string
   gap: number
   alignItems?: CSSProperties['alignItems']
@@ -227,7 +230,11 @@ export function Tablero({
       >
         {children}
       </div>
-      {pie && <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>{pie}</div>}
+      {pie && (
+        <div style={pieEnFila ? { flex: 'none', display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(0, 1fr)', gap: 12, alignItems: 'center' } : { flex: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {pie}
+        </div>
+      )}
     </div>
   )
 }
