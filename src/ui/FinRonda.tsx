@@ -1,5 +1,5 @@
 // Pantalla 7 · Fin de ronda (portado de FinRonda.dc.html): recuento y barra hacia 101.
-import type { Ovni } from './game'
+import { HUMAN_ID, type Ovni } from './game'
 import { Avatar } from './Avatar'
 import { CartaDe } from './Carta'
 import { Svg } from './dc'
@@ -9,6 +9,7 @@ export function FinRonda({ game }: { game: Ovni }) {
   const match = game.match!
   const round = game.round!
   const result = game.lastResult!
+  const yoEliminado = match.players.find((p) => p.id === HUMAN_ID)?.eliminated ?? false
 
   const rows = match.players.map((p) => {
     const inRound = round.players.find((rp) => rp.id === p.id)
@@ -44,7 +45,8 @@ export function FinRonda({ game }: { game: Ovni }) {
           onClick={game.nextRound}
           style={{ height: 74, boxSizing: 'border-box', borderRadius: 22, background: '#FFD23F', color: '#1A1A1A', border: '4px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 28, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
         >
-          <span>{match.phase === 'over' ? 'Ver resultado' : 'Siguiente ronda'}</span>
+          {/* Si quedas eliminado, el resto de la partida se resuelve sin ti: no hay «siguiente ronda» para ti. */}
+          <span>{match.phase === 'over' || yoEliminado ? 'Ver resultado' : 'Siguiente ronda'}</span>
           <Svg markup={`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 H20"></path><path d="M14 6 L20 12 L14 18"></path></svg>`} />
         </button>
       }
