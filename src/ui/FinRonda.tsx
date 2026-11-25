@@ -5,12 +5,13 @@ import { estaFuera } from './resultado'
 import { Avatar } from './Avatar'
 import { CartaDe } from './Carta'
 import { Svg } from './dc'
-import { Tablero } from './Pantalla'
+import { ALTO_REF_PANTALLA, Tablero, useEscala } from './Pantalla'
 
 const ICONO_BANDERA = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 V4"></path><path d="M5 4 H18 L15.5 8 L18 12 H5"></path></svg>`
 const ICONO_TROFEO = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 3.5 H16.5 V10 a4.5 4.5 0 0 1 -9 0 Z" fill="#1A1A1A"></path><path d="M7.5 5.5 H4 a3.5 3.5 0 0 0 4 4.5 M16.5 5.5 H20 a3.5 3.5 0 0 1 -4 4.5"></path><path d="M12 14.5 V18"></path><path d="M8 21 H16 L15 18 H9 Z" fill="#1A1A1A"></path></svg>`
 
 export function FinRonda({ game }: { game: Ovni }) {
+  const { apaisada } = useEscala(ALTO_REF_PANTALLA, true)
   const match = game.match!
   const round = game.round!
   const result = game.lastResult!
@@ -96,6 +97,8 @@ export function FinRonda({ game }: { game: Ovni }) {
         </div>
       )}
 
+      {/* Apaisado (móvil girado, tableta en horizontal): jugadores en dos columnas. */}
+      <div style={apaisada ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, alignItems: 'start' } : { display: 'contents' }}>
       {rows.map((p, idx) => (
         <div
           key={idx}
@@ -161,6 +164,7 @@ export function FinRonda({ game }: { game: Ovni }) {
           </div>
         </div>
       ))}
+      </div>
 
     </Tablero>
   )

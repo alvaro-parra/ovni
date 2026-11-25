@@ -4,7 +4,7 @@ import type { Ovni } from './game'
 import { HUMAN_ID } from './game'
 import { Avatar } from './Avatar'
 import { Svg } from './dc'
-import { Tablero } from './Pantalla'
+import { ALTO_REF_PANTALLA, Tablero, useEscala } from './Pantalla'
 import { estaFuera, ordenClasificacion, resumenFinal } from './resultado'
 import { anotarPartida } from './estadisticas'
 
@@ -14,6 +14,7 @@ const anotadas = new WeakSet<object>()
 const CONFETI_COLORES = ['#FFD23F', '#FF8A8A', '#8EC1FF', '#FFF8E7', '#B6E58A']
 
 export function Victoria({ game }: { game: Ovni }) {
+  const { apaisada } = useEscala(ALTO_REF_PANTALLA, true)
   const match = game.match!
   const winners = match.winners ?? []
   // El motivo distingue R-OBJ-4 (único por debajo de 101) de R-OBJ-5 (todos pasan de 101
@@ -102,6 +103,9 @@ export function Victoria({ game }: { game: Ovni }) {
         </div>
       )}
 
+      {/* Apaisado: el resultado a la izquierda y la clasificación a la derecha. */}
+      <div style={apaisada ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'center', width: '100%', flex: 1 } : { display: 'contents' }}>
+      <div style={apaisada ? { display: 'flex', flexDirection: 'column', alignItems: 'center' } : { display: 'contents' }}>
       {estado === 'gana' && (
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginTop: 18 }}>
           <Corona w={120} />
@@ -143,6 +147,7 @@ export function Victoria({ game }: { game: Ovni }) {
         </div>
       )}
 
+      </div>
       <section aria-label="Clasificación final" style={{ position: 'relative', width: '100%', background: 'var(--panel)', borderRadius: 20, padding: 12, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
         {tabla.map((f, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 52, padding: '4px 8px', borderRadius: 14, background: f.corona ? '#FFD23F' : 'transparent', color: f.corona ? '#1A1A1A' : f.fuera ? 'var(--texto-apagado)' : '#FFF8E7' }}>
@@ -154,6 +159,7 @@ export function Victoria({ game }: { game: Ovni }) {
           </div>
         ))}
       </section>
+      </div>
 
     </Tablero>
   )
