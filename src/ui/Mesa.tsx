@@ -14,6 +14,7 @@ import { BotonVista, PanelVista } from './Vista'
 import { AvisoRoba2 } from './Roba2'
 import { useFocoDialogo } from './foco'
 import { textoPista, type MotivoPista } from './pistas'
+import { anuncioJuega, anuncioRoba } from './anuncios'
 import { animarLlegada, CapaVuelo, CartelAviso, claveCarta, Pensando, useLatido } from './Animaciones'
 import {
   cardLabel,
@@ -126,10 +127,23 @@ export function Mesa({ game }: { game: Ovni }) {
     const claves = new Set(human.hand.map(claveCarta))
     const prev = prevMano.current
     prevMano.current = { ronda: game.roundNumber, claves }
-    if (!prev || prev.ronda !== game.roundNumber || !game.dur.animar) return
+    if (!prev || prev.ronda !== game.roundNumber) return
     const llegadas = [...claves].filter((k) => !prev.claves.has(k))
-    if (llegadas.length > 0) setLlegando((l) => [...l, ...llegadas])
+    if (llegadas.length === 0) return
+    setAnuncio(anuncioRoba(null, llegadas.length, human.hand.filter((c) => llegadas.includes(claveCarta(c)))))
+    if (game.dur.animar) setLlegando((l) => [...l, ...llegadas])
   }, [human.hand, game.roundNumber, game.dur.animar])
+
+  // Lectores de pantalla: qué se juega o se roba (lo que a la vista se ve volar).
+  const [anuncio, setAnuncio] = useState('')
+  useEffect(() => {
+    const j = game.jugada
+    if (!j) return
+    const nombre = j.actorId === HUMAN_ID ? null : (players.find((p) => p.id === j.actorId)?.name ?? '')
+    if (j.tipo === 'juega') setAnuncio(anuncioJuega(nombre, j.card))
+    else if (nombre !== null) setAnuncio(anuncioRoba(nombre, j.n))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.jugada?.id])
   useLayoutEffect(() => {
     if (llegando.length === 0 || game.overlay || !raizRef.current) return
     animarLlegada(raizRef.current, llegando, game.dur)
@@ -627,6 +641,14 @@ export function Mesa({ game }: { game: Ovni }) {
         </div>
       </div>
 
+      </div>
+
+      <div
+        aria-live="polite"
+        data-testid="anuncio"
+        style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}
+      >
+        {anuncio}
       </div>
 
       {/* Cartas en movimiento y avisos grandes de lo que pasa */}
