@@ -12,6 +12,7 @@ import { ALTO_REF_MESA, estiloTablero, useEscala } from './Pantalla'
 import { ajustarRejilla, PROPORCION_CARTA } from './ajuste'
 import { BotonVista, PanelVista } from './Vista'
 import { AvisoRoba2 } from './Roba2'
+import { useFocoDialogo } from './foco'
 import { animarLlegada, CapaVuelo, CartelAviso, claveCarta, Pensando, useLatido } from './Animaciones'
 import {
   cardLabel,
@@ -562,7 +563,7 @@ export function Mesa({ game }: { game: Ovni }) {
 
       {/* Overlays */}
       {game.overlay?.kind === 'palo' && (
-        <SelectorPalo sota={game.overlay.card} mano={human.hand} onPick={game.chooseSuit} />
+        <SelectorPalo sota={game.overlay.card} mano={human.hand} onPick={game.chooseSuit} onCancel={game.cancelarSota} />
       )}
       {game.overlay?.kind === 'vista' && <PanelVista onClose={game.closeOverlay} />}
       {game.overlay?.kind === 'salir' && <ConfirmarSalir onSeguir={game.closeOverlay} onSalir={game.restart} />}
@@ -682,7 +683,8 @@ function CartaBtn({
  * Elegir palo al jugar una Sota. Muestra tus cartas (sin la Sota que juegas) y cuántas
  * tienes de cada palo, para decidir sin tener que recordar la mano que queda detrás.
  */
-function SelectorPalo({ sota, mano, onPick }: { sota: Card; mano: Card[]; onPick: (s: Suit) => void }) {
+function SelectorPalo({ sota, mano, onPick, onCancel }: { sota: Card; mano: Card[]; onPick: (s: Suit) => void; onCancel: () => void }) {
+  const ref = useFocoDialogo<HTMLDivElement>(onCancel)
   let quitada = false
   const resto = mano.filter((c) => {
     if (!quitada && c.suit === sota.suit && c.rank === sota.rank) {
@@ -695,8 +697,11 @@ function SelectorPalo({ sota, mano, onPick }: { sota: Card; mano: Card[]; onPick
   const cuantas = (s: Suit) => resto.filter((c) => c.suit === s && c.rank !== 'sota').length
   const solape = ordenadas.length > 7 ? -Math.min(22, (ordenadas.length - 7) * 4 + 8) : 4
   return (
-    <div style={{ position: 'absolute', inset: 0, background: 'rgba(6,20,12,0.6)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-      <div role="dialog" aria-label="Elige el palo" style={{ background: '#FFF8E7', color: '#1A1A1A', borderRadius: '28px 28px 0 0', borderTop: '6px solid #5A3A1E', padding: '18px 16px 20px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
+    <div
+      onClick={(e) => e.target === e.currentTarget && onCancel()}
+      style={{ position: 'absolute', inset: 0, background: 'rgba(6,20,12,0.6)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
+    >
+      <div ref={ref} role="dialog" data-claro aria-label="Elige el palo" style={{ background: '#FFF8E7', color: '#1A1A1A', borderRadius: '28px 28px 0 0', borderTop: '6px solid #5A3A1E', padding: '18px 16px 20px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <CartaDe card={sota} w={52} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -736,6 +741,15 @@ function SelectorPalo({ sota, mano, onPick }: { sota: Card; mano: Card[]; onPick
             </button>
           ))}
         </div>
+        <button
+          data-testid="palo-volver"
+          aria-label="Volver sin jugar la Sota"
+          onClick={onCancel}
+          style={{ height: 56, borderRadius: 18, border: '3px solid #1A1A1A', background: '#FFFFFF', color: '#1A1A1A', fontFamily: 'inherit', fontSize: 21, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+        >
+          <Svg markup={`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12 H4"></path><path d="M10 6 L4 12 L10 18"></path></svg>`} />
+          <span>Volver</span>
+        </button>
       </div>
     </div>
   )
@@ -743,14 +757,15 @@ function SelectorPalo({ sota, mano, onPick }: { sota: Card; mano: Card[]; onPick
 
 /** Confirmación antes de abandonar: un toque sin querer en la casita no debe perder la partida. */
 function ConfirmarSalir({ onSeguir, onSalir }: { onSeguir: () => void; onSalir: () => void }) {
+  const ref = useFocoDialogo<HTMLDivElement>(onSeguir)
   const boton = { height: 72, width: '100%', borderRadius: 22, border: '4px solid #1A1A1A', fontFamily: 'inherit', fontSize: 26, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 } as const
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 6, background: 'rgba(6,20,12,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div role="alertdialog" aria-label="¿Salir de la partida?" style={{ width: '100%', maxWidth: 340, background: '#FFF8E7', color: '#1A1A1A', borderRadius: 28, border: '4px solid #1A1A1A', padding: '24px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
+      <div ref={ref} role="alertdialog" data-claro aria-label="¿Salir de la partida?" style={{ width: '100%', maxWidth: 340, background: '#FFF8E7', color: '#1A1A1A', borderRadius: 28, border: '4px solid #1A1A1A', padding: '24px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
         <Svg markup={`<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 L12 3.5 L21 11"></path><path d="M5.5 9.5 V20.5 H18.5 V9.5"></path><path d="M10 20.5 V15 H14 V20.5"></path></svg>`} />
         <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.15 }}>¿Salir de la partida?</div>
         <div style={{ fontSize: 19, color: '#4A4A4A' }}>Se perderá la partida</div>
-        <button data-testid="seguir-jugando" onClick={onSeguir} style={{ ...boton, background: '#FFD23F', color: '#1A1A1A' }}>
+        <button data-testid="seguir-jugando" data-autofoco onClick={onSeguir} style={{ ...boton, background: '#FFD23F', color: '#1A1A1A' }}>
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24"><path d="M7 4.5 L19.5 12 L7 19.5 Z" fill="#1A1A1A"></path></svg>`} />
           <span>Seguir jugando</span>
         </button>
@@ -773,8 +788,9 @@ function VerMano({
   onPlay: (c: Card) => void
   onClose: () => void
 }) {
+  const ref = useFocoDialogo<HTMLDivElement>(onClose)
   return (
-    <div data-testid="ver-mano-panel" style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'var(--fondo)', boxShadow: 'inset 0 0 0 8px #5A3A1E', display: 'flex', flexDirection: 'column', padding: 16, boxSizing: 'border-box', color: '#FFF8E7' }}>
+    <div ref={ref} role="dialog" aria-label="Tus cartas" data-testid="ver-mano-panel" style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'var(--fondo)', boxShadow: 'inset 0 0 0 8px #5A3A1E', display: 'flex', flexDirection: 'column', padding: 16, boxSizing: 'border-box', color: '#FFF8E7' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <h2 style={{ margin: 0, fontSize: 26, fontWeight: 700 }}>Tus cartas</h2>
         <button
@@ -789,7 +805,7 @@ function VerMano({
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '18px 8px', justifyItems: 'center', paddingTop: 10 }}>
           {hand.map((i, k) => (
-            <CartaBtn key={k} item={{ ...i, est: humanTurn ? i.est : 'espera' }} w={96} onPlay={(c) => { onPlay(c); onClose() }} />
+            <CartaBtn key={k} item={{ ...i, est: humanTurn ? i.est : 'espera' }} w={96} onPlay={(c) => { onClose(); onPlay(c) }} />
           ))}
         </div>
       </div>

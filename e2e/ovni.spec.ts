@@ -203,6 +203,39 @@ test.describe('OVNI · happy paths', () => {
     await expect(page.getByTestId('continuar')).toHaveCount(0)
   })
 
+  test('Historia 12 · Arrepentirse de la Sota: «Volver» (o Escape) la deja en la mano', async ({ page }) => {
+    await page.goto('/?seed=1&fast=1')
+    await page.getByTestId('rivales-3').click()
+    await page.getByTestId('jugar').click()
+    const sota = page.locator('[data-testid="carta-jugable"][aria-label^="Sota"]')
+    // Juega (sin usar Sotas) hasta que tengas una Sota jugable.
+    for (let i = 0; i < 300 && (await sota.count()) === 0; i++) {
+      const s = await readState(page)
+      if (s.screen) break
+      if (s.overlay === 'roba2') await page.getByTestId('roba2-ok').click().catch(() => {})
+      else if (s.estado === 'robar') await page.getByTestId('robar').click().catch(() => {})
+      else if (s.estado === 'tu') await page.locator('[data-testid="carta-jugable"]:not([aria-label^="Sota"])').first().click({ timeout: 500 }).catch(() => {})
+      else await page.waitForTimeout(20)
+    }
+    await expect(sota.first()).toBeVisible()
+    const cartas = await page.getByTestId('mis-cartas').innerText()
+    const mesa = await page.locator('[data-vuelo="pila"]').getAttribute('aria-label')
+
+    await sota.first().click()
+    await page.getByTestId('palo-volver').click()
+    await expect(page.getByTestId('palo-oros')).toHaveCount(0)
+    await expect(page.getByTestId('mis-cartas')).toHaveText(cartas)
+    await expect(page.locator('[data-vuelo="pila"]')).toHaveAttribute('aria-label', mesa!)
+
+    // Con teclado: el foco entra en el selector y Escape también cancela.
+    await sota.first().click()
+    await expect(page.locator('[role="dialog"][aria-label="Elige el palo"]')).toContainText('Elige el palo')
+    expect(await page.evaluate(() => !!document.activeElement?.closest('[aria-label="Elige el palo"]'))).toBe(true)
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('palo-oros')).toHaveCount(0)
+    await expect(page.getByTestId('mis-cartas')).toHaveText(cartas)
+  })
+
   // Aviso del +2 en los casos límite del mazo (banco de pruebas: e2e/banco/roba2.html).
   for (const [caso, robadas, robo, consecuencia] of [
     ['normal', 2, 'Robas estas 2 cartas', 'Pierdes el turno'],

@@ -146,7 +146,8 @@ export function Tablero({
     <div {...rest} style={estiloTablero({ padding, gap: 12, overflowY: 'hidden' })}>
       <div
         data-testid="tablero-scroll"
-        style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap, alignItems }}
+        // padding + margin negativo: deja sitio al anillo de foco (si no, el scroll lo recorta).
+        style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap, alignItems, padding: 7, margin: -7 }}
       >
         {children}
       </div>

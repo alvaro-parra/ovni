@@ -26,6 +26,15 @@
       * {
         -webkit-tap-highlight-color: transparent;
       }
+      /* Foco visible al usar teclado o accesorios (no aparece al tocar con el dedo). */
+      :focus-visible {
+        outline: 4px solid #ffd23f;
+        outline-offset: 3px;
+      }
+      /* En paneles claros (reglas, palo, ver mejor, salir) el amarillo no contrasta: negro. */
+      [data-claro] :focus-visible {
+        outline-color: #1a1a1a;
+      }
     </style>
   </head>
   <body>

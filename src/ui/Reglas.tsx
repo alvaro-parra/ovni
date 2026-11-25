@@ -5,6 +5,7 @@ import type { Card } from '../cards'
 import { Carta, CartaDe } from './Carta'
 import { Palo } from './Palo'
 import { Svg } from './dc'
+import { useFocoDialogo } from './foco'
 
 const C = (rank: Card['rank'], suit: Card['suit']): Card => ({ rank, suit })
 
@@ -30,9 +31,12 @@ function Regla({ n, dibujo, children }: { n: number; dibujo: ReactNode; children
 }
 
 export function Reglas({ onClose }: { onClose: () => void }) {
+  const ref = useFocoDialogo<HTMLDivElement>(onClose)
   return (
     <div
+      ref={ref}
       role="dialog"
+      data-claro
       aria-label="Cómo se juega"
       data-testid="reglas"
       style={{ position: 'absolute', inset: 0, zIndex: 5, background: '#FFF8E7', color: '#1A1A1A', display: 'flex', flexDirection: 'column', boxShadow: 'inset 0 0 0 8px #5A3A1E' }}
@@ -149,6 +153,7 @@ export function Reglas({ onClose }: { onClose: () => void }) {
       <div style={{ padding: '8px 18px 20px' }}>
         <button
           data-testid="reglas-ok"
+          data-autofoco
           onClick={onClose}
           style={{ width: '100%', height: 68, borderRadius: 22, background: '#FFD23F', color: '#1A1A1A', border: '4px solid #1A1A1A', fontFamily: 'inherit', fontSize: 28, fontWeight: 700, cursor: 'pointer' }}
         >

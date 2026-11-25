@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react'
 import { Svg } from './dc'
 import { usePreferencias, type Velocidad } from './preferencias'
+import { useFocoDialogo } from './foco'
 
 const ICONO_GRANDE = (c: string, w: number) =>
   `<svg width="${w}" height="${w}" viewBox="0 0 32 32"><text x="1" y="26" font-family="Atkinson Hyperlegible, system-ui, sans-serif" font-size="15" font-weight="700" fill="${c}">A</text><text x="11" y="27" font-family="Atkinson Hyperlegible, system-ui, sans-serif" font-size="25" font-weight="700" fill="${c}">A</text></svg>`
@@ -104,6 +105,7 @@ const VELOCIDADES: { v: Velocidad; icono: string; texto: string }[] = [
 
 export function PanelVista({ onClose }: { onClose: () => void }) {
   const { grande, contraste, setGrande, setContraste, velocidad, setVelocidad } = usePreferencias()
+  const ref = useFocoDialogo<HTMLDivElement>(onClose)
   const fila = (activo: boolean, icono: string, texto: string, testid: string, on: () => void) => (
     <button
       data-testid={testid}
@@ -129,7 +131,7 @@ export function PanelVista({ onClose }: { onClose: () => void }) {
   )
   return (
     <div style={{ position: 'absolute', inset: 0, background: 'rgba(6,20,12,0.8)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', zIndex: 5 }}>
-      <div role="dialog" aria-label="Ver mejor" style={{ background: '#FFF8E7', color: '#1A1A1A', borderRadius: '28px 28px 0 0', borderTop: '6px solid #5A3A1E', padding: '22px 18px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div ref={ref} role="dialog" data-claro aria-label="Ver mejor" style={{ background: '#FFF8E7', color: '#1A1A1A', borderRadius: '28px 28px 0 0', borderTop: '6px solid #5A3A1E', padding: '22px 18px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div style={{ fontSize: 30, fontWeight: 700 }}>Ver mejor</div>
         {fila(grande, ICONO_GRANDE('#1A1A1A', 40), 'Más grande', 'vista-grande', () => setGrande(!grande))}
         {fila(contraste, ICONO_CONTRASTE('#1A1A1A', 36), 'Más contraste', 'vista-contraste', () => setContraste(!contraste))}

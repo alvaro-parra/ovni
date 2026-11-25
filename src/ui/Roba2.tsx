@@ -7,6 +7,7 @@ import { Avatar } from './Avatar'
 import { CartaDe } from './Carta'
 import { Svg } from './dc'
 import { textosRoba2 } from './textosRoba2'
+import { useFocoDialogo } from './foco'
 
 export interface DatosAvisoRoba2 {
   byName: string
@@ -36,10 +37,12 @@ function Linea({ icono, texto, testid }: { icono: string; texto: string; testid:
 }
 
 export function AvisoRoba2({ datos, onOk }: { datos: DatosAvisoRoba2; onOk: () => void }) {
+  const ref = useFocoDialogo<HTMLDivElement>(onOk)
   const n = datos.cartas.length
   const t = textosRoba2({ n, rebarajado: datos.rebarajado, finRonda: datos.finRonda }, null, datos.byName)
   return (
     <div
+      ref={ref}
       role="alertdialog"
       aria-label={t.resumen}
       data-testid="aviso-roba2"
@@ -81,6 +84,7 @@ export function AvisoRoba2({ datos, onOk }: { datos: DatosAvisoRoba2; onOk: () =
 
       <button
         data-testid="roba2-ok"
+        data-autofoco
         onClick={onOk}
         style={{ marginBottom: 'auto', flex: 'none', width: 240, height: 68, borderRadius: 22, background: '#FFD23F', color: '#1A1A1A', border: '4px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontFamily: 'inherit', fontSize: 28, fontWeight: 700, cursor: 'pointer' }}
       >

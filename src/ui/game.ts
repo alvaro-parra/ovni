@@ -164,6 +164,8 @@ export interface Ovni {
   startGame: () => void
   playHuman: (card: Card) => void
   chooseSuit: (suit: Suit) => void
+  /** Arrepentirse de jugar la Sota: se cierra el selector y la carta vuelve a la mano. */
+  cancelarSota: () => void
   drawHuman: () => void
   dismissRoba2: () => void
   openVerMano: () => void
@@ -504,6 +506,10 @@ export function useOvni(): Ovni {
   }, [round, jugada, shuffle, cerrarAviso])
 
   const dismissRoba2 = useCallback(() => setOverlay(null), [])
+  const cancelarSota = useCallback(() => {
+    pendingSota.current = null
+    setOverlay(null)
+  }, [])
   const openVerMano = useCallback(() => setOverlay({ kind: 'verMano' }), [])
   const openVista = useCallback(() => setOverlay({ kind: 'vista' }), [])
   const openSalir = useCallback(() => setOverlay({ kind: 'salir' }), [])
@@ -625,6 +631,7 @@ export function useOvni(): Ovni {
     startGame,
     playHuman,
     chooseSuit,
+    cancelarSota,
     drawHuman,
     dismissRoba2,
     openVerMano,
