@@ -645,7 +645,19 @@ export function Mesa({ game }: { game: Ovni }) {
         <AvisoRoba2 datos={game.overlay} onOk={game.dismissRoba2} compacto={altoPantalla < 520} />
       )}
       {game.overlay?.kind === 'verMano' && (
-        <VerMano hand={hand} humanTurn={humanTurn} onPlay={game.playHuman} onClose={game.closeOverlay} />
+        <VerMano
+          hand={hand}
+          humanTurn={humanTurn}
+          onPlay={game.playHuman}
+          onClose={game.closeOverlay}
+          pistaDe={(item) =>
+            textoPista(
+              humanTurn && item.est !== 'espera'
+                ? { tipo: 'no-vale', palo: round.activeSuit, numero: round.activeRank }
+                : { tipo: 'espera', quien: curPlayer?.name ?? '' },
+            )
+          }
+        />
       )}
     </div>
   )
@@ -877,13 +889,27 @@ function VerMano({
   humanTurn,
   onPlay,
   onClose,
+  pistaDe,
 }: {
   hand: HandItem[]
   humanTurn: boolean
   onPlay: (c: Card) => void
   onClose: () => void
+  /** Texto de la pista al tocar una carta que no vale (como en la mesa). */
+  pistaDe: (item: HandItem) => string
 }) {
   const ref = useFocoDialogo<HTMLDivElement>(onClose)
+  const [pista, setPista] = useState<string | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
+  const noJugable = (item: HandItem, el: HTMLElement) => {
+    if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(0)' }], { duration: 300 })
+    }
+    setPista(pistaDe(item))
+    if (timer.current) clearTimeout(timer.current)
+    timer.current = setTimeout(() => setPista(null), 2500)
+  }
   // «En grande» de verdad: tan anchas como quepan (2 columnas con pocas cartas, 3 con más),
   // hasta 150 px; si no caben a lo alto, el panel hace scroll.
   const [refRejilla, rejilla] = useMedida<HTMLDivElement>()
@@ -903,10 +929,15 @@ function VerMano({
           Cerrar
         </button>
       </div>
+      {pista && (
+        <div role="status" data-testid="pista-lupa" style={{ marginBottom: 8, padding: '8px 14px', borderRadius: 18, background: '#FFF8E7', color: '#1A1A1A', border: '3px solid #B8202A', fontSize: 19, fontWeight: 700, textAlign: 'center' }}>
+          {pista}
+        </div>
+      )}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div ref={refRejilla} data-testid="ver-mano-rejilla" style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: `22px ${gapX}px`, justifyItems: 'center', paddingTop: 20, paddingBottom: 8 }}>
           {hand.map((i, k) => (
-            <CartaBtn key={k} item={{ ...i, est: humanTurn ? i.est : 'espera' }} w={w} onPlay={(c) => { onClose(); onPlay(c) }} />
+            <CartaBtn key={k} item={{ ...i, est: humanTurn ? i.est : 'espera' }} w={w} onPlay={(c) => { onClose(); onPlay(c) }} onNoJugable={noJugable} />
           ))}
         </div>
       </div>
