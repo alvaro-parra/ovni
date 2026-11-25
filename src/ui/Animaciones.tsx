@@ -281,7 +281,8 @@ export function CartelAviso({
           <Palo palo={aviso.suit} w={92} />
         </div>
         <span>
-          Ahora: <span style={{ color: SUIT_COLOR[aviso.suit] }}>{SUIT_NAME[aviso.suit]}</span>
+          {esYo(aviso.actorId) ? 'Eliges' : `${nombre(aviso.actorId)} elige`}{' '}
+          <span style={{ color: SUIT_COLOR[aviso.suit] }}>{SUIT_NAME[aviso.suit]}</span>
         </span>
       </>
     )
