@@ -437,7 +437,8 @@ export function Mesa({ game }: { game: Ovni }) {
         <button
           data-testid="robar"
           data-vuelo="mazo"
-          aria-label={`Mazo de robo, ${round.drawPile.length} cartas`}
+          aria-label={`Mazo de robo, ${round.drawPile.length} cartas${round.reshuffleUsed ? '. Último mazo: si se acaba, termina la ronda' : ''}`}
+          data-ultimo={round.reshuffleUsed}
           // Sin `disabled`: si no toca robar, el mazo responde con una pista (R-JUEGO-4).
           onClick={(e) =>
             estado === 'robar'
@@ -467,18 +468,24 @@ export function Mesa({ game }: { game: Ovni }) {
               height: 38,
               boxSizing: 'border-box',
               borderRadius: 19,
-              background: '#FFF8E7',
-              color: '#1A1A1A',
+              // Último mazo (ya se rebarajó, R-MAZO-2): contador en rojo y con banderita de fin,
+              // porque si se acaba termina la ronda (R-MAZO-3). No solo color (R-UI-A11Y-3).
+              background: round.reshuffleUsed ? '#B8202A' : '#FFF8E7',
+              color: round.reshuffleUsed ? '#FFFFFF' : '#1A1A1A',
               border: '3px solid #1A1A1A',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: 2,
               fontSize: 19,
               fontWeight: 700,
               lineHeight: 1,
               padding: '0 4px',
             }}
           >
+            {round.reshuffleUsed && (
+              <Svg markup={`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 V4"></path><path d="M5 4 H18 L15.5 8 L18 12 H5"></path></svg>`} />
+            )}
             {round.drawPile.length}
           </span>
           {estado === 'robar' && (
