@@ -36,6 +36,10 @@
          tocar despacio. Los enlaces del crédito siguen funcionando. */
       html {
         touch-action: manipulation;
+        /* Sin inflado automático de texto (Safari al girar, «font boosting» de Chrome Android):
+           la maqueta se escala entera; para agrandar está «Más grande». No afecta al zoom. */
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
       }
       #root {
         -webkit-user-select: none;
