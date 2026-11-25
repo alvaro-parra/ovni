@@ -309,16 +309,16 @@ export function CartelAviso({
       </>
     )
   } else if (aviso.tipo === 'rebaraje') {
-    etiqueta = 'Se acabó el mazo. Las cartas de la mesa se barajan y forman un mazo nuevo. Si se vuelve a acabar, termina la ronda'
+    etiqueta = '¡Mazo nuevo! Se acabó el mazo y se barajan las cartas de la mesa. Si se vuelve a acabar, termina la ronda'
     contenido = (
       <>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ lineHeight: 0 }}><Carta estado="dorso" w={48} /></span>
           <Svg markup={ICONO_BARAJAR} />
         </div>
-        <span>Se acabó el mazo</span>
+        <span>¡Mazo nuevo!</span>
         <span style={{ fontSize: 18, fontWeight: 400 }}>
-          Las cartas de la mesa se barajan y forman un mazo nuevo. Si se vuelve a acabar, termina la ronda.
+          Se acabó el mazo y se barajan las cartas de la mesa. Si se vuelve a acabar, termina la ronda.
         </span>
       </>
     )
