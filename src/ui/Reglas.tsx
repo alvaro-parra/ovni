@@ -20,12 +20,14 @@ function Regla({ n, dibujo, children }: { n: number; dibujo: ReactNode; children
   return (
     <li
       data-testid={`regla-${n}`}
-      style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#FFFFFF', border: '3px solid #1A1A1A', borderRadius: 18, padding: '10px 12px' }}
+      // Si la tarjeta es estrecha (móvil pequeño con «Más grande»), el dibujo pasa arriba y el
+      // texto ocupa todo el ancho debajo, en vez de partirse en líneas de dos palabras.
+      style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '6px 12px', background: '#FFFFFF', border: '3px solid #1A1A1A', borderRadius: 18, padding: '10px 12px' }}
     >
       <div aria-hidden="true" style={{ flex: 'none', width: 118, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
         {dibujo}
       </div>
-      <div style={{ fontSize: 19, lineHeight: 1.25, fontWeight: 700 }}>{children}</div>
+      <div style={{ flex: '1 1 170px', fontSize: 19, lineHeight: 1.25, fontWeight: 700 }}>{children}</div>
     </li>
   )
 }
