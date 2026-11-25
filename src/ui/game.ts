@@ -44,8 +44,9 @@ export type Jugada =
 /** Aviso grande de lo que acaba de pasar (R-UI-A11Y-9, R-UI-COMP-5). */
 export type Aviso =
   | ({ id: number; tipo: 'roba2'; actorId: string; n: number } & Omit<Roba2Info, 'cartas'>)
-  | { id: number; tipo: 'sentido'; actorId: string }
-  | { id: number; tipo: 'repite'; actorId: string }
+  /** `inicial`: el As es la carta volteada al empezar la ronda, no una jugada de `actorId`. */
+  | { id: number; tipo: 'sentido'; actorId: string; carta: Card; inicial?: boolean }
+  | { id: number; tipo: 'repite'; actorId: string; carta: Card; inicial?: boolean }
   | { id: number; tipo: 'palo'; actorId: string; suit: Suit }
   | { id: number; tipo: 'fin'; ganadorId: string | null }
   /** Empieza una ronda: cuál y quién abre el juego (la mano rota cada ronda, R-CFG-4/6). */
@@ -68,8 +69,8 @@ export function avisoInicial(r: RoundState, dealerId: string): SinId<Aviso> | nu
   }
   if (top.rank === 'as') {
     return r.players.length === 2
-      ? { tipo: 'repite', actorId: dealerId }
-      : { tipo: 'sentido', actorId: dealerId }
+      ? { tipo: 'repite', actorId: dealerId, carta: top, inicial: true }
+      : { tipo: 'sentido', actorId: dealerId, carta: top, inicial: true }
   }
   return null
 }
@@ -405,9 +406,9 @@ export function useOvni(): Ovni {
       } else if (res.next.phase === 'over') {
         return // el aviso de fin de ronda lo pone su efecto
       } else if (res.reversed) {
-        mostrarAviso({ tipo: 'sentido', actorId: res.actorId })
+        mostrarAviso({ tipo: 'sentido', actorId: res.actorId, carta: card })
       } else if (card.rank === 'as' && n === 2) {
-        mostrarAviso({ tipo: 'repite', actorId: res.actorId })
+        mostrarAviso({ tipo: 'repite', actorId: res.actorId, carta: card })
       } else if (card.rank === 'sota' && !porHumano) {
         mostrarAviso({ tipo: 'palo', actorId: res.actorId, suit: res.next.activeSuit })
       }

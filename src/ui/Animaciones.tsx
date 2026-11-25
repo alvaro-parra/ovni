@@ -169,7 +169,7 @@ export function CapaVuelo({
 
 // ---- Avisos ---------------------------------------------------------------
 
-const ICONO_SENTIDO = `<svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11 A8 8 0 0 0 5.6 6.2"></path><path d="M5 2.5 V6.6 H9.1"></path><path d="M4 13 A8 8 0 0 0 18.4 17.8"></path><path d="M19 21.5 V17.4 H14.9"></path></svg>`
+const ICONO_SENTIDO = `<svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11 A8 8 0 0 0 5.6 6.2"></path><path d="M5 2.5 V6.6 H9.1"></path><path d="M4 13 A8 8 0 0 0 18.4 17.8"></path><path d="M19 21.5 V17.4 H14.9"></path></svg>`
 const ICONO_REPITE = `<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12 a7.5 7.5 0 1 1 -2.2 -5.3"></path><path d="M19.5 3.5 V7.5 H15.5"></path></svg>`
 const ICONO_SALTA = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8E0F18" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M5.6 5.6 L18.4 18.4"></path></svg>`
 
@@ -250,24 +250,27 @@ export function CartelAviso({
         </div>
       </>
     )
-  } else if (aviso.tipo === 'sentido') {
-    etiqueta = '¡Cambio de sentido!'
-    contenido = (
-      <>
-        <Svg markup={ICONO_SENTIDO} />
-        <span>¡Cambio de sentido!</span>
-      </>
-    )
-  } else if (aviso.tipo === 'repite') {
+  } else if (aviso.tipo === 'sentido' || aviso.tipo === 'repite') {
+    // Quién jugó el As (o si es la carta inicial) y la carta misma: el cartel tapa la pila,
+    // así que la carta que provoca el efecto se enseña aquí.
     const a = cfg(aviso.actorId)
-    etiqueta = esYo(aviso.actorId) ? '¡Vuelves a jugar!' : `¡${nombre(aviso.actorId)} vuelve a jugar!`
+    const titulo =
+      aviso.tipo === 'sentido'
+        ? '¡Cambio de sentido!'
+        : esYo(aviso.actorId) ? '¡Vuelves a jugar!' : `¡${nombre(aviso.actorId)} vuelve a jugar!`
+    const causa = aviso.inicial
+      ? 'La carta inicial es un As'
+      : esYo(aviso.actorId) ? 'Has jugado un As' : `${nombre(aviso.actorId)} ha jugado un As`
+    etiqueta = `${causa}. ${titulo}`
     contenido = (
       <>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {a && <Avatar quien={a.avatar} w={76} />}
-          <Svg markup={ICONO_REPITE} />
+          {a && !aviso.inicial && <Avatar quien={a.avatar} w={64} />}
+          <CartaDe card={aviso.carta} w={54} sinSubir />
+          <Svg markup={aviso.tipo === 'sentido' ? ICONO_SENTIDO : ICONO_REPITE} />
         </div>
-        <span>{etiqueta}</span>
+        <span>{titulo}</span>
+        <span style={{ fontSize: 18, fontWeight: 400 }}>{causa}</span>
       </>
     )
   } else if (aviso.tipo === 'palo') {

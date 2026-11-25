@@ -48,7 +48,7 @@ describe('avisoInicial: efectos de la carta volteada (R-INI-1)', () => {
     const r3 = createRound({ playerIds: ['p0', 'p1', 'p2'], deck: deckFor(3, C('as', 'oros')), dealerIndex: 0 })
     expect(avisoInicial(r3, 'p0')?.tipo).toBe('sentido')
     const r2 = createRound({ playerIds: ['p0', 'p1'], deck: deckFor(2, C('as', 'oros')), dealerIndex: 0 })
-    expect(avisoInicial(r2, 'p0')).toEqual({ tipo: 'repite', actorId: 'p0' })
+    expect(avisoInicial(r2, 'p0')).toMatchObject({ tipo: 'repite', actorId: 'p0', inicial: true })
   })
 
   it('carta normal o sota inicial: sin aviso', () => {
