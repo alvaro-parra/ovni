@@ -603,10 +603,20 @@ export function Mesa({ game }: { game: Ovni }) {
             <Svg markup={`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="7" width="11" height="14" rx="2" fill="#FFF8E7"></rect><path d="M8 4 H19 a2 2 0 0 1 2 2 V16"></path></svg>`} />
             <span data-testid="mis-cartas">{human.hand.length}</span>
           </span>
-          <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 700, color: colorPuntos(humanScore) }}>{humanScore}</span>
-          <div style={{ width: 54, height: 8, borderRadius: 5, background: 'var(--pista)', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${Math.min(100, Math.round((humanScore / 101) * 100))}%`, background: colorPuntos(humanScore) }} />
-          </div>
+          {/* Tus puntos hacia 101 («pts»: un número suelto no decía qué era). */}
+          <span
+            role="img"
+            aria-label={`Tus puntos: ${humanScore} de 101`}
+            style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            <span style={{ fontSize: 20, fontWeight: 700, color: colorPuntos(humanScore), whiteSpace: 'nowrap' }}>
+              {humanScore}
+              <span style={{ fontSize: 14, marginLeft: 2 }}>pts</span>
+            </span>
+            <span style={{ width: 48, height: 8, borderRadius: 5, background: 'var(--pista)', overflow: 'hidden' }}>
+              <span style={{ display: 'block', height: '100%', width: `${Math.min(100, Math.round((humanScore / 101) * 100))}%`, background: colorPuntos(humanScore) }} />
+            </span>
+          </span>
           <button
             data-testid="ver-mano"
             aria-label="Ver mis cartas en grande"
