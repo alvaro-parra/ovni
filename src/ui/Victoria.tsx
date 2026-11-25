@@ -5,7 +5,7 @@ import { HUMAN_ID } from './game'
 import { Avatar } from './Avatar'
 import { Svg } from './dc'
 import { Tablero } from './Pantalla'
-import { ordenClasificacion, resumenFinal } from './resultado'
+import { estaFuera, ordenClasificacion, resumenFinal } from './resultado'
 import { anotarPartida } from './estadisticas'
 
 // Partidas ya anotadas (por si la pantalla se vuelve a montar): cada una cuenta una vez.
@@ -34,7 +34,7 @@ export function Victoria({ game }: { game: Ovni }) {
         cfg,
         puntos: p.score,
         corona: winners.includes(p.id),
-        fuera: p.eliminated && !winners.includes(p.id),
+        fuera: estaFuera(p, match),
       }
     })
 

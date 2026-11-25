@@ -1,6 +1,7 @@
 // Pantalla 7 · Fin de ronda (portado de FinRonda.dc.html): recuento y barra hacia 101.
 import { useEffect, useState } from 'react'
 import { HUMAN_ID, type Ovni } from './game'
+import { estaFuera } from './resultado'
 import { Avatar } from './Avatar'
 import { CartaDe } from './Carta'
 import { Svg } from './dc'
@@ -30,7 +31,7 @@ export function FinRonda({ game }: { game: Ovni }) {
     const cards = inRound ? inRound.hand : []
     const suma = result.handPoints[p.id] ?? 0
     const total = p.score
-    const elim = p.eliminated
+    const elim = estaFuera(p, match)
     const color = total >= 90 ? '#FF8A8A' : total >= 70 ? '#FFB347' : '#8FE3A6'
     return {
       cfg,

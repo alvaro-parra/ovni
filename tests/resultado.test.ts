@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { applyRoundResult, createMatch } from '../src/match'
-import { ordenClasificacion, resumenFinal } from '../src/ui/resultado'
+import { estaFuera, ordenClasificacion, resumenFinal } from '../src/ui/resultado'
 
 // Mensajes de la pantalla final (UI). Se apoyan en R-OBJ-4 / R-OBJ-5 del motor.
 describe('resumenFinal: mensaje de la pantalla final', () => {
@@ -34,6 +34,15 @@ describe('resumenFinal: mensaje de la pantalla final', () => {
     let m = createMatch(['yo', 'b'], 0)
     m = applyRoundResult(m, { winnerId: null, handPoints: { yo: 105, b: 105 } })
     expect(resumenFinal(m, 'yo')).toEqual({ estado: 'empate', motivo: 'menos-puntos' })
+  })
+
+  it('R-OBJ-5: quien pierde por tener más puntos cuenta como fuera aunque el motor no lo marque', () => {
+    const m = partidaReportada() // Robi 112 pierde contra Tú 109 en la última ronda
+    const robi = m.players.find((p) => p.id === 'robi')!
+    expect(robi.eliminated).toBe(false) // así lo deja el motor
+    expect(estaFuera(robi, m)).toBe(true)
+    expect(estaFuera(m.players.find((p) => p.id === 'yo')!, m)).toBe(false) // gana
+    expect(estaFuera(m.players.find((p) => p.id === 'toby')!, m)).toBe(true) // eliminado antes
   })
 
   it('la clasificación pone al ganador arriba aunque otro eliminado antes tenga menos puntos', () => {

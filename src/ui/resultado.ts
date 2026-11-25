@@ -25,6 +25,16 @@ export function resumenFinal(match: MatchState, humanId: string): ResumenFinal {
   return { estado, motivo: scoreGanador >= UMBRAL ? 'menos-puntos' : 'por-debajo' }
 }
 
+/**
+ * ¿Está fuera de la partida? Además de los eliminados (R-OBJ-3), cuando la partida acaba
+ * porque todos los que quedaban pasan de 101 a la vez (R-OBJ-5), el motor no marca a los
+ * perdedores como eliminados: aquí se cuentan también (101 o más y no han ganado).
+ */
+export function estaFuera(p: { id: string; score: number; eliminated: boolean }, match: MatchState): boolean {
+  if (p.eliminated) return !(match.winners ?? []).includes(p.id)
+  return match.phase === 'over' && p.score >= UMBRAL && !(match.winners ?? []).includes(p.id)
+}
+
 /** Orden de la clasificación final: ganadores arriba; el resto, de menos a más puntos. */
 export function ordenClasificacion<T extends { id: string; score: number }>(
   players: T[],
