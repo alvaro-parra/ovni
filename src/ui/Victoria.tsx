@@ -6,6 +6,10 @@ import { Avatar } from './Avatar'
 import { Svg } from './dc'
 import { Tablero } from './Pantalla'
 import { ordenClasificacion, resumenFinal } from './resultado'
+import { anotarPartida } from './estadisticas'
+
+// Partidas ya anotadas (por si la pantalla se vuelve a montar): cada una cuenta una vez.
+const anotadas = new WeakSet<object>()
 
 const CONFETI_COLORES = ['#FFD23F', '#FF8A8A', '#8EC1FF', '#FFF8E7', '#B6E58A']
 
@@ -15,6 +19,11 @@ export function Victoria({ game }: { game: Ovni }) {
   // El motivo distingue R-OBJ-4 (único por debajo de 101) de R-OBJ-5 (todos pasan de 101
   // en la misma ronda y gana quien tiene menos puntos): cada caso lleva su propio mensaje.
   const { estado, motivo } = resumenFinal(match, HUMAN_ID)
+  useEffect(() => {
+    if (anotadas.has(match)) return
+    anotadas.add(match)
+    anotarPartida(estado !== 'eliminado')
+  }, [match, estado])
   const fiesta = estado !== 'eliminado'
 
   const human = match.players.find((p) => p.id === HUMAN_ID)!

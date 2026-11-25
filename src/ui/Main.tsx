@@ -8,6 +8,7 @@ import { Svg, css } from './dc'
 import { ALTO_REF_PANTALLA, Tablero, useEscala } from './Pantalla'
 import { InterruptoresVista } from './Vista'
 import { Reglas } from './Reglas'
+import { leerEstadisticas } from './estadisticas'
 
 const BOTS: AvatarKind[] = ['robi', 'pixel', 'toby']
 const AVATARES: { q: AvatarKind; nombre: string }[] = [
@@ -26,8 +27,14 @@ export function Main({ game }: { game: Ovni }) {
   // En pantallas bajas se quita el abanico decorativo y se compacta el título para que
   // la elección de rivales y avatar quepa sin scroll (R-UI-PLAT-1).
   const { h: altoInicio, w: anchoInicio } = useEscala(ALTO_REF_PANTALLA)
-  const compacta = altoInicio < 760
+  // Compacta (sin abanico de cartas) si no cabría todo sin scroll: el contador de partidas
+  // ocupa ~50 px más, así que con él hace falta más alto.
+  const conEstadisticas = leerEstadisticas().jugadas > 0
+  // Contenido completo ≈ 700 px de diseño (+50 con el contador); pie y márgenes ≈ 140.
+  const compacta = altoInicio < (conEstadisticas ? 900 : 850)
+  const muyCompacta = compacta && conEstadisticas && altoInicio < 720
   const [verReglas, setVerReglas] = useState(false)
+  const [estadisticas] = useState(leerEstadisticas)
   // Hasta que se abran las reglas una vez, el botón se destaca (para quien juega por primera vez).
   const [reglasVistas, setReglasVistas] = useState(() => {
     try {
@@ -139,22 +146,24 @@ export function Main({ game }: { game: Ovni }) {
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+      {/* Muy justo de alto (pantalla baja y con contador de partidas): título en una fila. */}
+      <div style={{ display: 'flex', flexDirection: muyCompacta ? 'row' : 'column', alignItems: 'center', justifyContent: 'center', gap: muyCompacta ? 12 : 2 }}>
         <div
           aria-hidden="true"
           style={{
             display: 'flex',
-            gap: 10,
+            gap: muyCompacta ? 4 : 10,
             background: '#FFF8E7',
             borderRadius: 999,
-            padding: '8px 16px',
+            padding: muyCompacta ? '6px 10px' : '8px 16px',
             marginBottom: compacta ? 2 : 6,
+            ...(muyCompacta ? { display: 'grid', gridTemplateColumns: 'repeat(2, 24px)', borderRadius: 14, marginBottom: 0 } : {}),
           }}
         >
-          <Palo palo="oros" w={36} />
-          <Palo palo="copas" w={36} />
-          <Palo palo="espadas" w={36} />
-          <Palo palo="bastos" w={36} />
+          <Palo palo="oros" w={muyCompacta ? 24 : 36} />
+          <Palo palo="copas" w={muyCompacta ? 24 : 36} />
+          <Palo palo="espadas" w={muyCompacta ? 24 : 36} />
+          <Palo palo="bastos" w={muyCompacta ? 24 : 36} />
         </div>
         <h1 style={{ margin: 0, fontSize: compacta ? 52 : 72, lineHeight: 1, fontWeight: 700, letterSpacing: 6, color: '#FFF8E7' }}>
           OVNI
@@ -177,6 +186,21 @@ export function Main({ game }: { game: Ovni }) {
         </div>
       </div>
       )}
+
+      {/* Partidas ganadas en este dispositivo. */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: compacta ? -6 : 0 }}>
+        {estadisticas.jugadas > 0 && (
+          <div
+            data-testid="ganadas"
+            aria-label={`Has ganado ${estadisticas.ganadas} de ${estadisticas.jugadas} partidas`}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, height: 40, boxSizing: 'border-box', background: 'var(--panel)', border: '2px solid var(--borde)', borderRadius: 999, padding: '0 12px 0 8px', marginTop: 4, fontWeight: 700 }}
+          >
+            <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24"><path d="M7.5 3.5 H16.5 V10 a4.5 4.5 0 0 1 -9 0 Z" fill="#FFD23F" stroke="#1A1A1A" stroke-width="1.2"></path><path d="M7.5 5.5 H4 a3.5 3.5 0 0 0 4 4.5 M16.5 5.5 H20 a3.5 3.5 0 0 1 -4 4.5" fill="none" stroke="#FFD23F" stroke-width="1.6"></path><path d="M12 14.5 V18" stroke="#FFD23F" stroke-width="1.8"></path><path d="M7.5 21 H16.5 L15.5 18 H8.5 Z" fill="#FFD23F" stroke="#1A1A1A" stroke-width="1.2"></path></svg>`} />
+            <span aria-hidden="true" style={{ fontSize: 24 }}>{estadisticas.ganadas}</span>
+            <span aria-hidden="true" style={{ fontSize: 17, color: 'var(--texto-2)' }}>de {estadisticas.jugadas}</span>
+          </div>
+        )}
+      </div>
 
       <section
         aria-label="Número de rivales"
