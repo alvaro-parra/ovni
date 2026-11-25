@@ -31,6 +31,20 @@
       * {
         -webkit-tap-highlight-color: transparent;
       }
+      /* Juego táctil: sin zoom por doble toque (el zoom con dos dedos sigue disponible),
+         sin menú «Guardar imagen» al mantener pulsada una carta y sin seleccionar texto al
+         tocar despacio. Los enlaces del crédito siguen funcionando. */
+      html {
+        touch-action: manipulation;
+      }
+      #root {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      #root img {
+        -webkit-user-drag: none;
+      }
       /* Foco visible al usar teclado o accesorios (no aparece al tocar con el dedo). */
       :focus-visible {
         outline: 4px solid #ffd23f;
