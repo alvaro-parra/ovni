@@ -189,3 +189,12 @@ requisito responde.
   ejecución (tipografía servida con la app). Respeta la muesca y la barra de inicio.
 - **Teclado y lectores de pantalla.** Foco visible; los diálogos retienen el foco y se
   cierran con Escape cuando tiene sentido; se anuncia qué se juega y qué se roba.
+- **Mazo agotado (R-MAZO-2, R-MAZO-3).** Si al robar se acaba el mazo y se rebaraja la
+  mesa, aviso «Se acabó el mazo» y, desde entonces, el contador del mazo va en rojo con una
+  banderita: es el último mazo y, si se acaba, termina la ronda.
+- **Avisos que tapan la mesa.** El del As dice quién lo jugó (o si es la carta inicial) y
+  enseña la carta. En horizontal los avisos se centran sobre la mesa, no sobre tu mano.
+- **Amarillo = «te toca».** Se reserva para lo que pide una acción (JUGAR, «¡Tu turno!»,
+  cartas jugables); la píldora de ronda ya no se pone amarilla al cambiar el sentido.
+- **Botones de icono con rótulo** en el inicio (Letra, Contraste, Despacio/Normal/Rápido,
+  Reglas): el icono solo no bastaba.
