@@ -407,7 +407,7 @@ export function Mesa({ game }: { game: Ovni }) {
       </div>
 
       {/* Banner de estado */}
-      <Banner estado={estado} animar={game.dur.animar} curPlayer={curPlayer} roba={game.jugada?.tipo === 'roba' && game.jugada.actorId === curId ? game.jugada.n : 0} />
+      <Banner estado={estado} animar={game.dur.animar} letra={anchoPantalla < 380 ? 20 : 22} curPlayer={curPlayer} roba={game.jugada?.tipo === 'roba' && game.jugada.actorId === curId ? game.jugada.n : 0} />
 
       {/* Panel del jugador */}
       <div
@@ -580,11 +580,14 @@ export function Mesa({ game }: { game: Ovni }) {
 function Banner({
   estado,
   animar,
+  letra,
   curPlayer,
   roba = 0,
 }: {
   estado: 'tu' | 'robar' | 'ia' | 'fin'
   animar: boolean
+  /** Tamaño de letra: algo menor en pantallas estrechas para que quepa en una línea. */
+  letra: number
   curPlayer: PlayerCfg | undefined
   /** Cartas que está robando el bot en turno (0 si no está robando). */
   roba?: number
@@ -598,7 +601,7 @@ function Banner({
         role="status"
         data-testid="estado"
         data-value="fin"
-        style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: 'var(--panel)', color: '#FFF8E7', border: '3px solid var(--borde)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 23, fontWeight: 700 }}
+        style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: 'var(--panel)', color: '#FFF8E7', border: '3px solid var(--borde)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: letra, fontWeight: 700 }}
       >
         <Svg markup={`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFF8E7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 V4"></path><path d="M5 4 H18 L15.5 8 L18 12 H5"></path></svg>`} />
         <span>Fin de la ronda</span>
@@ -611,7 +614,7 @@ function Banner({
         role="status"
         data-testid="estado"
         data-value="ia"
-        style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: 'var(--panel)', color: '#FFF8E7', border: '3px solid var(--borde)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 23, fontWeight: 700 }}
+        style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: 'var(--panel)', color: '#FFF8E7', border: '3px solid var(--borde)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: letra, fontWeight: 700 }}
       >
         {curPlayer && <Avatar quien={curPlayer.avatar} w={34} />}
         <span>{roba > 0 ? `${curPlayer?.name ?? ''} roba ${roba}` : `Juega ${curPlayer?.name ?? ''}`}</span>
@@ -625,7 +628,7 @@ function Banner({
       role="status"
       data-testid="estado"
       data-value={estado}
-      style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: '#FFD23F', color: '#1A1A1A', border: '3px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: robar ? 23 : 24, fontWeight: 700 }}
+      style={{ minHeight: 52, padding: '4px 16px', lineHeight: 1.1, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: '#FFD23F', color: '#1A1A1A', border: '3px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: letra, fontWeight: 700 }}
     >
       {robar ? (
         <>
@@ -635,7 +638,8 @@ function Banner({
       ) : (
         <>
           <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="#FFF8E7" stroke="#1A1A1A" stroke-width="1.8" stroke-linejoin="round"><path d="M8.5 13 V5.2 a1.75 1.75 0 0 1 3.5 0 V11 l5.2 1 a2 2 0 0 1 1.6 2.2 L18.1 19 a2 2 0 0 1 -2 1.7 H11 a2 2 0 0 1 -1.6 -0.8 L5.8 15.3 a1.6 1.6 0 0 1 2.7 -1.8 Z"></path></svg>`} />
-          <span>¡Tu turno! Elige una carta</span>
+          {/* En pantallas estrechas no cabe la frase entera: la mano dibujada ya dice «toca una carta». */}
+          <span>{letra < 22 ? '¡Tu turno!' : '¡Tu turno! Elige una carta'}</span>
         </>
       )}
     </div>
@@ -789,6 +793,12 @@ function VerMano({
   onClose: () => void
 }) {
   const ref = useFocoDialogo<HTMLDivElement>(onClose)
+  // «En grande» de verdad: tan anchas como quepan (2 columnas con pocas cartas, 3 con más),
+  // hasta 150 px; si no caben a lo alto, el panel hace scroll.
+  const [refRejilla, rejilla] = useMedida<HTMLDivElement>()
+  const cols = hand.length <= 4 ? 2 : 3
+  const gapX = 12
+  const w = Math.max(96, Math.min(150, Math.floor((rejilla.ancho - (cols - 1) * gapX) / cols)))
   return (
     <div ref={ref} role="dialog" aria-label="Tus cartas" data-testid="ver-mano-panel" style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'var(--fondo)', boxShadow: 'inset 0 0 0 8px #5A3A1E', display: 'flex', flexDirection: 'column', padding: 16, boxSizing: 'border-box', color: '#FFF8E7' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -803,9 +813,9 @@ function VerMano({
         </button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '18px 8px', justifyItems: 'center', paddingTop: 10 }}>
+        <div ref={refRejilla} data-testid="ver-mano-rejilla" style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: `22px ${gapX}px`, justifyItems: 'center', paddingTop: 20, paddingBottom: 8 }}>
           {hand.map((i, k) => (
-            <CartaBtn key={k} item={{ ...i, est: humanTurn ? i.est : 'espera' }} w={96} onPlay={(c) => { onClose(); onPlay(c) }} />
+            <CartaBtn key={k} item={{ ...i, est: humanTurn ? i.est : 'espera' }} w={w} onPlay={(c) => { onClose(); onPlay(c) }} />
           ))}
         </div>
       </div>
