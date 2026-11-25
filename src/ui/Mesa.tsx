@@ -259,7 +259,7 @@ export function Mesa({ game }: { game: Ovni }) {
           gap: 8,
         }}
       >
-        {rivales.map(({ rp, idx }) => {
+        {rivales.map(({ rp, idx }, k) => {
           const cfg = players.find((p) => p.id === rp.id)!
           const pts = scoreOf(rp.id)
           const activo = idx === round.currentPlayerIndex && round.phase === 'playing'
@@ -302,6 +302,17 @@ export function Mesa({ game }: { game: Ovni }) {
                 </span>
               )}
               {activo && !game.jugada && !game.aviso && !game.overlay && <Pensando animar={game.dur.animar} />}
+              {/* Sentido de juego entre rivales: las fichas van en orden de asiento; la flecha
+                  apunta a quién juega después y se da la vuelta con un As (R-AS-1). */}
+              {k < rivales.length - 1 && (
+                <span
+                  aria-hidden="true"
+                  data-testid="flecha-sentido"
+                  style={{ position: 'absolute', right: -14, top: '50%', transform: 'translateY(-50%)', zIndex: 3, width: 20, height: 20, borderRadius: '50%', background: invertido ? '#FFD23F' : 'var(--fondo)', border: `2px solid ${invertido ? '#1A1A1A' : 'var(--borde)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Svg markup={`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${invertido ? '#1A1A1A' : '#FFF8E7'}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="${invertido ? 'M15 5 L8 12 L15 19' : 'M9 5 L16 12 L9 19'}"></path></svg>`} />
+                </span>
+              )}
               {game.robosRecientes[rp.id] && (
                 <span
                   data-testid={`robo-${rp.id}`}
