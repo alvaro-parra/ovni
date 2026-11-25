@@ -35,6 +35,26 @@ async function precargar() {
   await cache.addAll([...urls].map((u) => BASE + u))
 }
 
+/**
+ * Tras cada publicación, el JS y el CSS cambian de nombre (hash) y los viejos se quedarían en
+ * la caché para siempre. Con la página nueva en la mano, se borran los de assets/ que ya no
+ * usa (las fuentes no: las referencia el CSS y casi nunca cambian).
+ */
+async function podar(res) {
+  try {
+    const html = await res.text()
+    const usados = new Set([...html.matchAll(/(?:src|href)="\.\/(assets\/[^"]+)"/g)].map((m) => BASE + m[1]))
+    if (usados.size === 0) return // página rara: mejor no tocar nada
+    const cache = await caches.open(CACHE)
+    for (const req of await cache.keys()) {
+      const u = req.url.split('?')[0]
+      if (u.includes('/assets/') && /\.(js|css)$/.test(u) && !usados.has(u)) await cache.delete(req)
+    }
+  } catch {
+    // sin poda esta vez; no afecta al funcionamiento
+  }
+}
+
 self.addEventListener('install', (e) => {
   e.waitUntil(precargar().then(() => self.skipWaiting()))
 })
@@ -59,7 +79,11 @@ self.addEventListener('fetch', (e) => {
       (async () => {
         try {
           const res = await fetch(req)
-          if (res.ok) (await caches.open(CACHE)).put(BASE, res.clone())
+          if (res.ok) {
+            const cache = await caches.open(CACHE)
+            await cache.put(BASE, res.clone())
+            e.waitUntil(podar(res.clone()))
+          }
           return res
         } catch {
           return (await caches.match(BASE, { ignoreVary: true })) ?? Response.error()
