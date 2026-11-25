@@ -178,7 +178,7 @@ test.describe('OVNI · happy paths', () => {
     expect(JSON.parse(guardado!).velocidad).toBe('lenta')
   })
 
-  test('Historia 9 · «¿Cómo se juega?» abre las reglas resumidas y se cierra', async ({ page }) => {
+  test('Historia 9 · «¿Cómo se juega?» abre las reglas resumidas (en el inicio y en la mesa)', async ({ page }) => {
     await page.goto('/?seed=7&fast=1')
     await page.getByTestId('abrir-reglas').click()
     await expect(page.getByTestId('reglas')).toBeVisible()
@@ -187,6 +187,14 @@ test.describe('OVNI · happy paths', () => {
     await page.getByTestId('reglas-ok').click()
     await expect(page.getByTestId('reglas')).toHaveCount(0)
     await expect(page.getByTestId('jugar')).toBeVisible()
+
+    // También a mitad de partida, sin salir: desde «Ver mejor».
+    await page.getByTestId('jugar').click()
+    await page.getByTestId('abrir-vista').click()
+    await page.getByTestId('vista-reglas').click()
+    await expect(page.getByTestId('reglas')).toBeVisible()
+    await page.getByTestId('reglas-ok').click()
+    await expect(page.getByTestId('mesa')).toBeVisible()
   })
 
   test('Historia 10 · La casita pide confirmación antes de abandonar la partida', async ({ page }) => {

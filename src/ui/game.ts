@@ -34,6 +34,7 @@ export type Overlay =
   | { kind: 'verMano' }
   | { kind: 'vista' } // ajustes de letra grande / contraste (R-UI-A11Y-4)
   | { kind: 'salir' } // confirmar antes de abandonar la partida
+  | { kind: 'reglas' } // consultar las reglas sin salir de la partida
 
 /** Movimiento de cartas en curso (se anima en la mesa; el estado se aplica al terminar). */
 export type Jugada =
@@ -173,6 +174,7 @@ export interface Ovni {
   openVerMano: () => void
   openVista: () => void
   openSalir: () => void
+  openReglas: () => void
   closeOverlay: () => void
   nextRound: () => void
   restart: () => void
@@ -528,6 +530,7 @@ export function useOvni(): Ovni {
   const openVerMano = useCallback(() => setOverlay({ kind: 'verMano' }), [])
   const openVista = useCallback(() => setOverlay({ kind: 'vista' }), [])
   const openSalir = useCallback(() => setOverlay({ kind: 'salir' }), [])
+  const openReglas = useCallback(() => setOverlay({ kind: 'reglas' }), [])
   const closeOverlay = useCallback(() => setOverlay(null), [])
 
   // --- simula el resto de la partida (cuando el humano queda eliminado) ---
@@ -648,6 +651,7 @@ export function useOvni(): Ovni {
     openVerMano,
     openVista,
     openSalir,
+    openReglas,
     closeOverlay,
     nextRound,
     restart,

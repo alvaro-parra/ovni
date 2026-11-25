@@ -35,7 +35,7 @@ const game = {
   overlay: null, jugada: null, aviso: null, robosRecientes: {}, dur: duraciones('normal', { rapidoTests: true }),
   cerrarAviso: nada, lastResult: null, nRivals: 2, humanAvatar: 'sol', setNRivals: nada, setHumanAvatar: nada,
   startGame: nada, playHuman: nada, chooseSuit: nada, cancelarSota: nada, drawHuman: nada, dismissRoba2: nada,
-  openVerMano: nada, openVista: nada, openSalir: nada, closeOverlay: nada, nextRound: nada, restart: nada,
+  openVerMano: nada, openVista: nada, openSalir: nada, openReglas: nada, closeOverlay: nada, nextRound: nada, restart: nada,
   partidaGuardada: null, continuarPartida: nada,
 } satisfies Ovni
 

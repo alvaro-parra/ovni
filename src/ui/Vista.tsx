@@ -118,7 +118,7 @@ export function BotonVista({ onClick }: { onClick: () => void }) {
 
 /** Panel inferior con los dos interruptores grandes (icono + texto), para la mesa. */
 
-export function PanelVista({ onClose }: { onClose: () => void }) {
+export function PanelVista({ onClose, onReglas }: { onClose: () => void; onReglas?: () => void }) {
   const { grande, contraste, setGrande, setContraste, velocidad, setVelocidad } = usePreferencias()
   const ref = useFocoDialogo<HTMLDivElement>(onClose)
   const fila = (activo: boolean, icono: string, texto: string, testid: string, on: () => void) => (
@@ -178,6 +178,16 @@ export function PanelVista({ onClose }: { onClose: () => void }) {
             )
           })}
         </div>
+        {onReglas && (
+          <button
+            data-testid="vista-reglas"
+            onClick={onReglas}
+            style={estiloBoton(false, { height: 60, width: '100%', justifyContent: 'flex-start', gap: 14, padding: '0 18px', fontSize: 22, fontWeight: 700, border: '3px solid #1A1A1A', background: '#FFFFFF', color: '#1A1A1A' })}
+          >
+            <Svg markup={`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M9.2 9.3 a3 3 0 0 1 5.6 1.2 c0 2 -2.8 2.4 -2.8 4"></path><path d="M12 17.6 V17.8"></path></svg>`} />
+            <span>Cómo se juega</span>
+          </button>
+        )}
         <button
           data-testid="cerrar-vista"
           onClick={onClose}

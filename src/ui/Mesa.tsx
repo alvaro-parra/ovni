@@ -12,6 +12,7 @@ import { ALTO_REF_MESA, estiloTablero, useEscala } from './Pantalla'
 import { ajustarRejilla, PROPORCION_CARTA } from './ajuste'
 import { BotonVista, PanelVista } from './Vista'
 import { AvisoRoba2 } from './Roba2'
+import { Reglas } from './Reglas'
 import { useFocoDialogo } from './foco'
 import { FACTOR_GRANDE, usePreferencias } from './preferencias'
 import { textoPista, type MotivoPista } from './pistas'
@@ -724,7 +725,8 @@ export function Mesa({ game }: { game: Ovni }) {
       {game.overlay?.kind === 'palo' && (
         <SelectorPalo sota={game.overlay.card} mano={human.hand} onPick={game.chooseSuit} onCancel={game.cancelarSota} unaFila={apaisada} />
       )}
-      {game.overlay?.kind === 'vista' && <PanelVista onClose={game.closeOverlay} />}
+      {game.overlay?.kind === 'vista' && <PanelVista onClose={game.closeOverlay} onReglas={game.openReglas} />}
+      {game.overlay?.kind === 'reglas' && <Reglas onClose={game.closeOverlay} />}
       {game.overlay?.kind === 'salir' && <ConfirmarSalir onSeguir={game.closeOverlay} onSalir={game.restart} />}
       {game.overlay?.kind === 'roba2' && (
         <AvisoRoba2 datos={game.overlay} onOk={game.dismissRoba2} compacto={altoPantalla < 520} />
