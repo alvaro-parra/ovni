@@ -13,6 +13,7 @@ import { ajustarRejilla, PROPORCION_CARTA } from './ajuste'
 import { BotonVista, PanelVista } from './Vista'
 import { AvisoRoba2 } from './Roba2'
 import { useFocoDialogo } from './foco'
+import { textoPista, type MotivoPista } from './pistas'
 import { animarLlegada, CapaVuelo, CartelAviso, claveCarta, Pensando, useLatido } from './Animaciones'
 import {
   cardLabel,
@@ -134,6 +135,28 @@ export function Mesa({ game }: { game: Ovni }) {
     animarLlegada(raizRef.current, llegando, game.dur)
     setLlegando([])
   }, [llegando, game.overlay, game.dur])
+
+  // Pista al tocar una carta que no vale (o fuera de tu turno): ocupa el banner 2,5 s.
+  const [pista, setPista] = useState<{ texto: string; palo: Suit | null; id: number } | null>(null)
+  const pistaTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (pistaTimer.current) clearTimeout(pistaTimer.current) }, [])
+  const mostrarPista = (item: HandItem, el: HTMLElement) => {
+    if (game.dur.animar) {
+      el.animate(
+        [{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }],
+        { duration: 320, easing: 'ease-in-out' },
+      )
+    }
+    const motivo: MotivoPista =
+      item.est === 'espera'
+        ? { tipo: 'espera', quien: curPlayer?.name ?? '' }
+        : { tipo: 'no-vale', palo: round.activeSuit, numero: round.activeRank }
+    setPista({ texto: textoPista(motivo), palo: motivo.tipo === 'no-vale' ? motivo.palo : null, id: Date.now() })
+    if (pistaTimer.current) clearTimeout(pistaTimer.current)
+    pistaTimer.current = setTimeout(() => setPista(null), 2500)
+  }
+  // Cambia el turno o la mesa: la pista ya no aplica.
+  useEffect(() => setPista(null), [round.currentPlayerIndex, round.discardPile.length])
 
   // La carta propia en vuelo se oculta de la mano solo si de verdad se ve volar.
   const vueloVisible = game.dur.animar ? game.jugada : null
@@ -410,7 +433,18 @@ export function Mesa({ game }: { game: Ovni }) {
       </div>
 
       {/* Banner de estado */}
+      {pista ? (
+        <div
+          role="status"
+          data-testid="pista"
+          style={{ minHeight: 52, padding: '4px 14px', lineHeight: 1.15, textAlign: 'center', flex: 'none', boxSizing: 'border-box', borderRadius: 999, background: '#FFF8E7', color: '#1A1A1A', border: '3px solid #B8202A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: anchoPantalla < 380 ? 17 : 19, fontWeight: 700 }}
+        >
+          {pista.palo && <Palo palo={pista.palo} w={30} />}
+          <span>{pista.texto}</span>
+        </div>
+      ) : (
       <Banner estado={estado} animar={game.dur.animar} letra={anchoPantalla < 380 ? 20 : 22} curPlayer={curPlayer} roba={game.jugada?.tipo === 'roba' && game.jugada.actorId === curId ? game.jugada.n : 0} />
+      )}
 
       {/* Panel del jugador */}
       <div
@@ -464,7 +498,7 @@ export function Mesa({ game }: { game: Ovni }) {
         {modo === 'grande' && (
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rGrande.cols}, minmax(0, 1fr))`, gap: '20px 8px', justifyItems: 'center', alignContent: 'center', flex: 1, paddingTop: 18 }}>
             {hand.map((i, k) => (
-              <CartaBtn key={k} item={i} w={rGrande.w} onPlay={game.playHuman} vuelo={vueloVisible} oculta={llegando} />
+              <CartaBtn key={k} item={i} w={rGrande.w} onPlay={game.playHuman} vuelo={vueloVisible} oculta={llegando} onNoJugable={mostrarPista} />
             ))}
           </div>
         )}
@@ -486,6 +520,7 @@ export function Mesa({ game }: { game: Ovni }) {
                 <CartaBtn
                   vuelo={vueloVisible}
                   oculta={llegando}
+                  onNoJugable={mostrarPista}
                   key={k}
                   item={i}
                   w={rDividido.w}
@@ -525,7 +560,7 @@ export function Mesa({ game }: { game: Ovni }) {
         {modo === 'rejilla' && (
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rRejilla.cols}, minmax(0, 1fr))`, gap: '12px 6px', justifyItems: 'center', alignContent: 'center', flex: 1, paddingTop: 6 }}>
             {(n > 12 ? hand.slice(0, 11) : hand).map((i, k) => (
-              <CartaBtn key={k} item={i} w={rRejilla.w} onPlay={game.playHuman} vuelo={vueloVisible} oculta={llegando} />
+              <CartaBtn key={k} item={i} w={rRejilla.w} onPlay={game.playHuman} vuelo={vueloVisible} oculta={llegando} onNoJugable={mostrarPista} />
             ))}
             {n > 12 && (
               <button
@@ -655,10 +690,13 @@ function CartaBtn({
   onPlay,
   vuelo = null,
   oculta,
+  onNoJugable,
 }: {
   item: HandItem
   w: number
   onPlay: (c: Card) => void
+  /** Al tocar una carta que no se puede jugar: pista (y la carta tiembla). */
+  onNoJugable?: (item: HandItem, el: HTMLElement) => void
   /** Movimiento en curso: si es esta carta volando a la mesa, se oculta de la mano. */
   vuelo?: Jugada | null
   /** Claves de cartas que aún no han «llegado» (esperan su vuelo desde el mazo). */
@@ -675,9 +713,10 @@ function CartaBtn({
       data-testid={jugable ? 'carta-jugable' : 'carta'}
       data-vuelo={claveCarta(item.card)}
       aria-label={cardLabel(item.card) + (jugable ? ', se puede jugar' : item.est === 'apagada' ? ', no se puede jugar' : '')}
-      disabled={!jugable}
-      onClick={() => jugable && onPlay(item.card)}
-      style={{ padding: 0, border: 0, background: 'transparent', cursor: jugable ? 'pointer' : 'default', borderRadius: 10, lineHeight: 0, visibility: volando || oculta?.includes(claveCarta(item.card)) ? 'hidden' : 'visible' }}
+      // No `disabled`: tocar una carta que no vale debe responder (pista), no ignorarse.
+      aria-disabled={!jugable}
+      onClick={(e) => (jugable ? onPlay(item.card) : onNoJugable?.(item, e.currentTarget))}
+      style={{ padding: 0, border: 0, background: 'transparent', cursor: 'pointer', borderRadius: 10, lineHeight: 0, visibility: volando || oculta?.includes(claveCarta(item.card)) ? 'hidden' : 'visible' }}
     >
       <CartaDe card={item.card} estado={item.est} w={w} />
     </button>

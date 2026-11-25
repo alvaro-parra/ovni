@@ -236,6 +236,17 @@ test.describe('OVNI · happy paths', () => {
     await expect(page.getByTestId('mis-cartas')).toHaveText(cartas)
   })
 
+  test('Historia 13 · Tocar una carta que no vale explica por qué (R-UI-A11Y-7)', async ({ page }) => {
+    await empezarPartida(page, 3)
+    await expect(page.getByTestId('estado')).toHaveAttribute('data-value', 'tu')
+    const noVale = page.getByTestId('carta').first()
+    await expect(noVale).toBeVisible()
+    const mano = await page.getByTestId('mis-cartas').innerText()
+    await noVale.click({ force: true }) // aria-disabled: Playwright no la pulsaría, una persona sí
+    await expect(page.getByTestId('pista')).toContainText('Esa no vale: necesitas')
+    await expect(page.getByTestId('mis-cartas')).toHaveText(mano) // no se ha jugado nada
+  })
+
   // Aviso del +2 en los casos límite del mazo (banco de pruebas: e2e/banco/roba2.html).
   for (const [caso, robadas, robo, consecuencia] of [
     ['normal', 2, 'Robas estas 2 cartas', 'Pierdes el turno'],
