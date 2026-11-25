@@ -35,6 +35,31 @@ function caja(raiz: HTMLElement, clave: string): Caja | null {
 
 const EASE = 'cubic-bezier(.25,.75,.3,1)'
 
+/**
+ * Cartas que te llegan a la mano (robo o +2): cada una sale del mazo y vuela, boca arriba,
+ * hasta su sitio. Técnica FLIP: la carta ya está colocada en la mano y se anima desde la
+ * posición del mazo, así cae justo en su hueco sea cual sea la distribución de la mano.
+ * Las que no tienen sitio propio (p. ej. en la tira de no jugables) aparecen sin vuelo.
+ */
+export function animarLlegada(raiz: HTMLElement, claves: string[], dur: Duraciones) {
+  const mazo = caja(raiz, 'mazo')
+  claves.forEach((clave, i) => {
+    const el = raiz.querySelector<HTMLElement>(`[data-vuelo="${clave}"]`)
+    const destino = caja(raiz, clave)
+    if (!el || !destino || !mazo) return
+    const dx = mazo.x + mazo.w / 2 - (destino.x + destino.w / 2)
+    const dy = mazo.y + mazo.h / 2 - (destino.y + destino.h / 2)
+    const s0 = Math.min(1, mazo.w / destino.w)
+    el.animate(
+      [
+        { transform: `translate(${dx}px, ${dy}px) scale(${s0})`, zIndex: 3 },
+        { transform: 'translate(0, 0) scale(1)', zIndex: 3 },
+      ],
+      { duration: dur.robo, delay: i * dur.roboExtra * 1.5, easing: EASE, fill: 'backwards' },
+    )
+  })
+}
+
 export function CapaVuelo({
   jugada,
   dur,

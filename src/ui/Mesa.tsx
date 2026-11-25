@@ -11,7 +11,7 @@ import { Svg } from './dc'
 import { ALTO_REF_MESA, estiloTablero, useEscala } from './Pantalla'
 import { ajustarRejilla, PROPORCION_CARTA } from './ajuste'
 import { BotonVista, PanelVista } from './Vista'
-import { CapaVuelo, CartelAviso, claveCarta, Pensando, useLatido } from './Animaciones'
+import { animarLlegada, CapaVuelo, CartelAviso, claveCarta, Pensando, useLatido } from './Animaciones'
 import {
   cardLabel,
   rankVnum,
@@ -114,24 +114,24 @@ export function Mesa({ game }: { game: Ovni }) {
   const colorPuntos = (pts: number) =>
     pts >= 90 ? '#FF8A8A' : pts >= 70 ? '#FFB347' : '#8FE3A6'
 
-  // Cartas recién llegadas a la mano (robo o +2): se destacan hasta un rato después de
-  // que no haya overlays delante, o hasta la siguiente jugada propia.
-  const [nuevas, setNuevas] = useState<Set<string>>(() => new Set())
+  // Cartas que te llegan a la mano (robo o +2): vuelan del mazo a su sitio. Mientras haya
+  // un overlay delante (p. ej. el aviso del +2) esperan ocultas y vuelan al cerrarlo.
+  // Layout effects: se ocultan antes de pintarse, sin un fotograma en su sitio final.
+  const [llegando, setLlegando] = useState<string[]>([])
   const prevMano = useRef<{ ronda: number; claves: Set<string> } | null>(null)
-  useEffect(() => {
+  useLayoutEffect(() => {
     const claves = new Set(human.hand.map(claveCarta))
     const prev = prevMano.current
     prevMano.current = { ronda: game.roundNumber, claves }
     if (!prev || prev.ronda !== game.roundNumber || !game.dur.animar) return
     const llegadas = [...claves].filter((k) => !prev.claves.has(k))
-    if (llegadas.length > 0) setNuevas(new Set(llegadas))
-    else if (claves.size < prev.claves.size) setNuevas(new Set()) // has jugado: se quita
+    if (llegadas.length > 0) setLlegando((l) => [...l, ...llegadas])
   }, [human.hand, game.roundNumber, game.dur.animar])
-  useEffect(() => {
-    if (nuevas.size === 0 || game.overlay) return
-    const t = setTimeout(() => setNuevas(new Set()), game.dur.aviso * 1.6)
-    return () => clearTimeout(t)
-  }, [nuevas, game.overlay, game.dur.aviso])
+  useLayoutEffect(() => {
+    if (llegando.length === 0 || game.overlay || !raizRef.current) return
+    animarLlegada(raizRef.current, llegando, game.dur)
+    setLlegando([])
+  }, [llegando, game.overlay, game.dur])
 
   // La carta propia en vuelo se oculta de la mano solo si de verdad se ve volar.
   const vueloVisible = game.dur.animar ? game.jugada : null
@@ -459,7 +459,7 @@ export function Mesa({ game }: { game: Ovni }) {
         {modo === 'grande' && (
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rGrande.cols}, minmax(0, 1fr))`, gap: '20px 8px', justifyItems: 'center', alignContent: 'center', flex: 1, paddingTop: 18 }}>
             {hand.map((i, k) => (
-              <CartaBtn key={k} item={i} w={rGrande.w} onPlay={game.playHuman} vuelo={vueloVisible} nuevas={nuevas} />
+              <CartaBtn key={k} item={i} w={rGrande.w} onPlay={game.playHuman} vuelo={vueloVisible} oculta={llegando} />
             ))}
           </div>
         )}
@@ -478,7 +478,7 @@ export function Mesa({ game }: { game: Ovni }) {
               {jugables.map((i, k) => (
                 <CartaBtn
                   vuelo={vueloVisible}
-                  nuevas={nuevas}
+                  oculta={llegando}
                   key={k}
                   item={i}
                   w={rDividido.w}
@@ -518,7 +518,7 @@ export function Mesa({ game }: { game: Ovni }) {
         {modo === 'rejilla' && (
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rRejilla.cols}, minmax(0, 1fr))`, gap: '12px 6px', justifyItems: 'center', paddingTop: 6 }}>
             {(n > 12 ? hand.slice(0, 11) : hand).map((i, k) => (
-              <CartaBtn key={k} item={i} w={rRejilla.w} onPlay={game.playHuman} vuelo={vueloVisible} nuevas={nuevas} />
+              <CartaBtn key={k} item={i} w={rRejilla.w} onPlay={game.playHuman} vuelo={vueloVisible} oculta={llegando} />
             ))}
             {n > 12 && (
               <button
@@ -642,15 +642,15 @@ function CartaBtn({
   w,
   onPlay,
   vuelo = null,
-  nuevas,
+  oculta,
 }: {
   item: HandItem
   w: number
   onPlay: (c: Card) => void
   /** Movimiento en curso: si es esta carta volando a la mesa, se oculta de la mano. */
   vuelo?: Jugada | null
-  /** Claves de las cartas recién llegadas a la mano. */
-  nuevas?: Set<string>
+  /** Claves de cartas que aún no han «llegado» (esperan su vuelo desde el mazo). */
+  oculta?: string[]
 }) {
   const jugable = item.est === 'jugable'
   const volando =
@@ -665,9 +665,9 @@ function CartaBtn({
       aria-label={cardLabel(item.card) + (jugable ? ', se puede jugar' : item.est === 'apagada' ? ', no se puede jugar' : '')}
       disabled={!jugable}
       onClick={() => jugable && onPlay(item.card)}
-      style={{ padding: 0, border: 0, background: 'transparent', cursor: jugable ? 'pointer' : 'default', borderRadius: 10, lineHeight: 0, visibility: volando ? 'hidden' : 'visible' }}
+      style={{ padding: 0, border: 0, background: 'transparent', cursor: jugable ? 'pointer' : 'default', borderRadius: 10, lineHeight: 0, visibility: volando || oculta?.includes(claveCarta(item.card)) ? 'hidden' : 'visible' }}
     >
-      <CartaDe card={item.card} estado={item.est} w={w} nueva={nuevas?.has(claveCarta(item.card))} />
+      <CartaDe card={item.card} estado={item.est} w={w} />
     </button>
   )
 }

@@ -15,7 +15,6 @@ export function Carta({
   w = 130,
   sinSubir = false,
   indiceGrande = true,
-  nueva = false,
 }: {
   rank?: Rank
   suit?: Suit
@@ -23,8 +22,6 @@ export function Carta({
   w?: number
   sinSubir?: boolean
   indiceGrande?: boolean
-  /** Recién llegada a la mano (robada o por un +2): anillo azul y marca «+». */
-  nueva?: boolean
 }) {
   const [imgError, setImgError] = useState(false)
   const h = Math.round(w * 1.542)
@@ -53,8 +50,7 @@ export function Carta({
 
   const borde = jugable ? '#FFD23F' : '#CFC4A8'
   const bw = jugable ? 4 : 2
-  const anillo = nueva ? '0 0 0 4px #8EC1FF, 0 0 0 6px #13306B, ' : ''
-  const sombra = anillo + (jugable
+  const sombra = (jugable
     ? '0 0 0 2px #1A1A1A, 0 10px 18px rgba(0,0,0,0.45)'
     : apagada
       ? 'none'
@@ -193,30 +189,6 @@ export function Carta({
           />
         </div>
       )}
-
-      {nueva && (
-        <div
-          data-testid="marca-nueva"
-          style={{
-            position: 'absolute',
-            bottom: chkT,
-            left: chkT,
-            width: chk,
-            height: chk,
-            borderRadius: '50%',
-            background: '#8EC1FF',
-            border: '3px solid #13306B',
-            boxSizing: 'border-box',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Svg
-            markup={`<svg width="${chkIco}" height="${chkIco}" viewBox="0 0 24 24" fill="none" stroke="#13306B" stroke-width="3.8" stroke-linecap="round"><path d="M12 5 V19 M5 12 H19"></path></svg>`}
-          />
-        </div>
-      )}
     </div>
   )
 }
@@ -227,13 +199,11 @@ export function CartaDe({
   estado,
   w,
   sinSubir,
-  nueva,
 }: {
   card: Card
   estado?: EstadoCarta
   w?: number
   sinSubir?: boolean
-  nueva?: boolean
 }) {
-  return <Carta rank={card.rank} suit={card.suit} estado={estado} w={w} sinSubir={sinSubir} nueva={nueva} />
+  return <Carta rank={card.rank} suit={card.suit} estado={estado} w={w} sinSubir={sinSubir} />
 }

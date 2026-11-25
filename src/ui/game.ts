@@ -447,14 +447,10 @@ export function useOvni(): Ovni {
     if (!esTurnoHumano(round) || jugada || ocupado.current) return
     if (getPlayableCards(round).length > 0) return // jugar es obligatorio
     cerrarAviso()
-    const r = drawCard(round, shuffle)
-    const n = r.players[r.currentPlayerIndex].hand.length - round.players[round.currentPlayerIndex].hand.length
-    if (n <= 0) {
-      setRound(r)
-      return
-    }
-    animarYAplicar({ tipo: 'roba', actorId: HUMAN_ID, n }, dur.vueloHumano, () => setRound(r))
-  }, [round, jugada, shuffle, dur.vueloHumano, animarYAplicar, cerrarAviso])
+    // Se aplica al momento: la mesa hace volar la carta robada, boca arriba, del mazo a su
+    // sitio en la mano (así se ve qué carta ha llegado y dónde).
+    setRound(drawCard(round, shuffle))
+  }, [round, jugada, shuffle, cerrarAviso])
 
   const dismissRoba2 = useCallback(() => setOverlay(null), [])
   const openVerMano = useCallback(() => setOverlay({ kind: 'verMano' }), [])
