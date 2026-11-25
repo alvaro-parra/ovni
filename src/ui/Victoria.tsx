@@ -90,7 +90,7 @@ export function Victoria({ game }: { game: Ovni }) {
           </div>
           <h1 style={{ margin: '4px 0 0', fontSize: apaisada ? 34 : 46, lineHeight: 1.05, fontWeight: 700, textAlign: 'center' }}>¡Has ganado!</h1>
           <p style={{ margin: 0, fontSize: apaisada ? 17 : 20, color: 'var(--texto-2)', textAlign: 'center' }}>
-            {motivo === 'por-debajo' ? 'Eres el único por debajo de 101' : 'Todos pasasteis de 101, pero tú tienes menos puntos'}
+            {motivo === 'por-debajo' ? 'Solo tú quedas por debajo de 101' : 'Todos llegasteis a 101, pero tú tienes menos puntos'}
           </p>
         </div>
       )}
@@ -113,12 +113,12 @@ export function Victoria({ game }: { game: Ovni }) {
               <Svg markup={`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8E0F18" stroke-width="3.6" stroke-linecap="round"><path d="M6 6 L18 18"></path><path d="M18 6 L6 18"></path></svg>`} />
             </span>
           </div>
-          <h1 style={{ margin: '8px 0 0', fontSize: apaisada ? 34 : 44, lineHeight: 1.05, fontWeight: 700 }}>Eliminado</h1>
+          <h1 style={{ margin: '8px 0 0', fontSize: apaisada ? 34 : 44, lineHeight: 1.05, fontWeight: 700 }}>Quedas fuera</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: apaisada ? 20 : 24, fontWeight: 700, color: '#FF8A8A' }}>
             <span>{human.score} puntos (101 o más)</span>
           </div>
           <p style={{ margin: 0, fontSize: apaisada ? 17 : 20, color: 'var(--texto-2)', textAlign: 'center' }}>
-            {motivo === 'por-debajo' ? 'Ganó quien quedó por debajo de 101' : 'Todos pasaron de 101: gana quien tiene menos puntos'}
+            {motivo === 'por-debajo' ? 'Ganó quien quedó por debajo de 101' : 'Todos llegaron a 101: gana quien tiene menos puntos'}
           </p>
         </div>
       )}
@@ -131,7 +131,7 @@ export function Victoria({ game }: { game: Ovni }) {
             <Avatar quien={f.cfg.avatar} w={40} apagado={f.fuera} />
             <span style={{ fontSize: 21, fontWeight: 700, flex: 1 }}>{f.cfg.name}</span>
             {f.corona && <Svg ariaLabel="Ganador" markup={`<svg width="24" height="22" viewBox="0 0 24 22" role="img" aria-label="Ganador"><path d="M2 8 L7 12 L12 3 L17 12 L22 8 L20 20 H4 Z" fill="#1A1A1A"></path></svg>`} />}
-            {f.fuera && <Svg ariaLabel="Eliminado" markup={`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF8A8A" stroke-width="3.4" stroke-linecap="round" role="img" aria-label="Eliminado"><path d="M6 6 L18 18"></path><path d="M18 6 L6 18"></path></svg>`} />}
+            {f.fuera && <Svg ariaLabel="Fuera" markup={`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF8A8A" stroke-width="3.4" stroke-linecap="round" role="img" aria-label="Fuera"><path d="M6 6 L18 18"></path><path d="M18 6 L6 18"></path></svg>`} />}
             <span style={{ fontSize: 24, fontWeight: 700, minWidth: 48, textAlign: 'right' }}>{f.puntos}</span>
           </div>
         ))}

@@ -148,7 +148,7 @@ export function Reglas({ onClose }: { onClose: () => void }) {
             </>
           }
         >
-          Las cartas que te quedan suman puntos (la Sota, 50). Con 101 quedas fuera. Gana el último; si todos pasáis de 101 a la vez, gana quien tenga menos.
+          Las cartas que te quedan suman puntos (la Sota, 50). Con 101 quedas fuera. Gana el último; si todos llegáis a 101 a la vez, gana quien tenga menos.
         </Regla>
       </ol>
 

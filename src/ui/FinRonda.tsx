@@ -153,7 +153,7 @@ export function FinRonda({ game }: { game: Ovni }) {
                 {p.elim && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#FFE1E1', color: '#8E0F18', borderRadius: 999, padding: '1px 10px 1px 6px', fontSize: 16, fontWeight: 700 }}>
                     <Svg markup={`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E0F18" stroke-width="3.4" stroke-linecap="round"><path d="M6 6 L18 18"></path><path d="M18 6 L6 18"></path></svg>`} />
-                    <span>Eliminado</span>
+                    <span>Fuera</span>
                   </span>
                 )}
               </div>
