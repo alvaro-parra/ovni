@@ -6,6 +6,9 @@ export default defineConfig({
   testMatch: '**/*.spec.ts',
   timeout: 60_000,
   fullyParallel: true,
+  // En local, un solo worker: el sandbox tiene 2 GB y varios Chrome a la vez lo agotan.
+  // En CI (máquina propia) se usa el valor por defecto de Playwright.
+  workers: process.env.CI ? undefined : 1,
   retries: 0,
   reporter: [['list']],
   webServer: {

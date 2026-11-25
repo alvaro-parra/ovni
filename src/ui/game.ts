@@ -211,6 +211,7 @@ export function useOvni(): Ovni {
   const cancelarTodo = useCallback(() => {
     for (const t of timers.current) clearTimeout(t)
     timers.current.clear()
+    ocupado.current = false
     setJugada(null)
     setAviso(null)
     setRobosRecientes({})
@@ -236,6 +237,10 @@ export function useOvni(): Ovni {
     setAviso((a) => (a?.tipo === 'fin' ? a : null)) // el de fin de ronda se va solo
   }, [])
 
+  // Hay un movimiento en curso. Ref (y no solo estado) para que un doble toque rápido,
+  // que puede llegar antes del siguiente render, no lance la misma jugada dos veces.
+  const ocupado = useRef(false)
+
   /** Muestra el movimiento `j` durante `ms` y después aplica `fin` (el nuevo estado). */
   const animarYAplicar = useCallback(
     (j: SinId<Jugada>, ms: number, fin: () => void) => {
@@ -243,8 +248,10 @@ export function useOvni(): Ovni {
         fin()
         return
       }
+      ocupado.current = true
       setJugada({ ...j, id: ++seq.current } as Jugada)
       programar(() => {
+        ocupado.current = false
         setJugada(null)
         fin()
       }, ms)
@@ -405,7 +412,7 @@ export function useOvni(): Ovni {
 
   const playHuman = useCallback(
     (card: Card) => {
-      if (!esTurnoHumano(round) || jugada) return
+      if (!esTurnoHumano(round) || jugada || ocupado.current) return
       if (!isPlayable(card, round.activeSuit, round.activeRank)) return
       cerrarAviso()
       if (card.rank === 'sota') {
@@ -425,7 +432,7 @@ export function useOvni(): Ovni {
   const chooseSuit = useCallback(
     (suit: Suit) => {
       const card = pendingSota.current
-      if (!card || !round || jugada) return
+      if (!card || !round || jugada || ocupado.current) return
       const res = describeAndPlay(round, card, suit, shuffle)
       pendingSota.current = null
       setOverlay(null)
@@ -437,7 +444,7 @@ export function useOvni(): Ovni {
   )
 
   const drawHuman = useCallback(() => {
-    if (!esTurnoHumano(round) || jugada) return
+    if (!esTurnoHumano(round) || jugada || ocupado.current) return
     if (getPlayableCards(round).length > 0) return // jugar es obligatorio
     cerrarAviso()
     const r = drawCard(round, shuffle)

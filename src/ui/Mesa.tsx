@@ -133,6 +133,9 @@ export function Mesa({ game }: { game: Ovni }) {
     return () => clearTimeout(t)
   }, [nuevas, game.overlay, game.dur.aviso])
 
+  // La carta propia en vuelo se oculta de la mano solo si de verdad se ve volar.
+  const vueloVisible = game.dur.animar ? game.jugada : null
+
   const rivales = round.players
     .map((rp, idx) => ({ rp, idx }))
     .filter(({ rp }) => rp.id !== HUMAN_ID)
@@ -456,7 +459,7 @@ export function Mesa({ game }: { game: Ovni }) {
         {modo === 'grande' && (
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rGrande.cols}, minmax(0, 1fr))`, gap: '20px 8px', justifyItems: 'center', alignContent: 'center', flex: 1, paddingTop: 18 }}>
             {hand.map((i, k) => (
-              <CartaBtn key={k} item={i} w={rGrande.w} onPlay={game.playHuman} vuelo={game.jugada} nuevas={nuevas} />
+              <CartaBtn key={k} item={i} w={rGrande.w} onPlay={game.playHuman} vuelo={vueloVisible} nuevas={nuevas} />
             ))}
           </div>
         )}
@@ -474,7 +477,7 @@ export function Mesa({ game }: { game: Ovni }) {
             >
               {jugables.map((i, k) => (
                 <CartaBtn
-                  vuelo={game.jugada}
+                  vuelo={vueloVisible}
                   nuevas={nuevas}
                   key={k}
                   item={i}
@@ -515,7 +518,7 @@ export function Mesa({ game }: { game: Ovni }) {
         {modo === 'rejilla' && (
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rRejilla.cols}, minmax(0, 1fr))`, gap: '12px 6px', justifyItems: 'center', paddingTop: 6 }}>
             {(n > 12 ? hand.slice(0, 11) : hand).map((i, k) => (
-              <CartaBtn key={k} item={i} w={rRejilla.w} onPlay={game.playHuman} vuelo={game.jugada} nuevas={nuevas} />
+              <CartaBtn key={k} item={i} w={rRejilla.w} onPlay={game.playHuman} vuelo={vueloVisible} nuevas={nuevas} />
             ))}
             {n > 12 && (
               <button
